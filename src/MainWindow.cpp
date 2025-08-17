@@ -4,8 +4,6 @@
 #include <QMouseEvent>
 #include <iostream>
 
-#include "PixelScriptUI/menu_manager.h"
-
 QPoint mousePosU8g2 = QPoint(-1, -1);
 
 MainWindow::MainWindow(QWidget *parent, int _width, int _height, int _scale) : QMainWindow(parent), dSize_w(_width), dSize_h(_height), dScale(_scale)

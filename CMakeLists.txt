@@ -25,9 +25,11 @@ set(SOURCES
     src/MainWindow.cpp
     src/EmuWorker.cpp
     src/PixelScriptUI/pixelscriptui.cpp
-    src/PixelScriptUI/menu_manager.cpp
-    src/PixelScriptUI/root_menu.cpp
-    src/PixelScriptUI/app_1.cpp
+    src/PixelScriptUI/core/menu/menu_system.cpp
+    # src/PixelScriptUI/app_example.cpp
+    # src/PixelScriptUI/app_example2.cpp
+    src/PixelScriptUI/core/animation/anime.cpp
+    # src/PixelScriptUI/PSUI_animation.cpp
 )
 
 set(HEADERS
@@ -35,8 +37,10 @@ set(HEADERS
     include/MainWindow.h
     include/EmuWorker.h
     include/PixelScriptUI/pixelscriptui.h
-    include/PixelScriptUI/menu_manager.h
-    include/PixelScriptUI/root_menu.h
+    include/PixelScriptUI/core/menu/menu_system.h
+    # include/PixelScriptUI/app_example.h
+    include/PixelScriptUI/core/animation/anime.h
+    # include/PixelScriptUI/PSUI_animation.h
 )
 
 find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
