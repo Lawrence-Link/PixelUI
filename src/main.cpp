@@ -11,12 +11,13 @@
 #include "MainWindow.h"
 #include "EmuWorker.h"
 
-#include "PixelScriptUI/pixelscriptui.h"
+#include "PixelUI/pixelui.h"
+#include "PixelUI/core/ui/AppView/Appview.h"
 
-// #include "PixelScriptUI/menu_system.h"
-// #include "PixelScriptUI/app_example.h"
+// #include "PixelUI/menu_system.h"
+// #include "PixelUI/app_example.h"
 
-// #include "PixelScriptUI/PSUI_animation.h"
+// #include "PixelUI/PSUI_animation.h"
 
 U8G2Wrapper display;
 PixelUI ui(display);
@@ -43,7 +44,6 @@ float X_EASE_IN_CUBIC, Y_EASE_IN_CUBIC = 0.0f;
 float X_EASE_OUT_CUBIC, Y_EASE_OUT_CUBIC = 0.0f;
 float X_EASE_OUT_BOUNCE, Y_EASE_OUT_BOUNCE = 0.0f;
 float X_EASE_IN_OUT_CUBIC, Y_EASE_IN_OUT_CUBIC = 0.0f;
-
 
 bool movingRight = false;
 void startNextAnimation() {
@@ -83,10 +83,34 @@ public:
         // auto mainScene = std::make_shared<MainScene>();
         // gui.setScene(mainScene, TransitionType::ZOOM, 800);
     
-    ui.begin(Screen::TileMenu);
+    AppManager& manager = AppManager::getInstance();
+    const auto& apps = manager.getAppVector();
+
+    std::cout << "\nAppList:" << std::endl;
+    for (const auto& app : apps) {
+        std::cout << "------------------------" << std::endl;
+        std::cout << "Title: " << app.title << std::endl;
+        std::cout << "Type: ";
+        switch(app.type) {
+            case MenuItemType::App: std::cout << "App"; break;
+        }
+        std::cout << std::endl;
+        std::cout << "Size: " << app.w << "x" << app.h << std::endl;
+        // 调用App的动作函数
+        if (app.action) {
+            std::cout << "execute action: \n";
+            app.action();
+        }
+    }
+
+    ui.begin();
 
     // ui.debugInfo();
+    // float W_OUT_CUBIC, H_OUT_CUBIC = 10.0f;
+    // ui.animate(W_OUT_CUBIC, H_OUT_CUBIC, 82.0f, 30.0f, 560, EasingType::EASE_IN_OUT_CUBIC);
     
+    startAppView(ui);
+
     std::cout << "[TEST] Test completed" << std::endl;
 
         while (running) {   // the pseudo main loop for your u8g2 code to run in.
@@ -105,37 +129,30 @@ public:
             //         break;
             // }
             
-            if (ui.getActiveAnimationCount() == 0) {
-                // 动画完成，切换方向并开始新动画
-                movingRight = !movingRight;
-                // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                startNextAnimation();
+            // if (ui.getActiveAnimationCount() == 0) {
+            //     // 动画完成，切换方向并开始新动画
+            //     movingRight = !movingRight;
+            //     startNextAnimation();
+            // }
+
+            bool isDirty = ui.isDirty();
+        
+        // 只在内容改变时重绘
+            if (isDirty) {
+                display.clearBuffer();
+                ui.renderer();  // 调用 AppView::draw()
+                display.sendBuffer();  // 发送到屏幕
+                emit updateRequested(); // 通知Qt更新
+                
+                std::cout << "[DEBUG] Frame rendered and sent to display" << std::endl;
             }
-
-            display.clearBuffer();
-            display.setFont(u8g2_font_tom_thumb_4x6_mf );
-            display.setDrawColor(2);
-
-            display.drawStr((128 - display.getStrWidth("Linear")) / 2, 6,  "Linear");
-            display.drawStr((128 - display.getStrWidth("IN_QUAD")) / 2, 13, "IN_QUAD");
-            display.drawStr((128 - display.getStrWidth("OUT_QUAD")) / 2, 20, "OUT_QUAD");
-            display.drawStr((128 - display.getStrWidth("IN_OUT_QUAD")) / 2, 27, "IN_OUT_QUAD");
-            display.drawStr((128 - display.getStrWidth("IN_CUBIC")) / 2, 34, "IN_CUBIC");
-            display.drawStr((128 - display.getStrWidth("OUT_CUBIC")) / 2, 41, "OUT_CUBIC");
-            display.drawStr((128 - display.getStrWidth("IN_OUT_CUBIC")) / 2, 48, "IN_OUT_CUBIC");
-            display.drawStr((128 - display.getStrWidth("OUT_BOUNCE")) / 2, 54, "OUT_BOUNCE");
-
-            display.drawBox(X_LINEAR,           Y_LINEAR,6,6);
-            display.drawBox(X_EASE_IN_QUAD,     Y_EASE_IN_QUAD,6,6);
-            display.drawBox(X_EASE_OUT_QUAD,    Y_EASE_OUT_QUAD,6,6);
-            display.drawBox(X_EASE_IN_OUT_QUAD, Y_EASE_IN_OUT_QUAD,6,6);
-            display.drawBox(X_EASE_IN_CUBIC,    Y_EASE_IN_CUBIC,6,6);
-            display.drawBox(X_EASE_OUT_CUBIC,   Y_EASE_OUT_CUBIC,6,6);
-            display.drawBox(X_EASE_IN_OUT_CUBIC,Y_EASE_IN_OUT_CUBIC,6,6);
-            display.drawBox(X_EASE_OUT_BOUNCE,  Y_EASE_OUT_BOUNCE,6,6);
-            display.sendBuffer();
-            emit updateRequested();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        
+        // 检查动画是否在运行，如果有动画则持续标记为dirty
+            if (ui.getActiveAnimationCount() > 0) {
+                ui.markDirty();
+            }
+        
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }
     }
 };

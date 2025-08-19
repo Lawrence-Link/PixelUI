@@ -24,22 +24,33 @@ set(SOURCES
     src/u8g2_wrapper.cpp
     src/MainWindow.cpp
     src/EmuWorker.cpp
-    src/PixelScriptUI/pixelscriptui.cpp
-    src/PixelScriptUI/core/menu/menu_system.cpp
-    # src/PixelScriptUI/app_example.cpp
-    # src/PixelScriptUI/app_example2.cpp
-    src/PixelScriptUI/core/animation/anime.cpp
-    # src/PixelScriptUI/PSUI_animation.cpp
+    src/PixelUI/pixelui.cpp
+    src/PixelUI/core/menu/menu_system.cpp
+    
+    src/app_example.cpp
+    src/app_example2.cpp
+    src/app_example3.cpp
+
+    src/PixelUI/core/app/app_system.cpp
+    src/PixelUI/core/animation/anime.cpp
+    src/PixelUI/core/ui/Appview/AppView.cpp
+
 )
 
 set(HEADERS
     include/u8g2_wrapper.h
     include/MainWindow.h
     include/EmuWorker.h
-    include/PixelScriptUI/pixelscriptui.h
-    include/PixelScriptUI/core/menu/menu_system.h
-    # include/PixelScriptUI/app_example.h
-    include/PixelScriptUI/core/animation/anime.h
+    include/PixelUI/pixelui.h
+    include/PixelUI/core/menu/menu_system.h
+
+    include/app_example.h
+    include/app_example2.h
+    include/app_example3.h
+
+    include/PixelUI/core/animation/anime.h
+    include/PixelUI/core/app/app_system.h
+    include/PixelUI/core/ui/Appview/Appview.h
     # include/PixelScriptUI/PSUI_animation.h
 )
 

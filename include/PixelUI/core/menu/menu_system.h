@@ -1,6 +1,4 @@
 #pragma once
-#ifndef MENU_SYSTEM_H
-#define MENU_SYSTEM_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -71,5 +69,3 @@ class MenuItemRegistrar {
 public:
     MenuItemRegistrar(MenuLevel* parent, const MenuItem& item);
 };
-
-#endif // MENU_SYSTEM_H

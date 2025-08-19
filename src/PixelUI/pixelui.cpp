@@ -1,9 +1,8 @@
-// 在pixelscriptui.cpp中实现安全版本
-#include "PixelScriptUI/pixelscriptui.h"
+#include "PixelUI/pixelui.h"
 #include <iostream>
 #include <cassert>
 
-void PixelUI::begin(Screen s) 
+void PixelUI::begin() 
 {
     std::cout << "[DEBUG] PixelUI::begin() called" << std::endl;
     _currentTime = 0;
@@ -29,14 +28,6 @@ void PixelUI::Heartbeat(uint32_t ms)
 
 bool PixelUI::isPointerValid(const void* ptr) const {
     return ptr != nullptr;
-}
-
-void PixelUI::debugInfo() const {
-    std::cout << "[DEBUG] PixelUI State:" << std::endl;
-    std::cout << "  Current time: " << _currentTime << std::endl;
-    std::cout << "  Active animations: " << _animationManager.activeCount() << std::endl;
-    std::cout << "  Total animations created: " << _totalAnimationsCreated << std::endl;
-    std::cout << "  Update calls: " << _animationUpdateCalls << std::endl;
 }
 
 void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
@@ -73,4 +64,11 @@ void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t
         }
     );
     addAnimation(animY);
+}
+
+void PixelUI::renderer() {
+    if (currentDrawable_ && isDirty()) {
+        currentDrawable_->draw();
+        isDirty_ = false;
+    }
 }
