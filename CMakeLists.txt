@@ -50,7 +50,7 @@ set(HEADERS
 
     include/PixelUI/core/animation/anime.h
     include/PixelUI/core/app/app_system.h
-    include/PixelUI/core/ui/Appview/Appview.h
+    include/PixelUI/core/ui/Appview/AppView.h
     # include/PixelScriptUI/PSUI_animation.h
 )
 

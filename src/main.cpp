@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     display.init();
 
     // call this after u8g2.init(). otherwise the display size will be null
-    MainWindow w(nullptr, display.getWidth(), display.getHeight(), 10); // initial size 128x64, scale factor 10
+    MainWindow w(nullptr, display.getWidth(), display.getHeight(), 3); // initial size 128x64, scale factor 10
     
     w.show();
 

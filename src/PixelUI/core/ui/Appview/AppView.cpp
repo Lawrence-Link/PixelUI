@@ -1,48 +1,61 @@
-#include "PixelUI/core/ui/AppView/Appview.h"
+#include "PixelUI/core/ui/AppView/AppView.h"
 #include <iostream>
 #include <algorithm>
 #include <cstring>
 
 AppView::AppView(PixelUI& ui) : ui_(ui), appManager_(AppManager::getInstance()) {
-    currentIndex_ = 0;  // 初始化当前索引为0
-    appSelected_ = false; // 初始化应用未被选中
-    iconSpacing_ = (ui.getU8G2().getWidth() - 3* iconWidth_ )* 0.25;
+    // currentIndex_ = 0;  // 初始化当前索引为0
+    // appSelected_ = false; // 初始化应用未被选中
+    iconSpacing_ = (ui.getU8G2().getWidth() - 3 * iconWidth_ )* 0.25;
+
+    float totalListWidth = 3 * iconWidth_ + 2 * iconSpacing_;
+    float firstSlotX = centerX_ - 1.5f * iconWidth_ - iconSpacing_;
+
+    slotPositionsX_.push_back(firstSlotX);
+    slotPositionsX_.push_back(firstSlotX + iconWidth_ + iconSpacing_);
+    slotPositionsX_.push_back(firstSlotX + iconWidth_ * 2 + iconSpacing_ * 2);
+    scrollOffset_ = slotPositionsX_[0] -  /*calculateIconX(0)*/  + scrollOffset_;
+    scrollToIndex(1);
+
+    ui_.animate(appTitle_Y, 59, 300, EasingType::EASE_IN_OUT_CUBIC);
+
 }
 
+static float animation_selector_coord_x = 128;
+static float animation_selector_length = 10;
+
 void AppView::draw() {
+
+    // drawInitialLoadingAnimation(); 
+
     U8G2Wrapper& display = ui_.getU8G2();
     
     static bool run_once = false;
 
     static float animation_pixel_dots = 0;
     static float animation_scroll_bar= 0;
-    
-    static float animation_selector_coord_x = 128;
-    static float animation_selector_length = 10;
 
     if (!run_once) {
         run_once = true;
         // 初始化应用列表 loading scene
         ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
-        ui_.animate(animation_scroll_bar, 127, 1000, EasingType::EASE_IN_OUT_CUBIC);
-        ui_.animate(animation_selector_coord_x, 50,  500, EasingType::EASE_IN_OUT_CUBIC);
-        ui_.animate(animation_selector_length, 28,  500, EasingType::EASE_IN_OUT_CUBIC);
+        ui_.animate(animation_scroll_bar, 127/3, 1000, EasingType::EASE_OUT_QUAD);
+        ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
     }
 
     // 设置字体
     display.setFont(u8g2_font_tom_thumb_4x6_mf);
     
     // 绘制标题
-    display.drawStr(2, 10, "Apps");
+    display.drawStr((display.getWidth() - display.getStrWidth("< Apps >")) / 2, 10, "< Apps >");
     
     // 绘制选择框
-    drawSelector(animation_selector_coord_x, 12, animation_selector_length);
+    drawSelector(animation_selector_coord_x, 26, animation_selector_length);
     
     // 绘制水平应用列表
     drawHorizontalAppList();
     
     // draw dotline to the progress bar:
-
     for (int i = 0; i <= static_cast<int> (animation_pixel_dots); i++)
         display.drawPixel(i * 2, 50);
     display.drawBox(0, 49, animation_scroll_bar, 3);
@@ -56,9 +69,31 @@ void AppView::draw() {
     }
 }
 
+// draw Selector by center coordinate.
 void AppView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
     U8G2Wrapper& display = ui_.getU8G2();
-    
+
+    int half_length = 0.5 * length;
+
+    // Top left corner of the selector
+    display.drawLine(x - half_length + 1, y - half_length, x - half_length + 5, y - half_length);
+    display.drawLine(x - half_length, y+1 - half_length, x - half_length, y+5 - half_length);
+    // Top right corner of the selector
+    display.drawLine(x-1 + half_length, y - half_length, x-5 + half_length, y - half_length);
+    display.drawLine(x + half_length, y+1 - half_length, x + half_length, y+5 - half_length);
+    // Bottom left corner of the selector
+    display.drawLine(x+1 - half_length, y-1 + half_length, x+5 - half_length, y-1 + half_length);
+    display.drawLine(x - half_length, y-2 + half_length, x - half_length, y-6 + half_length);
+    // Bottom right corner of the selector
+    display.drawLine(x - 1 + half_length, y - 6 + half_length, x-1 + half_length, y-2 + half_length);
+    display.drawLine(x - 2 + half_length, y -1 + half_length, x-6 + half_length, y-1 + half_length);
+}
+
+/*
+
+void AppView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
+    U8G2Wrapper& display = ui_.getU8G2();
+
     // Top left corner of the selector
     display.drawLine(x+1, y, x+5, y);
     display.drawLine(x, y+1, x, y+5);
@@ -73,10 +108,10 @@ void AppView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
     display.drawLine(x+length-2, y+length-1, x+length-6, y+length-1);
 }
 
+*/
+
 int AppView::calculateIconX(int index) {
-    // 计算图标的X坐标，基于滚动偏移量
-    int baseX = centerX_ + (index - currentIndex_) * (iconWidth_ + iconSpacing_) - iconWidth_ / 2;
-    return baseX + static_cast<int>(scrollOffset_);
+    return (index * (iconWidth_ + iconSpacing_)) + scrollOffset_;
 }
 
 void AppView::drawHorizontalAppList() {
@@ -112,6 +147,7 @@ void AppView::drawAppIcon(const AppItem& app, int x, int y, bool inCenter) {
         int iconX = x + (iconWidth_ - app.w) / 2;
         int iconY = y + (iconHeight_ - app.h) / 2;
         display.drawXBM(iconX, iconY, app.w, app.h, app.bitmap);
+        
     } else {
         // 如果没有图标，绘制一个简单的矩形
         display.drawRBox(x + 4, y + 4, iconWidth_ - 8, iconHeight_ - 8, 2);
@@ -123,12 +159,14 @@ void AppView::drawAppIcon(const AppItem& app, int x, int y, bool inCenter) {
     // 计算文字居中位置
     int textWidth = strlen(app.title) * 4; // 大概估算
     int textX = x + (iconWidth_ - textWidth) / 2;
-    display.drawStr(textX, y + iconHeight_ + 8, app.title);
+    
+    // display.drawStr(textX, y + iconHeight_ + 8, app.title);
     
     // 如果在中心，可以添加特殊效果
     if (inCenter) {
         // 可以添加高亮效果，但选择框已经在drawCenterSelector中绘制了
         std::cout << "[DEBUG] Drew center app: " << app.title << " at (" << x << "," << y << ")" << std::endl;
+        display.drawStr((display.getWidth() - display.getStrWidth(app.title)) / 2, appTitle_Y, app.title);
     }
 }
 
@@ -158,24 +196,49 @@ int AppView::getVisibleEndIndex() {
     return static_cast<int>(apps.size()) - 1;
 }
 
-void AppView::scrollToIndex(int index) {
-    // 计算目标偏移量，使指定图标居中
-    targetOffset_ = 0.0f; // 当前图标应该在中心，所以偏移量为0
-    
-    // 启动平滑滚动动画
-    ui_.animate(scrollOffset_, targetOffset_, 300, EasingType::EASE_OUT_QUAD);
-    
-    ui_.markDirty(); // 标记需要重绘
+void AppView::drawInitialLoadingAnimation() {
+    static bool run_once = false;
+    if (!run_once) {
+        run_once = true;
+        scrollToIndex(0); 
+    }
+}
+
+void AppView::scrollToIndex(int newIndex) {
+    const auto& apps = appManager_.getAppVector();
+    int totalApps = apps.size();
+    if (totalApps == 0) return;
+
+    int targetSlot;
+    if (newIndex == 0) {
+        targetSlot = 0;
+    } else if (newIndex == totalApps - 1 && totalApps > 1) {
+        targetSlot = 2;
+    } else {
+        targetSlot = 1;
+    }
+    if (totalApps == 1) {
+        targetSlot = 1;
+    }
+
+    float targetSelectorX = slotPositionsX_[targetSlot] + 0.5 * iconWidth_ /*- (selector_length - iconWidth_) / 2.0f*/;
+    float iconTargetCenterX = slotPositionsX_[targetSlot] + iconWidth_ / 2.0f;
+    float iconOriginalCenterX = newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2.0f;
+    float targetScrollOffset = iconTargetCenterX - iconOriginalCenterX;
+
+    ui_.animate(animation_selector_coord_x, targetSelectorX, 750, EasingType::EASE_IN_OUT_CUBIC);
+    ui_.animate(scrollOffset_, targetScrollOffset, 650, EasingType::EASE_IN_OUT_CUBIC);
+
+    currentIndex_ = newIndex;
+    ui_.markDirty(); 
 }
 
 void AppView::selectCurrentApp() {
     const auto& apps = appManager_.getAppVector();
     if (currentIndex_ >= 0 && currentIndex_ < static_cast<int>(apps.size())) {
-        std::cout << "[DEBUG] Launching app: " << apps[currentIndex_].title << std::endl;
         if (apps[currentIndex_].action) {
             apps[currentIndex_].action();
         }
-        appSelected_ = true;
     }
 }
 
