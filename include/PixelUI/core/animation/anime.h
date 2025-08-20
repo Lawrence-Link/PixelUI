@@ -50,7 +50,7 @@ private:
 
 class AnimationManager {
 public:
-    void addAnimation(std::shared_ptr<Animation> animaton);
+    void addAnimation(std::shared_ptr<Animation> animation);
     void update(uint32_t currentTime);
     void clear();
     size_t activeCount() const;

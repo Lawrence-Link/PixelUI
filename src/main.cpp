@@ -21,7 +21,7 @@
 
 U8G2Wrapper display;
 PixelUI ui(display);
-
+ViewManager viewManager(ui);
 // void renderMenu(const MenuLevel* menu) {
 //     if (!menu) return;
     
@@ -97,19 +97,20 @@ public:
         std::cout << std::endl;
         std::cout << "Size: " << app.w << "x" << app.h << std::endl;
         // 调用App的动作函数
-        if (app.action) {
-            std::cout << "execute action: \n";
-            app.action();
-        }
+        // if (app.action) {
+        //     std::cout << "execute action: \n";
+        //     app.action();
+        // }
     }
-
     ui.begin();
 
     // ui.debugInfo();
     // float W_OUT_CUBIC, H_OUT_CUBIC = 10.0f;
     // ui.animate(W_OUT_CUBIC, H_OUT_CUBIC, 82.0f, 30.0f, 560, EasingType::EASE_IN_OUT_CUBIC);
     
-    startAppView(ui);
+    auto appView = std::make_shared<AppView>(ui, viewManager);
+    
+    viewManager.push(appView);
 
     std::cout << "[TEST] Test completed" << std::endl;
 

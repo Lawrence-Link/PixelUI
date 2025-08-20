@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <vector>
+#include "IApplication.h"
 
 enum class MenuItemType {
     Action,
@@ -13,7 +14,8 @@ enum class MenuItemType {
 struct AppItem {
     const char* title;
     const uint8_t* bitmap;
-    std::function<void* ()> action;
+    // 工厂函数 现在创建App实例
+    std::function<std::shared_ptr<IApplication>()> createApp;
     MenuItemType type;
     int w, h = 0;
 };

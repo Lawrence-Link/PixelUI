@@ -30,11 +30,12 @@ set(SOURCES
     src/app_example.cpp
     src/app_example2.cpp
     src/app_example3.cpp
+    src/app_example4.cpp
 
     src/PixelUI/core/app/app_system.cpp
     src/PixelUI/core/animation/anime.cpp
     src/PixelUI/core/ui/Appview/AppView.cpp
-
+    src/PixelUI/core/ViewManager/ViewManager.cpp
 )
 
 set(HEADERS
@@ -50,7 +51,10 @@ set(HEADERS
 
     include/PixelUI/core/animation/anime.h
     include/PixelUI/core/app/app_system.h
+    include/PixelUI/core/app/IApplication.h
     include/PixelUI/core/ui/Appview/AppView.h
+    include/PixelUI/core/ViewManager/ViewManager.h
+
     # include/PixelScriptUI/PSUI_animation.h
 )
 

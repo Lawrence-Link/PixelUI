@@ -3,18 +3,11 @@
 #include <iostream>
 #include "PixelUI/core/animation/anime.h"
 // #include "PixelUI/core/menu/menu_system.h"
-#include "PixelUI/core/app/app_system.h"
+// #include "PixelUI/core/app/app_system.h"
 #include <u8g2_wrapper.h>
 
-enum class ContentType{
-    TileMenu,
-    ListMenu,
-    APP
-};
-
-struct contentType{
-    ContentType type;
-    void*       content;
+enum class InputEvent {
+    UP, DOWN, LEFT, RIGHT, SELECT, BACK
 };
 
 class IDrawable {
@@ -23,6 +16,14 @@ public:
     virtual ~IDrawable() = default; 
     virtual void update(uint32_t currentTime) {};
 };
+
+class IInputHandler{
+public:
+    virtual bool handleInput(InputEvent event) = 0;
+    virtual ~IInputHandler() = default;
+};
+
+using InputCallback = std::function<bool(InputEvent)>;
 
 class PixelUI
 {
@@ -40,16 +41,16 @@ public:
     void animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing = EasingType::LINEAR);
     void addAnimation(std::shared_ptr<Animation> animation);
 
-    void setDrawable(IDrawable* drawable) {
+    void setDrawable(std::shared_ptr<IDrawable> drawable) {
         currentDrawable_ = drawable;
         markDirty();
     }
 
-    IDrawable* getDrawable() const { return currentDrawable_; };
+    std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; };
 
     void renderer();
 
-    void markDirty() { isDirty_ = true; }
+    void   markDirty() { isDirty_ = true; }
     
     bool isDirty() const { return isDirty_; }
     bool isPointerValid(const void* ptr) const;
@@ -57,13 +58,20 @@ public:
     uint32_t getCurrentTime() const { return _currentTime; }
     uint32_t getActiveAnimationCount() const { return _animationManager.activeCount(); };
 
+    void setInputCallback(InputCallback callback) { inputCallback_ = callback; }
+    bool handleInput(InputEvent event) {
+        if (inputCallback_) return inputCallback_(event);
+        return false;
+    }
+
 protected:
 private:
     U8G2Wrapper& u8g2_;
     AnimationManager _animationManager;
     uint32_t _currentTime;
-    IDrawable* currentDrawable_;
+    std::shared_ptr<IDrawable> currentDrawable_;
     bool isDirty_ = false;
+    InputCallback inputCallback_;
 
     mutable size_t _totalAnimationsCreated = 0;
     mutable size_t _animationUpdateCalls = 0;

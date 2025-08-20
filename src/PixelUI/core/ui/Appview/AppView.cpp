@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstring>
 
-AppView::AppView(PixelUI& ui) : ui_(ui), appManager_(AppManager::getInstance()) {
+AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(AppManager::getInstance()), m_viewManager(viewManager) {
     // currentIndex_ = 0;  // 初始化当前索引为0
     // appSelected_ = false; // 初始化应用未被选中
     iconSpacing_ = (ui.getU8G2().getWidth() - 3 * iconWidth_ )* 0.25;
@@ -15,33 +15,49 @@ AppView::AppView(PixelUI& ui) : ui_(ui), appManager_(AppManager::getInstance()) 
     slotPositionsX_.push_back(firstSlotX + iconWidth_ + iconSpacing_);
     slotPositionsX_.push_back(firstSlotX + iconWidth_ * 2 + iconSpacing_ * 2);
     scrollOffset_ = slotPositionsX_[0] -  /*calculateIconX(0)*/  + scrollOffset_;
-    scrollToIndex(1);
+    scrollToIndex(2);
 
     ui_.animate(appTitle_Y, 59, 300, EasingType::EASE_IN_OUT_CUBIC);
-
 }
 
 static float animation_selector_coord_x = 128;
 static float animation_selector_length = 10;
 
+void AppView::updateProgressBar() {
+    const auto& apps = appManager_.getAppVector();
+    ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 1000, EasingType::EASE_OUT_QUAD);
+}
+
+void AppView::onEnter(ExitCallback exitCallback) {
+    IApplication::onEnter(exitCallback);
+    std::cout << "[AppView] Entered." << std::endl;
+    // 可以在这里开始进入动画
+    ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
+    updateProgressBar();
+    ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
+    ui_.markDirty();
+}
+
+void AppView::onResume() {
+    std::cout << "[AppView] Resumed." << std::endl;
+    // 确保返回时界面刷新
+    ui_.markDirty();
+}
+
+bool AppView::handleInput(InputEvent event) {
+    // switch (event) {
+    //     case InputEvent::LEFT:  navigateLeft(); return true;
+    //     case InputEvent::RIGHT: navigateRight(); return true;
+    //     case InputEvent::SELECT: selectCurrentApp(); return true;
+    //     case InputEvent::BACK: /* 在根视图，通常无操作 */ return true;
+    //     default: return false;
+    // }
+}
+
 void AppView::draw() {
-
-    // drawInitialLoadingAnimation(); 
-
     U8G2Wrapper& display = ui_.getU8G2();
     
     static bool run_once = false;
-
-    static float animation_pixel_dots = 0;
-    static float animation_scroll_bar= 0;
-
-    if (!run_once) {
-        run_once = true;
-        // 初始化应用列表 loading scene
-        ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
-        ui_.animate(animation_scroll_bar, 127/3, 1000, EasingType::EASE_OUT_QUAD);
-        ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
-    }
 
     // 设置字体
     display.setFont(u8g2_font_tom_thumb_4x6_mf);
@@ -66,6 +82,34 @@ void AppView::draw() {
         char statusText[16];
         snprintf(statusText, sizeof(statusText), "%d/%d", currentIndex_ + 1, (int)apps.size());
         display.drawStr(2, 60, statusText);
+    }
+}
+
+void AppView::selectCurrentApp() {
+    const auto& apps = appManager_.getAppVector();
+    if (apps.empty() || currentIndex_ < 0 || currentIndex_ >= static_cast<int>(apps.size())) {
+        return;
+    }
+
+    const auto& selectedAppItem = apps[currentIndex_];
+    
+    // 检查这个AppItem是否有关联的工厂函数
+    if (selectedAppItem.createApp) {
+        // 1. 调用工厂函数，创建应用的一个新实例
+        std::cout << "[AppView] Creating instance for: " << selectedAppItem.title << std::endl;
+        auto appInstance = selectedAppItem.createApp();
+
+        if (appInstance) {
+            // 2. 将创建的实例推入视图管理器，完成启动
+            std::cout << "[AppView] Pushing app to ViewManager." << std::endl;
+            m_viewManager.push(appInstance);
+        } else {
+            std::cerr << "[AppView] Error: createApp factory returned a null instance for " 
+                      << selectedAppItem.title << std::endl;
+        }
+    } else {
+        std::cout << "[AppView] Info: No createApp factory associated with " 
+                  << selectedAppItem.title << std::endl;
     }
 }
 
@@ -233,29 +277,29 @@ void AppView::scrollToIndex(int newIndex) {
     ui_.markDirty(); 
 }
 
-void AppView::selectCurrentApp() {
-    const auto& apps = appManager_.getAppVector();
-    if (currentIndex_ >= 0 && currentIndex_ < static_cast<int>(apps.size())) {
-        if (apps[currentIndex_].action) {
-            apps[currentIndex_].action();
-        }
-    }
-}
+// void AppView::selectCurrentApp() {
+//     const auto& apps = appManager_.getAppVector();
+//     if (currentIndex_ >= 0 && currentIndex_ < static_cast<int>(apps.size())) {
+//         if (apps[currentIndex_].action) {
+//             apps[currentIndex_].action();
+//         }
+//     }
+// }
 
 void AppView::setIconSpacing(int spacing) {
     iconSpacing_ = spacing;
 }
 
-void AppView::update(uint32_t currentTime) {
+// void AppView::update(uint32_t currentTime) {
 
-}
+// }
 
-void AppView::goBack() {
-    std::cout << "[DEBUG] AppView go back requested" << std::endl;
-}
+// void AppView::goBack() {
+//     std::cout << "[DEBUG] AppView go back requested" << std::endl;
+// }
 
-void startAppView(PixelUI& ui) {
-    auto appView = new AppView(ui);
-    ui.setDrawable(appView);
-    std::cout << "[DEBUG] Horizontal scrolling AppView started successfully" << std::endl;
-}
+// void startAppView(PixelUI& ui) {
+//     auto appView = new AppView(ui);
+//     ui.setDrawable(appView);
+//     std::cout << "[DEBUG] Horizontal scrolling AppView started successfully" << std::endl;
+// }
