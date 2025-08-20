@@ -36,6 +36,7 @@ public:
     
     U8G2Wrapper& getU8G2() { return u8g2_; }
     const U8G2Wrapper& getU8G2() const { return u8g2_; }
+    AnimationManager& getAnimationMan() { return _animationManager; }
 
     void animate(float& value, float targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR);
     void animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing = EasingType::LINEAR);
@@ -50,7 +51,7 @@ public:
 
     void renderer();
 
-    void   markDirty() { isDirty_ = true; }
+    void markDirty() { isDirty_ = true; }
     
     bool isDirty() const { return isDirty_; }
     bool isPointerValid(const void* ptr) const;

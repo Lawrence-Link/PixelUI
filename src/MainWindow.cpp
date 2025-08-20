@@ -23,6 +23,75 @@ void MainWindow::setPixels(const std::vector<std::vector<bool>> &newPixels)
     pixelHeight = height() / (pixels.empty() ? 1 : static_cast<int>(pixels.size()));
 }
 
+void MainWindow::pushInputEvent(InputEvent event)
+{
+    std::lock_guard<std::mutex> lock(queueMutex);
+    inputQueue.push(event);
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->isAutoRepeat()) {
+        return; // 忽略键盘按住后的持续重复事件
+    }
+
+    switch (event->key())
+    {
+    case Qt::Key_Up:
+        if (!m_upPressed) {
+            m_upPressed = true;
+            pushInputEvent(InputEvent::UP);
+        }
+        break;
+    case Qt::Key_Down:
+        if (!m_downPressed) {
+            m_downPressed = true;
+            pushInputEvent(InputEvent::DOWN);
+        }
+        break;
+    case Qt::Key_Left:
+        if (!m_leftPressed) {
+            m_leftPressed = true;
+            pushInputEvent(InputEvent::LEFT);
+            std::cout << "fuck fuck" << std::endl;
+        }
+        break;
+    case Qt::Key_Right:
+        if (!m_rightPressed) {
+            m_rightPressed = true;
+            pushInputEvent(InputEvent::RIGHT);
+        }
+        break;
+    case Qt::Key_Return:
+    case Qt::Key_Enter:
+        if (!m_enterPressed) {
+            m_enterPressed = true;
+            pushInputEvent(InputEvent::SELECT);
+        }
+        break;
+    case Qt::Key_Escape: // 新增ESC键处理
+        if (!m_escPressed) {
+            m_escPressed = true;
+            pushInputEvent(InputEvent::BACK);
+        }
+        break;
+    default:
+        QMainWindow::keyPressEvent(event);
+        break;
+    }
+}
+
+std::optional<InputEvent> MainWindow::popInputEvent()
+{
+    std::lock_guard<std::mutex> lock(queueMutex);
+    if (inputQueue.empty()) {
+        return std::nullopt; // 没有事件
+    }
+    InputEvent event = inputQueue.front();
+    inputQueue.pop();
+    return event;
+}
+
 void MainWindow::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
@@ -76,62 +145,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
     update(); // 触发重绘
 }
 
-int MainWindow::InputGetterAPI()
-{
-    return this->currentKey; // 返回当前按下的键
-}
-
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
-    if (event->isAutoRepeat())
-        return; // 忽略按住后持续的重复事件
-
-    switch (event->key())
-    {
-    case Qt::Key_Up:
-        if (!m_upPressed)
-        {
-            m_upPressed = true;
-            currentKey =  0;
-        }
-        break;
-    case Qt::Key_Down:
-        if (!m_downPressed)
-        {
-            m_downPressed = true;
-            currentKey =  1;
-        }
-        break;
-    case Qt::Key_Left:
-        if (!m_leftPressed)
-        {
-            m_leftPressed = true;
-            currentKey =  2;
-        }
-        break;
-    case Qt::Key_Right:
-        if (!m_rightPressed)
-        {
-            m_rightPressed = true;
-            currentKey =  3;
-        }
-        break;
-    case Qt::Key_Return:
-    case Qt::Key_Enter:
-        if (!m_enterPressed)
-        {
-            m_enterPressed = true;
-            currentKey =  4;
-        }
-        break;
-    default:
-        QMainWindow::keyPressEvent(event);
-        break;
-    }
-}
-
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
+    // 不处理自动重复的释放事件
+    if (event->isAutoRepeat()) {
+        return;
+    }
+
     switch (event->key())
     {
     case Qt::Key_Up:
@@ -150,8 +170,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
     case Qt::Key_Enter:
         m_enterPressed = false;
         break;
+    case Qt::Key_Escape:
+        m_escPressed = false;
+        break;
     default:
+        QMainWindow::keyReleaseEvent(event);
         break;
     }
-    QMainWindow::keyReleaseEvent(event);
 }

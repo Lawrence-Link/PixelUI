@@ -10,7 +10,7 @@ static const unsigned char image_sans2_bits[] = {
 
 // --- 用户自定义的应用 ---
 // 这是一个简单的“关于”页面应用
-class AboutApp : public IApplication {
+class AboutApp2 : public IApplication {
 public:
     void draw() override {
         // 假设可以这样访问UI对象
@@ -18,7 +18,7 @@ public:
         U8G2Wrapper& display = ui.getU8G2();
         
         display.setFont(u8g2_font_ncenB10_tr);
-        display.drawStr(20, 20, "My GUI Lib");
+        display.drawStr(20, 20, "Pixel UI");
 
         display.setFont(u8g2_font_tom_thumb_4x6_mf);
         display.drawStr(30, 35, "Version 1.0");
@@ -47,7 +47,7 @@ static AppRegistrar registrar_about_app({
     
     // 关键点：提供一个创建 AboutApp 实例的工厂函数
     .createApp = []() -> std::shared_ptr<IApplication> { 
-        return std::make_shared<AboutApp>(); 
+        return std::make_shared<AboutApp2>(); 
     },
     
     .type = MenuItemType::App,

@@ -56,7 +56,6 @@ private:
     void drawHorizontalAppList();
     void drawAppIcon(const AppItem& app, int x, int y, bool inCenter);
     void drawSelector(uint32_t x, uint32_t y, uint32_t length);
-    void drawInitialLoadingAnimation(); 
 
     void updateProgressBar();
 

@@ -15,9 +15,9 @@ AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(A
     slotPositionsX_.push_back(firstSlotX + iconWidth_ + iconSpacing_);
     slotPositionsX_.push_back(firstSlotX + iconWidth_ * 2 + iconSpacing_ * 2);
     scrollOffset_ = slotPositionsX_[0] -  /*calculateIconX(0)*/  + scrollOffset_;
-    scrollToIndex(2);
+    scrollToIndex(0);
 
-    ui_.animate(appTitle_Y, 59, 300, EasingType::EASE_IN_OUT_CUBIC);
+    // ui_.animate(appTitle_Y, 59, 300, EasingType::EASE_IN_OUT_CUBIC);
 }
 
 static float animation_selector_coord_x = 128;
@@ -25,7 +25,7 @@ static float animation_selector_length = 10;
 
 void AppView::updateProgressBar() {
     const auto& apps = appManager_.getAppVector();
-    ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 1000, EasingType::EASE_OUT_QUAD);
+    ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 1000, EasingType::EASE_IN_OUT_QUAD);
 }
 
 void AppView::onEnter(ExitCallback exitCallback) {
@@ -45,13 +45,31 @@ void AppView::onResume() {
 }
 
 bool AppView::handleInput(InputEvent event) {
-    // switch (event) {
-    //     case InputEvent::LEFT:  navigateLeft(); return true;
-    //     case InputEvent::RIGHT: navigateRight(); return true;
-    //     case InputEvent::SELECT: selectCurrentApp(); return true;
-    //     case InputEvent::BACK: /* 在根视图，通常无操作 */ return true;
-    //     default: return false;
-    // }
+    switch (event) {
+        case InputEvent::LEFT:  navigateLeft(); return true;
+        case InputEvent::RIGHT: navigateRight(); return true;
+        case InputEvent::SELECT: selectCurrentApp(); return true;
+        case InputEvent::BACK: /* 在根视图，通常无操作 */ return true;
+        default: return false;
+    }
+}
+
+void AppView::navigateLeft() {
+    const auto& apps = appManager_.getAppVector();
+    currentIndex_ --;
+    if (currentIndex_ < 0) {
+        currentIndex_ = apps.size() - 1;
+    }
+    scrollToIndex(currentIndex_);
+}
+
+void AppView::navigateRight() {
+    const auto& apps = appManager_.getAppVector();
+    currentIndex_ ++;
+    if (currentIndex_ >= apps.size()) {
+        currentIndex_ = 0;
+    }
+    scrollToIndex(currentIndex_);
 }
 
 void AppView::draw() {
@@ -240,18 +258,12 @@ int AppView::getVisibleEndIndex() {
     return static_cast<int>(apps.size()) - 1;
 }
 
-void AppView::drawInitialLoadingAnimation() {
-    static bool run_once = false;
-    if (!run_once) {
-        run_once = true;
-        scrollToIndex(0); 
-    }
-}
-
 void AppView::scrollToIndex(int newIndex) {
     const auto& apps = appManager_.getAppVector();
     int totalApps = apps.size();
     if (totalApps == 0) return;
+
+    ui_.getAnimationMan().clear();
 
     int targetSlot;
     if (newIndex == 0) {
@@ -270,8 +282,14 @@ void AppView::scrollToIndex(int newIndex) {
     float iconOriginalCenterX = newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2.0f;
     float targetScrollOffset = iconTargetCenterX - iconOriginalCenterX;
 
-    ui_.animate(animation_selector_coord_x, targetSelectorX, 750, EasingType::EASE_IN_OUT_CUBIC);
-    ui_.animate(scrollOffset_, targetScrollOffset, 650, EasingType::EASE_IN_OUT_CUBIC);
+    ui_.animate(animation_selector_coord_x, targetSelectorX, 750, EasingType::EASE_OUT_CUBIC);
+    ui_.animate(scrollOffset_, targetScrollOffset, 650, EasingType::EASE_OUT_CUBIC);
+    
+    updateProgressBar();
+    
+    // popup effect
+    appTitle_Y = 70;
+    ui_.animate(appTitle_Y, 59, 300, EasingType::EASE_OUT_CUBIC);
 
     currentIndex_ = newIndex;
     ui_.markDirty(); 

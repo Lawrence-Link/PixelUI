@@ -32,43 +32,20 @@ ViewManager viewManager(ui);
 //     }
 //     std::cout << "========================\n";
 // }
-
+MainWindow* g_mainWindow = nullptr;
 class EmulatorThread : public EmuWorker {
 private:
 
-float X_LINEAR, Y_LINEAR = 0.0f;
-float X_EASE_IN_QUAD, Y_EASE_IN_QUAD = 0.0f;
-float X_EASE_OUT_QUAD, Y_EASE_OUT_QUAD = 0.0f;
-float X_EASE_IN_OUT_QUAD, Y_EASE_IN_OUT_QUAD = 0.0f;
-float X_EASE_IN_CUBIC, Y_EASE_IN_CUBIC = 0.0f;
-float X_EASE_OUT_CUBIC, Y_EASE_OUT_CUBIC = 0.0f;
-float X_EASE_OUT_BOUNCE, Y_EASE_OUT_BOUNCE = 0.0f;
-float X_EASE_IN_OUT_CUBIC, Y_EASE_IN_OUT_CUBIC = 0.0f;
+void processInput() {
+        if (!g_mainWindow) return;
 
-bool movingRight = false;
-void startNextAnimation() {
-        if (movingRight) {
-            // 向右移动到80
-            ui.animate(X_LINEAR,            Y_LINEAR,               111.0f, 1.0f,  1000, EasingType::LINEAR);
-            ui.animate(X_EASE_IN_QUAD,      Y_EASE_IN_QUAD,         111.0f, 8.0f,  1000, EasingType::EASE_IN_QUAD);
-            ui.animate(X_EASE_OUT_QUAD,     Y_EASE_OUT_QUAD,        111.0f, 15.0f, 1000, EasingType::EASE_OUT_QUAD);
-            ui.animate(X_EASE_IN_OUT_QUAD,  Y_EASE_IN_OUT_QUAD,     111.0f, 22.0f, 1000, EasingType::EASE_IN_OUT_QUAD);
-            ui.animate(X_EASE_IN_CUBIC,     Y_EASE_IN_CUBIC,        111.0f, 29.0f, 1000, EasingType::EASE_IN_CUBIC);
-            ui.animate(X_EASE_OUT_CUBIC,    Y_EASE_OUT_CUBIC,       111.0f, 36.0f, 1000, EasingType::EASE_OUT_CUBIC);
-            ui.animate(X_EASE_IN_OUT_CUBIC, Y_EASE_IN_OUT_CUBIC,    111.0f, 43.0f, 1000, EasingType::EASE_IN_OUT_CUBIC);
-            ui.animate(X_EASE_OUT_BOUNCE,   Y_EASE_OUT_BOUNCE,      111.0f, 50.0f, 1000, EasingType::EASE_OUT_BOUNCE);
-        } else {
-            // 向左移动到20
-            ui.animate(X_LINEAR,            Y_LINEAR,               10.0f, 1.0f,  1000, EasingType::LINEAR);
-            ui.animate(X_EASE_IN_QUAD,      Y_EASE_IN_QUAD,         10.0f, 8.0f,  1000, EasingType::EASE_IN_QUAD);
-            ui.animate(X_EASE_OUT_QUAD,     Y_EASE_OUT_QUAD,        10.0f, 15.0f, 1000, EasingType::EASE_OUT_QUAD);
-            ui.animate(X_EASE_IN_OUT_QUAD,  Y_EASE_IN_OUT_QUAD,     10.0f, 22.0f, 1000, EasingType::EASE_IN_OUT_QUAD);
-            ui.animate(X_EASE_IN_CUBIC,     Y_EASE_IN_CUBIC,        10.0f, 29.0f, 1000, EasingType::EASE_IN_CUBIC);
-            ui.animate(X_EASE_OUT_CUBIC,    Y_EASE_OUT_CUBIC,       10.0f, 36.0f, 1000, EasingType::EASE_OUT_CUBIC);
-            ui.animate(X_EASE_IN_OUT_CUBIC, Y_EASE_IN_OUT_CUBIC,    10.0f, 43.0f, 1000, EasingType::EASE_IN_OUT_CUBIC);
-            ui.animate(X_EASE_OUT_BOUNCE,   Y_EASE_OUT_BOUNCE,      10.0f, 50.0f, 1000, EasingType::EASE_OUT_BOUNCE);
+        // 从队列中不断取出事件直到队列为空
+        while(true) {
+            
         }
     }
+
+bool movingRight = false;
 
 public:
     void grandLoop() override {
@@ -138,6 +115,15 @@ public:
 
             bool isDirty = ui.isDirty();
         
+            auto eventOpt = g_mainWindow->popInputEvent();
+            if (eventOpt.has_value()) {
+                // 如果有事件，就交给PixelUI处理
+                ui.handleInput(eventOpt.value());
+            } else {
+                // 队列为空，退出循环
+                
+            }
+
         // 只在内容改变时重绘
             if (isDirty) {
                 display.clearBuffer();
@@ -169,7 +155,8 @@ int main(int argc, char *argv[]) {
     MainWindow w(nullptr, display.getWidth(), display.getHeight(), 3); // initial size 128x64, scale factor 10
     
     w.show();
-
+    g_mainWindow = &w;
+    
     EmulatorThread worker;
     QObject::connect(&worker, &EmulatorThread::updateRequested, &w, [&w]() {
         auto pixels = display.getFramebufferPixels();

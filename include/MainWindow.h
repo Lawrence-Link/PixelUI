@@ -1,8 +1,12 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QKeyEvent>
 #include <vector>
-
+#include <queue>
+#include <mutex>
+#include <optional>
+#include "PixelUI/pixelui.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -14,18 +18,22 @@ public:
     explicit MainWindow(QWidget *parent = nullptr, int _width = 128, int _height=64, int _scale = 10);
     ~MainWindow();
     void setPixels(const std::vector<std::vector<bool>>& pixels);
+
+    void pushInputEvent(InputEvent event);
+    std::optional<InputEvent> popInputEvent();
+    
     // void setDisplaySize(int _width, int _height, int _scale) { // setter to display size
     //     dSize_w = _width;
     //     dSize_h = _height;
     //     dScale = _scale;
     // }
-    int InputGetterAPI(); // to be set as the input getter function for menu_manager
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
-    
+    std::queue<InputEvent> inputQueue;
+    std::mutex queueMutex;
 private:
     std::vector<std::vector<bool>> pixels;
 
@@ -42,6 +50,7 @@ private:
     bool m_leftPressed = false;
     bool m_rightPressed = false;
     bool m_enterPressed = false;
+    bool m_escPressed = false;
 
-    int currentKey = -1; // to store the current key pressed
+    
 };
