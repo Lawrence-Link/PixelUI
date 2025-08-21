@@ -37,6 +37,11 @@ public:
         IApplication::onEnter(cb);
         std::cout << "[AboutApp] Entered." << std::endl;
     }
+
+    void onExit() {
+        extern PixelUI ui;
+        ui.markFading();
+    }
 };
 
 // --- 自注册机制 ---

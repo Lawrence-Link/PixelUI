@@ -18,6 +18,7 @@ struct AppItem {
     std::function<std::shared_ptr<IApplication>()> createApp;
     MenuItemType type;
     int w, h = 0;
+    bool useUnifiedEnterAnimation = false;
 };
 
 class AppManager{

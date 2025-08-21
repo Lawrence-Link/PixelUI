@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 
+
 AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(AppManager::getInstance()), m_viewManager(viewManager) {
     // currentIndex_ = 0;  // 初始化当前索引为0
     // appSelected_ = false; // 初始化应用未被选中
@@ -25,23 +26,35 @@ static float animation_selector_length = 10;
 
 void AppView::updateProgressBar() {
     const auto& apps = appManager_.getAppVector();
-    ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 1000, EasingType::EASE_IN_OUT_QUAD);
+    ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 300, EasingType::EASE_OUT_QUAD);
 }
 
 void AppView::onEnter(ExitCallback exitCallback) {
+    const auto& apps = appManager_.getAppVector();
     IApplication::onEnter(exitCallback);
     std::cout << "[AppView] Entered." << std::endl;
     // 可以在这里开始进入动画
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
-    updateProgressBar();
+    ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 700, EasingType::EASE_OUT_QUAD);
     ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
     ui_.markDirty();
 }
 
 void AppView::onResume() {
     std::cout << "[AppView] Resumed." << std::endl;
-    // 确保返回时界面刷新
+    
+    animation_scroll_bar = 0;
+    scrollOffset_ = -128;
+
+    ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
+    updateProgressBar();
+    scrollToIndex(currentIndex_);
+    ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
     ui_.markDirty();
+}
+
+void AppView::onPause() {
+    ui_.markFading();
 }
 
 bool AppView::handleInput(InputEvent event) {
@@ -188,7 +201,7 @@ void AppView::drawHorizontalAppList() {
     int startIndex = getVisibleStartIndex();
     int endIndex = getVisibleEndIndex();
 
-    std::cout << "[DEBUG] Drawing icons from " << startIndex << " to " << endIndex << std::endl;
+    // std::cout << "[DEBUG] Drawing icons from " << startIndex << " to " << endIndex << std::endl;
 
     // 绘制所有可能可见的图标（包括部分可见的）
     for (int i = startIndex; i <= endIndex && i < static_cast<int>(apps.size()); ++i) {
@@ -282,8 +295,8 @@ void AppView::scrollToIndex(int newIndex) {
     float iconOriginalCenterX = newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2.0f;
     float targetScrollOffset = iconTargetCenterX - iconOriginalCenterX;
 
-    ui_.animate(animation_selector_coord_x, targetSelectorX, 750, EasingType::EASE_OUT_CUBIC);
-    ui_.animate(scrollOffset_, targetScrollOffset, 650, EasingType::EASE_OUT_CUBIC);
+    ui_.animate(animation_selector_coord_x, targetSelectorX, 450, EasingType::EASE_OUT_CUBIC);
+    ui_.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC);
     
     updateProgressBar();
     

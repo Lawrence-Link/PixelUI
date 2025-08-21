@@ -1,6 +1,5 @@
-// app_example.cpp (或者任何用户自定义的 app_*.cpp 文件)
-#include "PixelUI/core/app/IApplication.h"
-#include "PixelUI/core/app/app_system.h"
+#include "PixelUI/core/app/IApplication.h"  // App接口
+#include "PixelUI/core/app/app_system.h"    // App系统
 #include <memory>
 #include <iostream>
 
@@ -13,7 +12,6 @@ static const unsigned char image_sans2_bits[] = {
 class AboutApp2 : public IApplication {
 public:
     void draw() override {
-        // 假设可以这样访问UI对象
         extern PixelUI ui;
         U8G2Wrapper& display = ui.getU8G2();
         
@@ -27,7 +25,7 @@ public:
 
     bool handleInput(InputEvent event) override {
         if (event == InputEvent::BACK) {
-            requestExit(); // 请求退出
+            requestExit();
             return true;
         }
         return false;
@@ -39,8 +37,6 @@ public:
     }
 };
 
-// --- 自注册机制 ---
-// 使用一个静态的 AppRegistrar 对象来在 main() 之前自动注册本应用
 static AppRegistrar registrar_about_app({
     .title = "Sans2",
     .bitmap = image_sans2_bits, // TODO: Add an icon bitmap here
@@ -52,5 +48,6 @@ static AppRegistrar registrar_about_app({
     
     .type = MenuItemType::App,
     .w = 24, 
-    .h = 24
+    .h = 24,
+    .useUnifiedEnterAnimation = true
 });

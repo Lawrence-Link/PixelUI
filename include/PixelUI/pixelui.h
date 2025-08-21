@@ -35,7 +35,7 @@ public:
     void Heartbeat(uint32_t ms);
     
     U8G2Wrapper& getU8G2() { return u8g2_; }
-    const U8G2Wrapper& getU8G2() const { return u8g2_; }
+    // const U8G2Wrapper& getU8G2() const { return u8g2_; }
     AnimationManager& getAnimationMan() { return _animationManager; }
 
     void animate(float& value, float targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR);
@@ -47,12 +47,19 @@ public:
         markDirty();
     }
 
+    void setEmuRefreshFunc(std::function <void()> function) {
+        emu_refresh_func_ = function;
+    }
+
+    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; };
+
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; };
 
     void renderer();
 
     void markDirty() { isDirty_ = true; }
-    
+    void markFading() { isFading = true; }
+
     bool isDirty() const { return isDirty_; }
     bool isPointerValid(const void* ptr) const;
 
@@ -72,6 +79,10 @@ private:
     uint32_t _currentTime;
     std::shared_ptr<IDrawable> currentDrawable_;
     bool isDirty_ = false;
+    bool isFading = false;
+
+    std::function<void()> emu_refresh_func_;
+
     InputCallback inputCallback_;
 
     mutable size_t _totalAnimationsCreated = 0;

@@ -15,6 +15,7 @@ public:
     bool handleInput(InputEvent event) override;
     void onEnter(ExitCallback exitCallback) override;
     void onResume() override ;
+    void onPause() override;
 
     // void update(uint32_t currentTime) override;
 
@@ -38,7 +39,7 @@ private:
     int currentIndex_ = 0; // 当前选中的应用索引
     bool appSelected_ = false; // 是否选中了应用
 
-    float scrollOffset_ = -100.0f;        // 当前滚动偏移量
+    float scrollOffset_ = -128.0f;        // 当前滚动偏移量
     float targetOffset_ = 0.0f;        // 目标滚动偏移量
     float appTitle_Y = 70.0f;
     
@@ -56,6 +57,7 @@ private:
     void drawHorizontalAppList();
     void drawAppIcon(const AppItem& app, int x, int y, bool inCenter);
     void drawSelector(uint32_t x, uint32_t y, uint32_t length);
+    // void drawEntranceAnimation();
 
     void updateProgressBar();
 

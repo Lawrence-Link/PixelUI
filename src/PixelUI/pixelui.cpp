@@ -1,6 +1,8 @@
 #include "PixelUI/pixelui.h"
 #include <iostream>
 #include <cassert>
+#include "EmuWorker.h"
+#include <functional>
 
 void PixelUI::begin() 
 {
@@ -67,8 +69,31 @@ void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t
 }
 
 void PixelUI::renderer() {
-    if (currentDrawable_ && isDirty()) {
-        currentDrawable_->draw();
-        isDirty_ = false;
+    if (!isFading){
+        this->getU8G2().clearBuffer();
+        if (currentDrawable_ && isDirty()) {
+            currentDrawable_->draw();
+            isDirty_ = false;
+        }
+        this->getU8G2().sendBuffer();
+    } else { // isFading
+        uint8_t * buf_ptr = this->getU8G2().getBufferPtr();
+        uint16_t buf_len = 1024;
+        for (int fade = 1; fade <= 4; fade++){
+            switch (fade)
+            {
+                case 1: for (uint16_t i = 0; i < buf_len; ++i)  
+                            if (i % 2 != 0) 
+                                buf_ptr[i] = buf_ptr[i] & 0xAA;
+                        break;
+                case 2: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;
+                case 3: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x55; break;
+                case 4: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;
+            }
+            this->getU8G2().sendBuffer();
+            getEmuRefreshFunction()();
+            std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        }
+        isFading = false;
     }
 }
