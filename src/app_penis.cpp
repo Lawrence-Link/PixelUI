@@ -13,21 +13,23 @@ float height = 28;
 bool state = 0;
 // --- 用户自定义的应用 ---
 // 这是一个简单的“关于”页面应用
-class AboutApp4 : public IApplication {
+class Penis : public IApplication {
+private:
+    PixelUI& m_ui;
 public:
+    Penis(PixelUI& ui) : m_ui(ui) {}
     void draw() override {
         // 假设可以这样访问UI对象
-        extern PixelUI ui;
-        U8G2Wrapper& display = ui.getU8G2();
+        U8G2Wrapper& display = m_ui.getU8G2();
         
-        timestpNow = ui.getCurrentTime();
+        timestpNow = m_ui.getCurrentTime();
 
         if (timestpNow - timestpPrev > 100) {
             timestpPrev = timestpNow;
             if (state) {
-                ui.animate(height, 35, 100, EasingType::LINEAR);
+                m_ui.animate(height, 35, 100, EasingType::LINEAR);
             } else {
-                ui.animate(height, 28, 100, EasingType::LINEAR);
+                m_ui.animate(height, 28, 100, EasingType::LINEAR);
             }
             state = !state;
         }
@@ -56,12 +58,12 @@ public:
 // --- 自注册机制 ---
 // 使用一个静态的 AppRegistrar 对象来在 main() 之前自动注册本应用
 static AppRegistrar registrar_about_app({
-    .title = "Penis",
+    .title = "Penis Up Down",
     .bitmap = image_sans4_bits,
     
     // 关键点：提供一个创建 AboutApp 实例的工厂函数
-    .createApp = []() -> std::shared_ptr<IApplication> { 
-        return std::make_shared<AboutApp4>(); 
+    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> { 
+        return std::make_shared<Penis>(ui); 
     },
     
     .type = MenuItemType::App,

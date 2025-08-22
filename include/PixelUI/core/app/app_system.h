@@ -15,7 +15,7 @@ struct AppItem {
     const char* title;
     const uint8_t* bitmap;
     // 工厂函数 现在创建App实例
-    std::function<std::shared_ptr<IApplication>()> createApp;
+    std::function<std::shared_ptr<IApplication>(PixelUI&)> createApp;
     MenuItemType type;
     int w, h = 0;
     bool useUnifiedEnterAnimation = false;

@@ -10,8 +10,11 @@ static const unsigned char image_sans3_bits[] = {
 
 // --- 用户自定义的应用 ---
 // 这是一个简单的“关于”页面应用
-class AboutApp3 : public IApplication {
+class Dynamic_Info : public IApplication {
+private:
+    PixelUI& m_ui;
 public:
+    Dynamic_Info(PixelUI& ui) : m_ui(ui) {};
     float Y_Title, Y_Version, Y_description = 0;
     void draw() override {
         // 假设可以这样访问UI对象
@@ -51,8 +54,8 @@ static AppRegistrar registrar_about_app({
     .bitmap = image_sans3_bits, // TODO: Add an icon bitmap here
     
     // 关键点：提供一个创建 AboutApp 实例的工厂函数
-    .createApp = []() -> std::shared_ptr<IApplication> { 
-        return std::make_shared<AboutApp3>(); 
+    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> { 
+        return std::make_shared<Dynamic_Info>(ui); 
     },
     
     .type = MenuItemType::App,

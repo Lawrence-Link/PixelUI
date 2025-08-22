@@ -128,7 +128,7 @@ void AppView::selectCurrentApp() {
     if (selectedAppItem.createApp) {
         // 1. 调用工厂函数，创建应用的一个新实例
         std::cout << "[AppView] Creating instance for: " << selectedAppItem.title << std::endl;
-        auto appInstance = selectedAppItem.createApp();
+        auto appInstance = selectedAppItem.createApp(ui_);
 
         if (appInstance) {
             // 2. 将创建的实例推入视图管理器，完成启动
@@ -295,7 +295,7 @@ void AppView::scrollToIndex(int newIndex) {
     float iconOriginalCenterX = newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2.0f;
     float targetScrollOffset = iconTargetCenterX - iconOriginalCenterX;
 
-    ui_.animate(animation_selector_coord_x, targetSelectorX, 450, EasingType::EASE_OUT_CUBIC);
+    ui_.animate(animation_selector_coord_x, targetSelectorX, 550, EasingType::EASE_OUT_CUBIC);
     ui_.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC);
     
     updateProgressBar();

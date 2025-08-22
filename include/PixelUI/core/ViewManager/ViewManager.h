@@ -17,7 +17,7 @@ public:
 
     void push(std::shared_ptr<IApplication> app);
     void pop();
-
+    
 private:
     PixelUI &m_ui;
     std::stack<std::shared_ptr<IApplication>> m_viewStack;
