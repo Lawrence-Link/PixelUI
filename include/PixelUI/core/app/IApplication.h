@@ -12,6 +12,8 @@ public:
     using ExitCallback = std::function<void()>; // 退出回调函数
     virtual ~IApplication() = default;
 
+    // 大循环
+    virtual void loop() {};
     // 应用被推入视图栈顶
     virtual void onEnter(ExitCallback exitCallback) { m_exitCallback = exitCallback; }
     // 本体被弹出时

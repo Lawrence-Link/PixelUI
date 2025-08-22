@@ -34,42 +34,15 @@ ViewManager viewManager(ui);
 // }
 MainWindow* g_mainWindow = nullptr;
 class EmulatorThread : public EmuWorker {
-private:
-
-void processInput() {
-        if (!g_mainWindow) return;
-
-        // 从队列中不断取出事件直到队列为空
-        while(true) {
-            
-        }
-    }
-
-bool movingRight = false;
-
 public:
-    void grandLoop() override {
-        // IMenuSystem& menuSystem = getMenuSystem();
-
-        // // 设置根菜单为当前菜单
-        // menuSystem.setCurrentMenu(menuSystem.getRootMenu());
-
-        // char input;
-        // std::cout << "Commands: u(up), d(down), s(select), b(back), q(quit)\n";
-
-        // auto mainScene = std::make_shared<MainScene>();
-        // gui.setScene(mainScene, TransitionType::ZOOM, 800);
-    
+    void grandLoop() override { 
     AppManager& manager = AppManager::getInstance();
     const auto& apps = manager.getAppVector();
-
     ui.begin();
-    
+
     auto appView = std::make_shared<AppView>(ui, viewManager);
     
     viewManager.push(appView);
-
-    std::cout << "[TEST] Test completed" << std::endl;
 
         while (running) {
 
@@ -83,7 +56,7 @@ public:
                 // 队列为空，退出循环
                 
             }
-
+            
         // 只在内容改变时重绘
             if (isDirty) {
                 
@@ -94,7 +67,7 @@ public:
             }
         
         // 检查动画是否在运行，如果有动画则持续标记为dirty
-            if (ui.getActiveAnimationCount() > 0) {
+            if (ui.getActiveAnimationCount() > 0 || ui.isContinousRefreshEnabled()) {
                 ui.markDirty();
             }
         

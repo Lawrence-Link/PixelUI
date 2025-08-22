@@ -35,7 +35,7 @@ void AppView::onEnter(ExitCallback exitCallback) {
     std::cout << "[AppView] Entered." << std::endl;
     // 可以在这里开始进入动画
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
-    ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 700, EasingType::EASE_OUT_QUAD);
+    // ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 700, EasingType::EASE_OUT_QUAD);
     ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
     ui_.markDirty();
 }

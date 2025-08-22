@@ -27,10 +27,10 @@ set(SOURCES
     src/PixelUI/pixelui.cpp
     src/PixelUI/core/menu/menu_system.cpp
     
-    src/app_example.cpp
-    src/app_example2.cpp
-    src/app_example3.cpp
-    src/app_example4.cpp
+    src/app_penis.cpp
+    src/app_info.cpp
+    src/app_dynamic_info.cpp
+    src/app_cube_demo.cpp
 
     src/PixelUI/core/app/app_system.cpp
     src/PixelUI/core/animation/anime.cpp

@@ -28,10 +28,6 @@ void PixelUI::Heartbeat(uint32_t ms)
     // std::cout << "[DEBUG] Animations: " << beforeCount << " -> " << afterCount << std::endl;
 }
 
-bool PixelUI::isPointerValid(const void* ptr) const {
-    return ptr != nullptr;
-}
-
 void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
     animation->start(_currentTime); // 启动动画
     _animationManager.addAnimation(animation); // 交给动画管理器
@@ -69,7 +65,7 @@ void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t
 }
 
 void PixelUI::renderer() {
-    if (!isFading){
+    if (!isFading_){
         this->getU8G2().clearBuffer();
         if (currentDrawable_ && isDirty()) {
             currentDrawable_->draw();
@@ -94,6 +90,6 @@ void PixelUI::renderer() {
             getEmuRefreshFunction()();
             std::this_thread::sleep_for(std::chrono::milliseconds(40));
         }
-        isFading = false;
+        isFading_ = false;
     }
 }

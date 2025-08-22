@@ -34,52 +34,45 @@ public:
     void begin();
     void Heartbeat(uint32_t ms);
     
-    U8G2Wrapper& getU8G2() { return u8g2_; }
-    // const U8G2Wrapper& getU8G2() const { return u8g2_; }
-    AnimationManager& getAnimationMan() { return _animationManager; }
-
     void animate(float& value, float targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR);
     void animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing = EasingType::LINEAR);
     void addAnimation(std::shared_ptr<Animation> animation);
 
-    void setDrawable(std::shared_ptr<IDrawable> drawable) {
-        currentDrawable_ = drawable;
-        markDirty();
-    }
+    // setters
+    void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
+    void setEmuRefreshFunc(std::function <void()> function) { emu_refresh_func_ = function; }
+    void setInputCallback(InputCallback callback) { inputCallback_ = callback; }
+    void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
 
-    void setEmuRefreshFunc(std::function <void()> function) {
-        emu_refresh_func_ = function;
-    }
-
-    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; };
-
-    std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; };
-
-    void renderer();
+    // getters
+    U8G2Wrapper& getU8G2() const { return u8g2_; }
+    AnimationManager& getAnimationMan() { return _animationManager; }
+    bool isDirty() const { return isDirty_; }
+    bool isPointerValid(const void* ptr) const { return ptr != nullptr; }
+    bool isContinousRefreshEnabled() const { return continousMode_; }
+    uint32_t getCurrentTime() const { return _currentTime; }
+    uint32_t getActiveAnimationCount() const { return _animationManager.activeCount(); }
+    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; }
+    std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
 
     void markDirty() { isDirty_ = true; }
-    void markFading() { isFading = true; }
+    void markFading() { isFading_ = true; }
 
-    bool isDirty() const { return isDirty_; }
-    bool isPointerValid(const void* ptr) const;
-
-    uint32_t getCurrentTime() const { return _currentTime; }
-    uint32_t getActiveAnimationCount() const { return _animationManager.activeCount(); };
-
-    void setInputCallback(InputCallback callback) { inputCallback_ = callback; }
     bool handleInput(InputEvent event) {
         if (inputCallback_) return inputCallback_(event);
         return false;
     }
-
+    void renderer();
 protected:
 private:
     U8G2Wrapper& u8g2_;
     AnimationManager _animationManager;
     uint32_t _currentTime;
     std::shared_ptr<IDrawable> currentDrawable_;
+    
     bool isDirty_ = false;
-    bool isFading = false;
+    bool isFading_ = false;
+    bool continousMode_ = false;
 
     std::function<void()> emu_refresh_func_;
 
