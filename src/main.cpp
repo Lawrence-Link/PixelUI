@@ -12,7 +12,7 @@
 #include "EmuWorker.h"
 
 #include "PixelUI/pixelui.h"
-#include "PixelUI/core/ui/AppView/Appview.h"
+#include "PixelUI/core/ui/AppView/AppView.h"
 
 // #include "PixelUI/menu_system.h"
 // #include "PixelUI/app_example.h"
@@ -69,6 +69,7 @@ public:
         // 检查动画是否在运行，如果有动画则持续标记为dirty
             if (ui.getActiveAnimationCount() > 0 || ui.isContinousRefreshEnabled()) {
                 ui.markDirty();
+                std::cout << "Animation count: " << ui.getActiveAnimationCount() << std::endl;
             }
         
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
@@ -78,7 +79,7 @@ public:
 
 
 int main(int argc, char *argv[]) {
-    std::cout << "U8G2 Emulator - Qt Windowed Mode" << std::endl;
+    std::cout << "<<<<<< U8G2 Emulator - Qt Windowed Mode >>>>>>" << std::endl;
 
     QApplication app(argc, argv);
     display.init();

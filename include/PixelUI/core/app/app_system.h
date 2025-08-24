@@ -3,8 +3,9 @@
 #include <functional>
 #include <stdint.h>
 #include <iostream>
-#include <vector>
+#include <etl/vector.h>
 #include "IApplication.h"
+#include "PixelUI/config.h"
 
 enum class MenuItemType {
     Action,
@@ -14,7 +15,7 @@ enum class MenuItemType {
 struct AppItem {
     const char* title;
     const uint8_t* bitmap;
-    // 工厂函数 现在创建App实例
+    // 工厂函数 创建App实例
     std::function<std::shared_ptr<IApplication>(PixelUI&)> createApp;
     MenuItemType type;
     int w, h = 0;
@@ -34,14 +35,14 @@ public:
     // register an app to the Manager.
     void registerApp(const AppItem& item);
 
-    const std::vector<AppItem>& getAppVector() const;
+    const etl::vector<AppItem, MAX_APP_NUM>& getAppVector() const;
 
     AppManager(const AppManager&) = delete; // disable copy constructor
     AppManager& operator=(const AppManager&) = delete; // disable assignment operator
 
 private:
     AppManager() {}; // private constructor
-    std::vector<AppItem> appItems_;
+    etl::vector<AppItem, MAX_APP_NUM> appItems_;
 };
 
 class AppRegistrar {
@@ -50,4 +51,3 @@ public:
         AppManager::getInstance().registerApp(item);
     }
 };
-

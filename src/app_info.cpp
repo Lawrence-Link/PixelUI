@@ -17,7 +17,7 @@ public:
     AboutApp(PixelUI& ui) : m_ui(ui){};
     void draw() override {
         // 假设可以这样访问UI对象
-        U8G2Wrapper& display = m_ui.getU8G2();
+        U8G2& display = m_ui.getU8G2();
         
         display.setFont(u8g2_font_ncenB10_tr);
         display.drawStr(20, 20, "My GUI Lib");
@@ -53,8 +53,8 @@ static AppRegistrar registrar_about_app({
     .bitmap = image_info_bits, // TODO: Add an icon bitmap here
     
     // 关键点：提供一个创建 AboutApp 实例的工厂函数
-    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> { 
-        return std::make_shared<AboutApp>(ui); 
+    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<AboutApp>(ui); 
     },
     
     .type = MenuItemType::App,

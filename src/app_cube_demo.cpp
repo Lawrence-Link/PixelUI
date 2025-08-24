@@ -43,11 +43,11 @@ void rotate3D(float v[3], float angleX, float angleY) {
 
 void project2D(float v[3], int16_t &x2d, int16_t &y2d, int16_t screenW, int16_t screenH) {
     float fov = 64;       // 视角因子
-    float distance = 17.0; // 观察点距离
+    float distance = 10.0; // 观察点距离
     float factor = fov / (v[2] + distance);
 
     x2d = static_cast<int16_t>(screenW/2 + v[0] * factor * screenW/16);
-    y2d = static_cast<int16_t>(screenH/2 - v[1] * factor * screenH/16);
+    y2d = static_cast<int16_t>(screenH/2 - v[1] * factor * screenH/16) + 0.12 * screenH;
 }
 
 void drawCube(U8G2 &display, float angleX, float angleY) {
@@ -101,7 +101,6 @@ public:
         drawCube(display, angleX, angleY);
         angleX += 0.05f;
         angleY += 0.03f;
-        
     }
 
     bool handleInput(InputEvent event) override {
@@ -117,7 +116,6 @@ public:
         extern PixelUI ui;
         ui.setContinousDraw(true);
         ui.markDirty(); 
-        std::cout << "[AboutApp] Entered." << std::endl;
     }
 
     void onExit() {
@@ -129,11 +127,10 @@ public:
 
 static AppRegistrar registrar_about_app({
     .title = "Cube Demo",
-    .bitmap = image_sans2_bits, // TODO: Add an icon bitmap here
+    .bitmap = image_sans2_bits,
     
-    // 关键点：提供一个创建 AboutApp 实例的工厂函数
-    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> { 
-        return std::make_shared<CubeDemo>(ui); 
+    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<CubeDemo>(ui); 
     },
     
     .type = MenuItemType::App,

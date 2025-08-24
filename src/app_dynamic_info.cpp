@@ -15,7 +15,8 @@ private:
     PixelUI& m_ui;
 public:
     Dynamic_Info(PixelUI& ui) : m_ui(ui) {};
-    float Y_Title, Y_Version, Y_description = 0;
+    ~Dynamic_Info() = default;
+    float Y_Title = 0, Y_Version = 0, Y_description = 0;
     void draw() override {
         // 假设可以这样访问UI对象
         extern PixelUI ui;

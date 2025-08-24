@@ -5,6 +5,6 @@ void AppManager::registerApp(const AppItem& item) {
     std::cout << "Registered app: " << item.title << std::endl;
 }
 
-const std::vector<AppItem>& AppManager::getAppVector() const {
+const etl::vector<AppItem, MAX_APP_NUM>& AppManager::getAppVector() const {
     return appItems_;
 }

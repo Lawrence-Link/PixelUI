@@ -92,41 +92,41 @@ void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
 }
 
 void AnimationManager::update(uint32_t currentTime) {
-    // std::cout << "[DEBUG] AnimationManager::update() called with " << _animations.size() << " animations" << std::endl;
-    
     if (_animations.empty()) {
         return;
     }
     
+    // 使用类型别名简化代码
+    using AnimationVector = etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT>;
+    
     try {
-        // 安全的反向遍历删除
-        for (auto it = _animations.rbegin(); it != _animations.rend();) {
-            if (!*it) {
+        // 方法1: 使用正向迭代器 + 标记删除（推荐）
+        auto writePos = _animations.begin();
+        for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
+            if (!*readPos) {
                 std::cerr << "[ERROR] Null animation found in manager!" << std::endl;
-                it = std::vector<std::shared_ptr<Animation>>::reverse_iterator(
-                    _animations.erase((it + 1).base())
-                );
-                continue;
+                continue; // 跳过空指针
             }
             
-            if (!(*it)->update(currentTime)) {
-                std::cout << "[DEBUG] Animation completed, removing" << std::endl;
-                it = std::vector<std::shared_ptr<Animation>>::reverse_iterator(
-                    _animations.erase((it + 1).base())
-                );
+            if ((*readPos)->update(currentTime)) {
+                // 动画继续，保留
+                if (writePos != readPos) {
+                    *writePos = std::move(*readPos);
+                }
+                ++writePos;
             } else {
-                ++it;
+                std::cout << "[DEBUG] Animation completed, removing" << std::endl;
+                // 动画完成，不复制到writePos位置
             }
         }
-    }
-    catch (const std::exception& e) {
+        
+        // 删除末尾的无效元素
+        _animations.erase(writePos, _animations.end());
+        
+    } catch (const std::exception& e) {
         std::cerr << "[ERROR] Exception in AnimationManager::update: " << e.what() << std::endl;
+        // 考虑是否需要重新抛出异常
     }
-    catch (...) {
-        std::cerr << "[ERROR] Unknown exception in AnimationManager::update" << std::endl;
-    }
-    
-    // std::cout << "[DEBUG] AnimationManager::update() finished with " << _animations.size() << " animations" << std::endl;
 }
 
 void AnimationManager::clear(){

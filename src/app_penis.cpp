@@ -62,8 +62,8 @@ static AppRegistrar registrar_about_app({
     .bitmap = image_sans4_bits,
     
     // 关键点：提供一个创建 AboutApp 实例的工厂函数
-    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> { 
-        return std::make_shared<Penis>(ui); 
+    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<Penis>(ui); 
     },
     
     .type = MenuItemType::App,

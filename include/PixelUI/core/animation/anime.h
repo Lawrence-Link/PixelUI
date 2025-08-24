@@ -4,8 +4,9 @@
 #include <cstdint>
 #include <cmath>
 #include <memory>
-#include <vector>
+#include "etl/vector.h"
 #include <functional>
+#include "PixelUI/config.h"
 
 enum class EasingType {
     LINEAR,
@@ -55,7 +56,7 @@ public:
     void clear();
     size_t activeCount() const;
 private:
-    std::vector<std::shared_ptr<Animation>> _animations;
+    etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations; // 最多15个动画并行
 };
 
 class CallbackAnimation : public Animation {
