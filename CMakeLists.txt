@@ -38,6 +38,7 @@ set(SOURCES
     src/PixelUI/core/ui/AppView/AppView.cpp
     src/PixelUI/core/ViewManager/ViewManager.cpp
     src/PixelUI/core/ui/ListView/ListView.cpp
+    src/ListViewDemo/ListViewDemo1.cpp
 )
 
 set(HEADERS

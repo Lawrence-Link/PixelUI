@@ -1,7 +1,6 @@
 #include "PixelUI/core/ui/ListView/ListView.h"
 
 // ... (image_LISTVIEW_bits 和 ItemList 定义保持不变) ...
-static const unsigned char image_LISTVIEW_bits[] = {0xf0,0xff,0x0f,0xfc,0xff,0x3f,0xfe,0xff,0x7f,0xfe,0xff,0x7f,0xff,0xff,0xff,0xff,0xff,0xff,0x07,0x7c,0xe3,0xff,0xff,0xf7,0x07,0x7f,0xf7,0xff,0xff,0xf7,0x07,0x7e,0xf7,0xff,0xff,0xf7,0x07,0x78,0xf7,0xff,0xff,0xf7,0x07,0x7e,0xf7,0xff,0xff,0xf7,0x07,0x7c,0xe3,0xff,0xff,0xff,0xdf,0x45,0xfc,0xdf,0xe5,0xfe,0x1e,0xcd,0x7e,0xfe,0xff,0x7f,0xfc,0xff,0x3f,0xf0,0xff,0x0f};
 
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
@@ -93,7 +92,7 @@ void ListView::scrollToTarget(size_t target){
     float targetCursorY = topMargin_ + screenCursorIndex * (FontHeight + spacing_) - 1;
     
     m_ui.animate(CursorY, targetCursorY, 140, EasingType::EASE_IN_OUT_CUBIC);
-    m_ui.animate(CursorWidth, m_ui.getU8G2().getUTF8Width(ItemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
+    m_ui.animate(CursorWidth, m_ui.getU8G2().getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
 }
 
 void ListView::navigateUp() {
@@ -136,7 +135,7 @@ void ListView::drawCursor() {
     u8g2.drawRBox(CursorX, CursorY, CursorWidth, FontHeight + 2, 0);
     u8g2.setDrawColor(1);
 
-    if (ItemList[currentCursor].isTitle)
+    if (m_itemList[currentCursor].isTitle)
         u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width("BACK") - 5, u8g2.getDisplayHeight() - 5, "BACK");
     else
         u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(">>") - 5, u8g2.getDisplayHeight() - 5, ">>");
@@ -173,21 +172,9 @@ void ListView::draw(){
                     drawX = 4 + (1.0f - loadProgress) * 30;
                 }
             }
-            u8g2.drawStr(drawX, itemY, ItemList[itemIndex].Title);
+            u8g2.drawStr(drawX, itemY, m_itemList[itemIndex].Title);
         }
     }
     drawCursor();
 }
 
-static AppRegistrar registrar_about_app({
-    .title = "ListView Test",
-    .bitmap = image_LISTVIEW_bits,
-    
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
-        return std::make_unique<ListView>(ui, ItemList, sizeof(ItemList)/sizeof(ItemList[0])); 
-    },
-    
-    .type = MenuItemType::App,
-    .w = 24, 
-    .h = 24
-});

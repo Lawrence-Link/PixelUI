@@ -20,23 +20,11 @@ struct ListItem{ // Item prototype
     void (*pFunc)();
 };
 
-ListItem ItemList[] = { // text example
-    { ">>> ListDemo <<<", false, true,  nullptr, terminus::ToFunc, nullptr, (void(*)())nullptr },
-    { "- Bob then raped", false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item B\n"; } },
-    { "- Cathy Flower",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
-    { "- Drunken",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
-    { "- Switch",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
-    { "- Alert",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
-    { "- Progress",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
-    { "- Anytone",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
-    { "- Potato",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
-    { "- Tomato",   false, false, nullptr, terminus::ToFunc, nullptr, (void(*)())[](){ std::cout << "Item C\n"; } },
 
-};
 
 class ListView : public IApplication {
 public:
-    ListView(PixelUI& ui, ListItem *itemList, size_t length) : m_ui(ui), m_itemList(ItemList), m_itemLength(length - 1) {}
+    ListView(PixelUI& ui, ListItem *itemList, size_t length) : m_ui(ui), m_itemList(itemList), m_itemLength(length - 1) {}
     ~ListView() = default;
 
     void draw() override;
