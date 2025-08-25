@@ -4,23 +4,20 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+#include "etl/vector.h"
 
-enum class terminus {
-    ToNextNode,
-    ToFunc
-};
+// enum class terminus {
+//     ToNextNode,
+//     ToFunc
+// };
 
 struct ListItem{ // Item prototype
     mutable char Title[MAX_LISTITEM_NAME_NUM];
-    bool featIcon;
-    bool isTitle;
-    char * icon;
-    terminus term;
-    ListItem * nextItem;
+    // terminus term;
+    ListItem * nextList;
+    size_t nextListLength;
     void (*pFunc)();
 };
-
-
 
 class ListView : public IApplication {
 public:
@@ -39,10 +36,12 @@ private:
     PixelUI& m_ui;
     ListItem* m_itemList;
     size_t m_itemLength;
-    uint8_t spacing_ = 3;      // <-- FIX 1: 使用固定的项目间距
-    uint8_t topMargin_ = 2;    // <-- FIX 1: 增加固定的顶部边距
+    uint8_t spacing_ = 3;
+    uint8_t topMargin_ = 2;
     uint8_t FontHeight = 0;
     
+    etl::vector<etl::pair<etl::pair<ListItem*, size_t>, size_t>, MAX_LISTVIEW_DEPTH> m_history_stack;
+
     // 光标相关
     float CursorY = 0;
     float CursorX = 1;
@@ -69,6 +68,6 @@ private:
     int getVisibleItemIndex(int screenIndex);
     bool shouldScroll(int newCursor);
     float calculateItemY(int itemIndex);
-
+    void selectCurrent();
     size_t currentCursor = 0;
 };

@@ -24,6 +24,7 @@ void ListView::onEnter(ExitCallback exitCallback){
 }
 
 void ListView::startLoadAnimation() {
+    isInitialLoad_ = true;
     int maxVisible = std::min(visibleItemCount_ + 1, (int)(m_itemLength + 1));
     
     for (int i = 0; i < maxVisible; i++) {
@@ -113,8 +114,44 @@ void ListView::navigateDown() {
     }
 }
 
+void ListView::selectCurrent(){
+    if (currentCursor == 0) { // Go back to previous level 
+    }
+    if (!m_itemList[currentCursor].nextList){} // nullptr, execute function then
+    else { // To next node
+        // set Length before the List pointer.
+        m_ui.getAnimationMan().clear();
+        m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
+        m_itemLength = m_itemList[currentCursor].nextListLength - 1;
+        m_itemList = m_itemList[currentCursor].nextList;
+        currentCursor = 0; // reset cursor to top
+        m_ui.markFading();
+        startLoadAnimation();
+        scrollToTarget(0);
+        return;
+    }
+
+    if (currentCursor == 0) {
+        if (!m_history_stack.empty()){
+            m_ui.getAnimationMan().clear();
+            etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
+            m_history_stack.pop_back();
+            m_itemList = parent_state.first.first;
+            m_itemLength = parent_state.first.second;
+            currentCursor = parent_state.second;
+            m_ui.markFading();
+            startLoadAnimation();
+            scrollToTarget(currentCursor);
+            return;
+        }
+        else { requestExit(); }
+    }
+}
+
 void ListView::navigateLeft() {}
-void ListView::navigateRight() {}
+void ListView::navigateRight() {
+    selectCurrent();
+}
 
 bool ListView::handleInput(InputEvent event) {
     switch (event) {
@@ -135,7 +172,7 @@ void ListView::drawCursor() {
     u8g2.drawRBox(CursorX, CursorY, CursorWidth, FontHeight + 2, 0);
     u8g2.setDrawColor(1);
 
-    if (m_itemList[currentCursor].isTitle)
+    if (!currentCursor)
         u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width("BACK") - 5, u8g2.getDisplayHeight() - 5, "BACK");
     else
         u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(">>") - 5, u8g2.getDisplayHeight() - 5, ">>");
