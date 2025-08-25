@@ -11,8 +11,8 @@ float EasingCalculator::calculate(EasingType type, float t)
         case EasingType::EASE_IN_CUBIC:     return t * t * t;
         case EasingType::EASE_OUT_CUBIC:    return 1 - pow(1 - t, 3);
         case EasingType::EASE_IN_OUT_CUBIC: return t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2;
-        case EasingType::EASE_OUT_BOUNCE:   return easeOutBounce(t); // use the specified function to calculate
-        default:                            return t; // default means linear
+        case EasingType::EASE_OUT_BOUNCE:   return easeOutBounce(t);
+        default:                            return t;
     }
 }
 
@@ -40,44 +40,31 @@ float EasingCalculator::easeOutBounce(float t) {
     }
 }
 
-/*
-*   begin the animation
-*/
-void Animation::start(uint32_t currentTime) { // 启动动画显示
+void Animation::start(uint32_t currentTime) {
     _startTime = currentTime;
     _progress = 0;
     _isActive = true;
 }
-/*
-*    stop the animation
-*/
 
-void Animation::stop() { // 终止动画
+void Animation::stop() {
     _isActive = false;
 }
 
-/* 
-* update the coordinates 更新动画
-* @param currentTime Current timestamp
-* @return {boolean} is the animation ongoing? 
-*/
 bool Animation::update(uint32_t currentTime){
     if (!_isActive) {
-        return false; // animation not active, 动画非进行中
+        return false;
     }
 
     uint32_t elapsed = currentTime - _startTime; 
     if (elapsed >= _duration) {
         _progress = 1.0f;
         _isActive = false;
-        return false; // the End of the animation, 动画完成
+        return false;
     }
-// if (_onCompleteCallback) {
-//             _onCompleteCallback();
-//         }
+
     float t = static_cast<float> (elapsed) / static_cast<float>(_duration);
     _progress = EasingCalculator::calculate(_easing, t);
-    return true; // animation is ongoing, 动画继续
+    return true;
 }
 
 void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
@@ -96,41 +83,81 @@ void AnimationManager::update(uint32_t currentTime) {
         return;
     }
     
-    // 使用类型别名简化代码
-    using AnimationVector = etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT>;
-    
     try {
-        // 方法1: 使用正向迭代器 + 标记删除（推荐）
         auto writePos = _animations.begin();
         for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
             if (!*readPos) {
                 std::cerr << "[ERROR] Null animation found in manager!" << std::endl;
-                continue; // 跳过空指针
+                continue;
             }
             
             if ((*readPos)->update(currentTime)) {
-                // 动画继续，保留
                 if (writePos != readPos) {
                     *writePos = std::move(*readPos);
                 }
                 ++writePos;
             } else {
                 std::cout << "[DEBUG] Animation completed, removing" << std::endl;
-                // 动画完成，不复制到writePos位置
+                
+                // 如果动画完成，也从保护列表中移除
+                auto protectedIt = std::find(_protectedAnimations.begin(), _protectedAnimations.end(), *readPos);
+                if (protectedIt != _protectedAnimations.end()) {
+                    _protectedAnimations.erase(protectedIt);
+                }
             }
         }
         
-        // 删除末尾的无效元素
         _animations.erase(writePos, _animations.end());
         
     } catch (const std::exception& e) {
         std::cerr << "[ERROR] Exception in AnimationManager::update: " << e.what() << std::endl;
-        // 考虑是否需要重新抛出异常
     }
 }
 
 void AnimationManager::clear(){
     _animations.clear();
+    _protectedAnimations.clear();
+}
+
+void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
+    if (animation && _protectedAnimations.size() < _protectedAnimations.max_size()) {
+        _protectedAnimations.push_back(animation);
+        std::cout << "[DEBUG] Marked animation as protected. Protected count: " << _protectedAnimations.size() << std::endl;
+    }
+}
+
+void AnimationManager::clearUnprotected() {
+    if (_animations.empty()) {
+        return;
+    }
+    
+    auto writePos = _animations.begin();
+    for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
+        bool isProtected = false;
+        
+        for (const auto& protectedAnim : _protectedAnimations) {
+            if (*readPos == protectedAnim) {
+                isProtected = true;
+                break;
+            }
+        }
+        
+        if (isProtected) {
+            if (writePos != readPos) {
+                *writePos = std::move(*readPos);
+            }
+            ++writePos;
+        } else {
+            std::cout << "[DEBUG] Clearing unprotected animation" << std::endl;
+        }
+    }
+    
+    _animations.erase(writePos, _animations.end());
+}
+
+void AnimationManager::clearAllProtectionMarks() {
+    _protectedAnimations.clear();
+    std::cout << "[DEBUG] Cleared all protection marks" << std::endl;
 }
 
 size_t AnimationManager::activeCount() const {

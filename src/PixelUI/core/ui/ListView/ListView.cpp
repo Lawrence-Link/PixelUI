@@ -1,7 +1,5 @@
 #include "PixelUI/core/ui/ListView/ListView.h"
 
-// ... (image_LISTVIEW_bits 和 ItemList 定义保持不变) ...
-
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
     m_ui.setContinousDraw(true);
@@ -13,7 +11,7 @@ void ListView::onEnter(ExitCallback exitCallback){
     topVisibleIndex_ = 0;
     scrollOffset_ = 0.0f;
     currentCursor = 0;
-    isInitialLoad_ = true; // 动画开始前，设置为true
+    isInitialLoad_ = true;
     
     for (int i = 0; i < visibleItemCount_; i++) {
         itemLoadAnimations_[i] = 0.0f;
@@ -25,6 +23,7 @@ void ListView::onEnter(ExitCallback exitCallback){
 
 void ListView::startLoadAnimation() {
     isInitialLoad_ = true;
+    
     int maxVisible = std::min(visibleItemCount_ + 1, (int)(m_itemLength + 1));
     
     for (int i = 0; i < maxVisible; i++) {
@@ -37,20 +36,29 @@ void ListView::startLoadAnimation() {
             
             if (isLastAnimation && value >= 1.0f) {
                 this->isInitialLoad_ = false;
+                this->m_ui.getAnimationMan().clearAllProtectionMarks();
                 std::cout << "[DEBUG] Initial load animation sequence complete." << std::endl;
             }
         };
         
         auto animation = std::make_shared<CallbackAnimation>(0.0f, 1.0f, duration, EasingType::EASE_IN_OUT_CUBIC, callback);
         
-        // 关键修复：启动动画
-        animation->start(m_ui.getCurrentTime()); // 需要获取当前时间
+        animation->start(m_ui.getCurrentTime());
         
+        m_ui.getAnimationMan().markProtected(animation);
         m_ui.getAnimationMan().addAnimation(animation);
     }
 }
 
-// ... (shouldScroll, updateScrollPosition, calculateItemY, scrollToTarget, navigate*, handleInput, drawCursor 函数都保持不变) ...
+void ListView::clearNonInitialAnimations() {
+    if (isInitialLoad_) {
+        m_ui.getAnimationMan().clearUnprotected();
+        std::cout << "[DEBUG] Cleared non-initial animations while protecting initial load animations" << std::endl;
+    } else {
+        m_ui.getAnimationMan().clear();
+        std::cout << "[DEBUG] Cleared all animations (not in initial load state)" << std::endl;
+    }
+}
 
 bool ListView::shouldScroll(int newCursor) {
     return (newCursor < topVisibleIndex_ || newCursor >= topVisibleIndex_ + visibleItemCount_);
@@ -75,7 +83,6 @@ void ListView::updateScrollPosition() {
         float targetScrollOffset = -newTopIndex * (FontHeight + spacing_);
         m_ui.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC);
         topVisibleIndex_ = newTopIndex;
-        isInitialLoad_ = false; // 滚动时也禁用初始动画
     }
 }
 
@@ -92,13 +99,13 @@ void ListView::scrollToTarget(size_t target){
     int screenCursorIndex = currentCursor - topVisibleIndex_;
     float targetCursorY = topMargin_ + screenCursorIndex * (FontHeight + spacing_) - 1;
     
-    m_ui.animate(CursorY, targetCursorY, 140, EasingType::EASE_IN_OUT_CUBIC);
+    m_ui.animate(CursorY, targetCursorY, 240, EasingType::EASE_IN_OUT_CUBIC);
     m_ui.animate(CursorWidth, m_ui.getU8G2().getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
 }
 
 void ListView::navigateUp() {
     if (currentCursor != 0)
-        m_ui.getAnimationMan().clear();
+        clearNonInitialAnimations();
     if (currentCursor > 0) {
         currentCursor--;
         scrollToTarget(currentCursor);
@@ -107,7 +114,7 @@ void ListView::navigateUp() {
 
 void ListView::navigateDown() {
     if (currentCursor != m_itemLength)
-        m_ui.getAnimationMan().clear();
+        clearNonInitialAnimations();
     if (currentCursor < m_itemLength) {
         currentCursor++;
         scrollToTarget(currentCursor);
@@ -115,16 +122,15 @@ void ListView::navigateDown() {
 }
 
 void ListView::selectCurrent(){
-    if (currentCursor == 0) { // Go back to previous level 
+    if (currentCursor == 0) { 
     }
-    if (!m_itemList[currentCursor].nextList){} // nullptr, execute function then
-    else { // To next node
-        // set Length before the List pointer.
-        m_ui.getAnimationMan().clear();
+    if (!m_itemList[currentCursor].nextList){} 
+    else { 
+        clearNonInitialAnimations();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
         m_itemLength = m_itemList[currentCursor].nextListLength - 1;
         m_itemList = m_itemList[currentCursor].nextList;
-        currentCursor = 0; // reset cursor to top
+        currentCursor = 0;
         m_ui.markFading();
         startLoadAnimation();
         scrollToTarget(0);
@@ -133,7 +139,7 @@ void ListView::selectCurrent(){
 
     if (currentCursor == 0) {
         if (!m_history_stack.empty()){
-            m_ui.getAnimationMan().clear();
+            clearNonInitialAnimations();
             etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
             m_history_stack.pop_back();
             m_itemList = parent_state.first.first;
@@ -159,7 +165,7 @@ bool ListView::handleInput(InputEvent event) {
         case InputEvent::DOWN: navigateDown(); return true;
         case InputEvent::LEFT:  navigateLeft(); return true;
         case InputEvent::RIGHT: navigateRight(); return true;
-        case InputEvent::SELECT: /*TBD*/ return true;
+        case InputEvent::SELECT: return true;
         case InputEvent::BACK: requestExit(); return true;
         default: return false;
     }
@@ -179,7 +185,8 @@ void ListView::drawCursor() {
 }
 
 void ListView::onResume() {
-    isInitialLoad_ = false; // 从其他视图返回时，不播放初始动画
+    isInitialLoad_ = false;
+    m_ui.getAnimationMan().clearAllProtectionMarks();
 }
 
 void ListView::onPause() {}
@@ -187,6 +194,7 @@ void ListView::onPause() {}
 void ListView::onExit() {
     m_ui.markFading();
     m_ui.setContinousDraw(false);
+    m_ui.getAnimationMan().clearAllProtectionMarks();
 }
 
 void ListView::draw(){
@@ -199,9 +207,8 @@ void ListView::draw(){
         float itemY = calculateItemY(itemIndex);
         
         if (itemY >= -FontHeight && itemY <= u8g2.getDisplayHeight() + FontHeight) {
-            float drawX = 4; // 默认最终位置
+            float drawX = 4;
             
-            // 只有在初始加载状态下才执行动画计算
             if (isInitialLoad_) {
                 int animIndex = itemIndex - topVisibleIndex_;
                 if (animIndex >= 0 && animIndex < visibleItemCount_ + 1) {
@@ -214,4 +221,3 @@ void ListView::draw(){
     }
     drawCursor();
 }
-

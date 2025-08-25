@@ -6,14 +6,8 @@
 #include <cstring>
 #include "etl/vector.h"
 
-// enum class terminus {
-//     ToNextNode,
-//     ToFunc
-// };
-
-struct ListItem{ // Item prototype
+struct ListItem{
     mutable char Title[MAX_LISTITEM_NAME_NUM];
-    // terminus term;
     ListItem * nextList;
     size_t nextListLength;
     void (*pFunc)();
@@ -43,7 +37,7 @@ private:
     etl::vector<etl::pair<etl::pair<ListItem*, size_t>, size_t>, MAX_LISTVIEW_DEPTH> m_history_stack;
 
     // 光标相关
-    float CursorY = 0;
+    float CursorY = -6;
     float CursorX = 1;
     float CursorWidth = 0;
     
@@ -55,6 +49,17 @@ private:
     // 载入动画相关
     float itemLoadAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
     bool isInitialLoad_ = true;
+    
+    // 过渡动画相关
+    bool isTransitioning_ = false;
+    float transitionProgress_ = 0.0f;
+    int selectedItemForTransition_ = -1;
+    float itemExitAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
+    float itemEnterAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
+    float selectedItemY_ = 0.0f;
+    ListItem* oldItemList_ = nullptr;
+    size_t oldItemLength_ = 0;
+    int oldTopVisibleIndex_ = 0;
 
     void navigateLeft();
     void navigateRight();
@@ -65,9 +70,15 @@ private:
     void scrollToTarget(size_t target);
     void updateScrollPosition();
     void startLoadAnimation();
+    void startTransitionAnimation(int selectedItemIndex);
+    void startBackTransitionAnimation();
     int getVisibleItemIndex(int screenIndex);
     bool shouldScroll(int newCursor);
     float calculateItemY(int itemIndex);
     void selectCurrent();
+    
+    // 选择性清除动画的方法
+    void clearNonInitialAnimations();
+    
     size_t currentCursor = 0;
 };

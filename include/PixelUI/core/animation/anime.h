@@ -54,9 +54,16 @@ public:
     void addAnimation(std::shared_ptr<Animation> animation);
     void update(uint32_t currentTime);
     void clear();
+    
+    // 保护机制
+    void markProtected(std::shared_ptr<Animation> animation);
+    void clearUnprotected();
+    void clearAllProtectionMarks();
+    
     size_t activeCount() const;
 private:
-    etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations; // 最多15个动画并行
+    etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
+    etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _protectedAnimations;
 };
 
 class CallbackAnimation : public Animation {
