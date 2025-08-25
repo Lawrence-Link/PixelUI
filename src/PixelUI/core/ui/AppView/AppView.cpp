@@ -97,7 +97,7 @@ void AppView::draw() {
     display.drawStr((display.getWidth() - display.getStrWidth("< Apps >")) / 2, 10, "< Apps >");
     
     // 绘制选择框
-    drawSelector(animation_selector_coord_x, 26, animation_selector_length);
+    drawSelector(animation_selector_coord_x, 30, animation_selector_length);
     
     // 绘制水平应用列表
     drawHorizontalAppList();
@@ -302,7 +302,7 @@ void AppView::scrollToIndex(int newIndex) {
     
     // popup effect
     appTitle_Y = 70;
-    ui_.animate(appTitle_Y, 59, 300, EasingType::EASE_OUT_CUBIC);
+    ui_.animate(appTitle_Y, 60, 300, EasingType::EASE_OUT_CUBIC);
 
     currentIndex_ = newIndex;
     ui_.markDirty(); 

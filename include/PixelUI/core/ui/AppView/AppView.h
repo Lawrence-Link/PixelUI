@@ -47,7 +47,7 @@ private:
     int iconHeight_ = 24;              // 图标高度
     int iconSpacing_ = 14;             // 图标间距
     int centerX_ = 64;                 // 屏幕中心X坐标 (128/2)
-    int iconY_ = 14;                   // 图标Y坐标
+    int iconY_ = 18;                   // 图标Y坐标
     
     float animation_pixel_dots = 0;
     float animation_scroll_bar= 0;

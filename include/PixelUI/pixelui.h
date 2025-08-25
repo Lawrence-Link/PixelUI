@@ -52,7 +52,7 @@ public:
     bool isContinousRefreshEnabled() const { return continousMode_; }
     uint32_t getCurrentTime() const { return _currentTime; }
     uint32_t getActiveAnimationCount() const { return _animationManager.activeCount(); }
-    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; }
+    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; } // TBD
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
 
     void markDirty() { isDirty_ = true; }
