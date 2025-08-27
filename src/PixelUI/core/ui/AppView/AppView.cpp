@@ -32,7 +32,9 @@ void AppView::updateProgressBar() {
 void AppView::onEnter(ExitCallback exitCallback) {
     const auto& apps = appManager_.getAppVector();
     IApplication::onEnter(exitCallback);
+    #ifdef DEBUG
     std::cout << "[AppView] Entered." << std::endl;
+    #endif
     // 可以在这里开始进入动画
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
     // ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 700, EasingType::EASE_OUT_QUAD);
@@ -41,10 +43,12 @@ void AppView::onEnter(ExitCallback exitCallback) {
 }
 
 void AppView::onResume() {
+    #ifdef DEBUG
     std::cout << "[AppView] Resumed." << std::endl;
+    #endif
     
     animation_scroll_bar = 0;
-    scrollOffset_ = -128;
+    scrollOffset_ -= 50;
 
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
     updateProgressBar();
@@ -105,7 +109,8 @@ void AppView::draw() {
     // draw dotline to the progress bar:
     for (int i = 0; i <= static_cast<int> (animation_pixel_dots); i++)
         display.drawPixel(i * 2, 50);
-    display.drawBox(0, 49, animation_scroll_bar, 3);
+    // display.drawBox(0, 49, animation_scroll_bar, 3);
+    display.drawHLine(0, 50, animation_scroll_bar);
 
     // 绘制状态信息
     const auto& apps = appManager_.getAppVector();
@@ -127,12 +132,16 @@ void AppView::selectCurrentApp() {
     // 检查这个AppItem是否有关联的工厂函数
     if (selectedAppItem.createApp) {
         // 1. 调用工厂函数，创建应用的一个新实例
+        #ifdef DEBUG
         std::cout << "[AppView] Creating instance for: " << selectedAppItem.title << std::endl;
+        #endif
         auto appInstance = selectedAppItem.createApp(ui_);
 
         if (appInstance) {
             // 2. 将创建的实例推入视图管理器，完成启动
+            #ifdef DEBUG
             std::cout << "[AppView] Pushing app to ViewManager." << std::endl;
+            #endif
             m_viewManager.push(appInstance);
         } else {
             std::cerr << "[AppView] Error: createApp factory returned a null instance for " 
@@ -208,7 +217,10 @@ void AppView::drawHorizontalAppList() {
         int iconX = calculateIconX(i);
         // 判断是否在中心区域
         bool inCenter = (i == currentIndex_);
+
+        #ifdef DEBUG
         std::cout << "[DEBUG] Icon " << i << " at X=" << iconX << (inCenter ? " [CENTER]" : "") << std::endl;
+        #endif
         drawAppIcon(apps[i], iconX, iconY_, inCenter);
     }
 }
@@ -240,7 +252,9 @@ void AppView::drawAppIcon(const AppItem& app, int x, int y, bool inCenter) {
     // 如果在中心，可以添加特殊效果
     if (inCenter) {
         // 可以添加高亮效果，但选择框已经在drawCenterSelector中绘制了
+        #ifdef DEBUG
         std::cout << "[DEBUG] Drew center app: " << app.title << " at (" << x << "," << y << ")" << std::endl;
+        #endif
         display.drawStr((display.getWidth() - display.getStrWidth(app.title)) / 2, appTitle_Y, app.title);
     }
 }

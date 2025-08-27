@@ -6,7 +6,6 @@
 
 void PixelUI::begin() 
 {
-    std::cout << "[DEBUG] PixelUI::begin() called" << std::endl;
     _currentTime = 0;
     _animationManager.clear();
     _totalAnimationsCreated = 0;
@@ -16,8 +15,6 @@ void PixelUI::begin()
 
 void PixelUI::Heartbeat(uint32_t ms) 
 {
-    // std::cout << "[DEBUG] Heartbeat called with ms=" << ms << ", currentTime=" << _currentTime << std::endl;
-    
     _currentTime += ms;
     _animationUpdateCalls++;
     
@@ -25,7 +22,10 @@ void PixelUI::Heartbeat(uint32_t ms)
     _animationManager.update(_currentTime);
     size_t afterCount = _animationManager.activeCount();
     
-    // std::cout << "[DEBUG] Animations: " << beforeCount << " -> " << afterCount << std::endl;
+    // 更新popup
+    if (popupManager_) {
+        popupManager_->update(_currentTime);
+    }
 }
 
 void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
@@ -33,7 +33,7 @@ void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
     _animationManager.addAnimation(animation); // 交给动画管理器
 }
 
-void PixelUI::animate(float& value, float targetValue, uint32_t duration, EasingType easing) {
+void PixelUI::animate(float& value, float targetValue, uint32_t duration, EasingType easing, PROTECTION prot) {
     auto animation = std::make_shared<CallbackAnimation>(
         value, targetValue, duration, easing,
         [&value](float currentValue) {
@@ -41,10 +41,11 @@ void PixelUI::animate(float& value, float targetValue, uint32_t duration, Easing
         }
     );
     addAnimation(animation);
+    if (prot == PROTECTION::PROTECTED)
+        _animationManager.markProtected(animation);
 }
 
-// 新增：位置坐标的安全动画实现
-void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing) {
+void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing, PROTECTION prot) {
     // 为 X 坐标创建动画
     auto animX = std::make_shared<CallbackAnimation>(
         x, targetX, duration, easing,
@@ -62,15 +63,27 @@ void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t
         }
     );
     addAnimation(animY);
+
+    if (prot == PROTECTION::PROTECTED) {
+        _animationManager.markProtected(animX);
+        _animationManager.markProtected(animY);
+    }
 }
 
 void PixelUI::renderer() {
     if (!isFading_){
         this->getU8G2().clearBuffer();
+        
         if (currentDrawable_ && isDirty()) {
             currentDrawable_->draw();
             isDirty_ = false;
         }
+        
+        // 绘制popup
+        if (popupManager_) {
+            popupManager_->draw();
+        }
+        
         this->getU8G2().sendBuffer();
     } else { // isFading
         uint8_t * buf_ptr = this->getU8G2().getBufferPtr();

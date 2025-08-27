@@ -36,6 +36,8 @@ set(SOURCES
     src/PixelUI/core/app/app_system.cpp
     src/PixelUI/core/animation/anime.cpp
     src/PixelUI/core/ui/AppView/AppView.cpp
+    src/PixelUI/core/ui/Popup/Popup.cpp
+    src/PixelUI/core/ui/Popup/PopupManager.cpp
     src/PixelUI/core/ViewManager/ViewManager.cpp
     src/PixelUI/core/ui/ListView/ListView.cpp
     src/ListViewDemo/ListViewDemo1.cpp
@@ -56,9 +58,14 @@ set(HEADERS
     include/PixelUI/core/app/app_system.h
     include/PixelUI/core/app/IApplication.h
     include/PixelUI/core/ui/AppView/AppView.h
+    include/PixelUI/core/ui/IDrawable.h
+    include/PixelUI/core/ui/Popup/IPopupRenderer.h
+    include/PixelUI/core/ui/Popup/Popup.h
+    include/PixelUI/core/ui/Popup/PopupManager.h
     include/PixelUI/core/ViewManager/ViewManager.h
     include/PixelUI/config.h
     include/PixelUI/core/ui/ListView/ListView.h
+    include/PixelUI/core/CommonTypes.h
 )
 
 find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)

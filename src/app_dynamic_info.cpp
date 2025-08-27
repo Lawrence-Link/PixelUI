@@ -40,7 +40,6 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
-        std::cout << "[AboutApp] Entered." << std::endl;
         extern PixelUI ui;
         ui.animate(Y_Title,        20, 600, EasingType::EASE_OUT_BOUNCE);
         ui.animate(Y_Version,      35, 700, EasingType::EASE_OUT_BOUNCE);

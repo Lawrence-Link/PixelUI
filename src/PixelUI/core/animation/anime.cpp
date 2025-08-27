@@ -72,10 +72,13 @@ void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
         std::cerr << "[ERROR] Trying to add null animation!" << std::endl;
         return;
     }
-    
+    #ifdef DEBUG
     std::cout << "[DEBUG] Adding animation to manager. Current count: " << _animations.size() << std::endl;
+    #endif
     _animations.push_back(animation);
+    #ifdef DEBUG
     std::cout << "[DEBUG] Animation added. New count: " << _animations.size() << std::endl;
+    #endif
 }
 
 void AnimationManager::update(uint32_t currentTime) {
@@ -97,9 +100,9 @@ void AnimationManager::update(uint32_t currentTime) {
                 }
                 ++writePos;
             } else {
+                #ifdef DEBUG
                 std::cout << "[DEBUG] Animation completed, removing" << std::endl;
-                
-                // 如果动画完成，也从保护列表中移除
+                #endif
                 auto protectedIt = std::find(_protectedAnimations.begin(), _protectedAnimations.end(), *readPos);
                 if (protectedIt != _protectedAnimations.end()) {
                     _protectedAnimations.erase(protectedIt);
@@ -122,7 +125,9 @@ void AnimationManager::clear(){
 void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
     if (animation && _protectedAnimations.size() < _protectedAnimations.max_size()) {
         _protectedAnimations.push_back(animation);
+        #ifdef DEBUG
         std::cout << "[DEBUG] Marked animation as protected. Protected count: " << _protectedAnimations.size() << std::endl;
+        #endif
     }
 }
 
@@ -148,7 +153,9 @@ void AnimationManager::clearUnprotected() {
             }
             ++writePos;
         } else {
+            #ifdef DEBUG
             std::cout << "[DEBUG] Clearing unprotected animation" << std::endl;
+            #endif
         }
     }
     
@@ -157,7 +164,6 @@ void AnimationManager::clearUnprotected() {
 
 void AnimationManager::clearAllProtectionMarks() {
     _protectedAnimations.clear();
-    std::cout << "[DEBUG] Cleared all protection marks" << std::endl;
 }
 
 size_t AnimationManager::activeCount() const {

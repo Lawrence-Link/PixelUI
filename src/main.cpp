@@ -62,14 +62,14 @@ public:
                 
                 ui.renderer();  // 调用 AppView::draw()
                 emit updateRequested(); // 通知Qt更新
-                
+                #ifdef DEBUG
                 std::cout << "[DEBUG] Frame rendered and sent to display" << std::endl;
+                #endif
             }
         
         // 检查动画是否在运行，如果有动画则持续标记为dirty
             if (ui.getActiveAnimationCount() > 0 || ui.isContinousRefreshEnabled()) {
                 ui.markDirty();
-                std::cout << "Animation count: " << ui.getActiveAnimationCount() << std::endl;
             }
         
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     display.init();
 
     // call this after u8g2.init(). otherwise the display size will be null
-    MainWindow w(nullptr, display.getWidth(), display.getHeight(), 3); // initial size 128x64, scale factor 10
+    MainWindow w(nullptr, display.getWidth(), display.getHeight(), 5); // initial size 128x64, scale factor 10
     
     w.show();
     g_mainWindow = &w;

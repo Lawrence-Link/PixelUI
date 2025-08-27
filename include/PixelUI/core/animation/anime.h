@@ -7,17 +7,7 @@
 #include "etl/vector.h"
 #include <functional>
 #include "PixelUI/config.h"
-
-enum class EasingType {
-    LINEAR,
-    EASE_IN_QUAD,
-    EASE_OUT_QUAD,
-    EASE_IN_OUT_QUAD,
-    EASE_IN_CUBIC,
-    EASE_OUT_CUBIC,
-    EASE_IN_OUT_CUBIC,
-    EASE_OUT_BOUNCE
-};
+#include "PixelUI/core/CommonTypes.h"
 
 class EasingCalculator {
 public:

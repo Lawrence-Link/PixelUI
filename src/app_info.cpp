@@ -17,14 +17,12 @@ public:
     AboutApp(PixelUI& ui) : m_ui(ui){};
     void draw() override {
         // 假设可以这样访问UI对象
-        U8G2& display = m_ui.getU8G2();
+        U8G2& u8g2 = m_ui.getU8G2();
         
-        display.setFont(u8g2_font_ncenB10_tr);
-        display.drawStr(20, 20, "My GUI Lib");
-
-        display.setFont(u8g2_font_tom_thumb_4x6_mf);
-        display.drawStr(30, 35, "Version 1.0");
-        display.drawStr(15, 58, "Press BACK to exit");
+        u8g2.setFont(u8g2_font_unifont_t_chinese2);  // use chinese2 for all the glyphs of "你好世界"
+        u8g2.setFontDirection(0);
+        u8g2.drawUTF8(0, 15, "Hello World!");
+        u8g2.drawUTF8(0, 40, "你好世界");		// Chinese "Hello World" 
     }
 
     bool handleInput(InputEvent event) override {
@@ -37,7 +35,6 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
-        std::cout << "[AboutApp] Entered." << std::endl;
     }
 
     void onExit() {

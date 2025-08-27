@@ -51,7 +51,6 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
-        std::cout << "[AboutApp] Entered." << std::endl;
     }
 };
 

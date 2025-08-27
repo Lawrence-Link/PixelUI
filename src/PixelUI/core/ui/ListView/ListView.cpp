@@ -17,6 +17,9 @@ void ListView::onEnter(ExitCallback exitCallback){
         itemLoadAnimations_[i] = 0.0f;
     }
     
+    // animation: scrollbar
+    m_ui.animate(animation_pixel_dots, 32, 400, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+
     startLoadAnimation();
     scrollToTarget(0);
 }
@@ -27,7 +30,7 @@ void ListView::startLoadAnimation() {
     int maxVisible = std::min(visibleItemCount_ + 1, (int)(m_itemLength + 1));
     
     for (int i = 0; i < maxVisible; i++) {
-        int duration = 250 + i * 100;
+        int duration = 250 + i * 60;
         
         bool isLastAnimation = (i == maxVisible - 1);
         
@@ -37,14 +40,12 @@ void ListView::startLoadAnimation() {
             if (isLastAnimation && value >= 1.0f) {
                 this->isInitialLoad_ = false;
                 this->m_ui.getAnimationMan().clearAllProtectionMarks();
-                std::cout << "[DEBUG] Initial load animation sequence complete." << std::endl;
             }
         };
-        
+
         auto animation = std::make_shared<CallbackAnimation>(0.0f, 1.0f, duration, EasingType::EASE_IN_OUT_CUBIC, callback);
-        
         animation->start(m_ui.getCurrentTime());
-        
+
         m_ui.getAnimationMan().markProtected(animation);
         m_ui.getAnimationMan().addAnimation(animation);
     }
@@ -53,10 +54,8 @@ void ListView::startLoadAnimation() {
 void ListView::clearNonInitialAnimations() {
     if (isInitialLoad_) {
         m_ui.getAnimationMan().clearUnprotected();
-        std::cout << "[DEBUG] Cleared non-initial animations while protecting initial load animations" << std::endl;
     } else {
         m_ui.getAnimationMan().clear();
-        std::cout << "[DEBUG] Cleared all animations (not in initial load state)" << std::endl;
     }
 }
 
@@ -84,6 +83,8 @@ void ListView::updateScrollPosition() {
         m_ui.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC);
         topVisibleIndex_ = newTopIndex;
     }
+
+    
 }
 
 float ListView::calculateItemY(int itemIndex) {
@@ -101,6 +102,9 @@ void ListView::scrollToTarget(size_t target){
     
     m_ui.animate(CursorY, targetCursorY, 240, EasingType::EASE_IN_OUT_CUBIC);
     m_ui.animate(CursorWidth, m_ui.getU8G2().getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
+    m_ui.animate(progress_bar_top, ((float)currentCursor/((float)m_itemLength + 1)) * 64.0f + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    m_ui.animate(progress_bar_bottom, (1/((float)m_itemLength + 1)) * 64.0f - 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+
 }
 
 void ListView::navigateUp() {
@@ -122,9 +126,11 @@ void ListView::navigateDown() {
 }
 
 void ListView::selectCurrent(){
-    if (currentCursor == 0) { 
+    if (currentCursor == 0) {
+        returnToPreviousContext();
+        return ;
     }
-    if (!m_itemList[currentCursor].nextList){} 
+    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc){ m_itemList[currentCursor].pFunc(); } 
     else { 
         clearNonInitialAnimations();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
@@ -133,12 +139,14 @@ void ListView::selectCurrent(){
         currentCursor = 0;
         m_ui.markFading();
         startLoadAnimation();
+        
         scrollToTarget(0);
         return;
     }
+}
 
-    if (currentCursor == 0) {
-        if (!m_history_stack.empty()){
+void ListView::returnToPreviousContext() {
+    if (!m_history_stack.empty()){
             clearNonInitialAnimations();
             etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
             m_history_stack.pop_back();
@@ -151,10 +159,11 @@ void ListView::selectCurrent(){
             return;
         }
         else { requestExit(); }
-    }
 }
 
-void ListView::navigateLeft() {}
+void ListView::navigateLeft() {
+    returnToPreviousContext();
+}
 void ListView::navigateRight() {
     selectCurrent();
 }
@@ -219,5 +228,16 @@ void ListView::draw(){
             u8g2.drawStr(drawX, itemY, m_itemList[itemIndex].Title);
         }
     }
+
+    /* Draw the side progress bar */
+
+    // for (int i = 0; i <= static_cast<int> (animation_pixel_dots); i++)
+    //     u8g2.drawPixel(126, 2 * i);
+
+    // display.drawBox(0, 49, animation_scroll_bar, 3);
+    // u8g2.drawVLine(u8g2.getDisplayWidth() - 2, 50, animation_scroll_bar);
+
+    u8g2.drawVLine(126, progress_bar_top, progress_bar_bottom);
+
     drawCursor();
 }

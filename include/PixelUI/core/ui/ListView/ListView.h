@@ -1,16 +1,19 @@
 #pragma once
 
 #include "PixelUI/core/ui/AppView/AppView.h"
+#include "PixelUI/pixelui.h"
 #include <iostream>
 #include <algorithm>
 #include <cstring>
 #include "etl/vector.h"
+#include "etl/delegate.h"
 
 struct ListItem{
     mutable char Title[MAX_LISTITEM_NAME_NUM];
     ListItem * nextList;
     size_t nextListLength;
-    void (*pFunc)();
+    // void (*pFunc)();
+    std::function<void()> pFunc;
 };
 
 class ListView : public IApplication {
@@ -25,9 +28,10 @@ public:
     void onPause() override;
     void onExit() override;
     void resizeLength(size_t itemLength) { m_itemLength = itemLength; }
-
-private:
+    PixelUI& getUI() { return m_ui; }
+    
     PixelUI& m_ui;
+private:
     ListItem* m_itemList;
     size_t m_itemLength;
     uint8_t spacing_ = 3;
@@ -49,6 +53,8 @@ private:
     // 载入动画相关
     float itemLoadAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
     bool isInitialLoad_ = true;
+    float animation_pixel_dots = 0.0f;
+    float animation_scroll_bar = 0.0f;
     
     // 过渡动画相关
     bool isTransitioning_ = false;
@@ -60,6 +66,10 @@ private:
     ListItem* oldItemList_ = nullptr;
     size_t oldItemLength_ = 0;
     int oldTopVisibleIndex_ = 0;
+
+    // progess bar related
+    float progress_bar_top = 0;
+    float progress_bar_bottom = 0;
 
     void navigateLeft();
     void navigateRight();
@@ -75,8 +85,10 @@ private:
     int getVisibleItemIndex(int screenIndex);
     bool shouldScroll(int newCursor);
     float calculateItemY(int itemIndex);
-    void selectCurrent();
     
+    void selectCurrent();
+    void returnToPreviousContext();
+
     // 选择性清除动画的方法
     void clearNonInitialAnimations();
     

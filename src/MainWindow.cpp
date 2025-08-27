@@ -53,7 +53,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if (!m_leftPressed) {
             m_leftPressed = true;
             pushInputEvent(InputEvent::LEFT);
-            std::cout << "fuck fuck" << std::endl;
         }
         break;
     case Qt::Key_Right:
