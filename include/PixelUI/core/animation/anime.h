@@ -29,11 +29,16 @@ public:
     virtual bool update(uint32_t currentTime);
 
     bool isActive() const { return _isActive; }
+    bool isProtected() const { return _isProtected; }
+
+    void setProtected(bool prot) { _isProtected = prot; }
+
     float getProgress() const { return _progress; }
 protected:
     float _progress = 0.0f;
 private:
     bool _isActive;
+    bool _isProtected = false;
     EasingType _easing;
     uint32_t _startTime;
     uint32_t _duration;
@@ -53,7 +58,7 @@ public:
     size_t activeCount() const;
 private:
     etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
-    etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _protectedAnimations;
+    // etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _protectedAnimations;
 };
 
 class CallbackAnimation : public Animation {

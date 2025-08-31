@@ -99,13 +99,16 @@ void AnimationManager::update(uint32_t currentTime) {
                     *writePos = std::move(*readPos);
                 }
                 ++writePos;
-            } else {
+            } else { // deploy delete algorithm here.
                 #ifdef DEBUG
                 std::cout << "[DEBUG] Animation completed, removing" << std::endl;
                 #endif
-                auto protectedIt = std::find(_protectedAnimations.begin(), _protectedAnimations.end(), *readPos);
-                if (protectedIt != _protectedAnimations.end()) {
-                    _protectedAnimations.erase(protectedIt);
+                // auto protectedIt = std::find(_protectedAnimations.begin(), _protectedAnimations.end(), *readPos);
+                // if (protectedIt != _protectedAnimations.end()) { = false
+                //     _protectedAnimations.erase(protectedIt);
+                // }
+                if (!(readPos->get()->isProtected())) {
+                    readPos->get()->setProtected(false); // remove from protection after it was done :()
                 }
             }
         }
@@ -118,13 +121,12 @@ void AnimationManager::update(uint32_t currentTime) {
 }
 
 void AnimationManager::clear(){
-    _animations.clear();
-    _protectedAnimations.clear();
+    _animations.clear(); // reset all
 }
 
 void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
-    if (animation && _protectedAnimations.size() < _protectedAnimations.max_size()) {
-        _protectedAnimations.push_back(animation);
+    if (animation) {
+        animation->setProtected(true);
         #ifdef DEBUG
         std::cout << "[DEBUG] Marked animation as protected. Protected count: " << _protectedAnimations.size() << std::endl;
         #endif
@@ -140,14 +142,7 @@ void AnimationManager::clearUnprotected() {
     for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
         bool isProtected = false;
         
-        for (const auto& protectedAnim : _protectedAnimations) {
-            if (*readPos == protectedAnim) {
-                isProtected = true;
-                break;
-            }
-        }
-        
-        if (isProtected) {
+        if (readPos ->get()->isProtected()) {
             if (writePos != readPos) {
                 *writePos = std::move(*readPos);
             }
@@ -163,7 +158,9 @@ void AnimationManager::clearUnprotected() {
 }
 
 void AnimationManager::clearAllProtectionMarks() {
-    _protectedAnimations.clear();
+    for (const auto& anim_ : _animations) {
+        anim_->setProtected(false);
+    }
 }
 
 size_t AnimationManager::activeCount() const {
