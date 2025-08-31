@@ -132,7 +132,8 @@ void ListView::selectCurrent(){
     }
     if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc){ m_itemList[currentCursor].pFunc(); } 
     else { 
-        clearNonInitialAnimations();
+        // clearNonInitialAnimations();
+        m_ui.getAnimationMan().clear();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
         m_itemLength = m_itemList[currentCursor].nextListLength - 1;
         m_itemList = m_itemList[currentCursor].nextList;
@@ -147,7 +148,8 @@ void ListView::selectCurrent(){
 
 void ListView::returnToPreviousContext() {
     if (!m_history_stack.empty()){
-            clearNonInitialAnimations();
+            // clearNonInitialAnimations();
+            m_ui.getAnimationMan().clear();
             etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
             m_history_stack.pop_back();
             m_itemList = parent_state.first.first;
