@@ -90,7 +90,9 @@ void AnimationManager::update(uint32_t currentTime) {
         auto writePos = _animations.begin();
         for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
             if (!*readPos) {
+                #ifdef DEBUG
                 std::cerr << "[ERROR] Null animation found in manager!" << std::endl;
+                #endif
                 continue;
             }
             
@@ -147,10 +149,6 @@ void AnimationManager::clearUnprotected() {
                 *writePos = std::move(*readPos);
             }
             ++writePos;
-        } else {
-            #ifdef DEBUG
-            std::cout << "[DEBUG] Clearing unprotected animation" << std::endl;
-            #endif
         }
     }
     

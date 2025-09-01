@@ -51,6 +51,11 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
+        this->m_ui.setContinousDraw(true);
+    }
+
+    void onExit() override {
+        this->m_ui.setContinousDraw(false);
     }
 };
 

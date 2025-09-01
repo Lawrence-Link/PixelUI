@@ -52,11 +52,7 @@ void ListView::startLoadAnimation() {
 }
 
 void ListView::clearNonInitialAnimations() {
-    if (isInitialLoad_) {
-        m_ui.getAnimationMan().clearUnprotected();
-    } else {
-        m_ui.getAnimationMan().clear();
-    }
+    m_ui.getAnimationMan().clearUnprotected();
 }
 
 bool ListView::shouldScroll(int newCursor) {
@@ -67,7 +63,8 @@ void ListView::updateScrollPosition() {
     if (!shouldScroll(currentCursor)) {
         return;
     }
-    
+    // if scroll is needed then:
+    // calculate new top visible index
     int newTopIndex = topVisibleIndex_;
     if (currentCursor < topVisibleIndex_) {
         newTopIndex = currentCursor;
@@ -80,11 +77,9 @@ void ListView::updateScrollPosition() {
     
     if (newTopIndex != topVisibleIndex_) {
         float targetScrollOffset = -newTopIndex * (FontHeight + spacing_);
-        m_ui.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC);
+        m_ui.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
         topVisibleIndex_ = newTopIndex;
     }
-
-    
 }
 
 float ListView::calculateItemY(int itemIndex) {
@@ -100,16 +95,21 @@ void ListView::scrollToTarget(size_t target){
     int screenCursorIndex = currentCursor - topVisibleIndex_;
     float targetCursorY = topMargin_ + screenCursorIndex * (FontHeight + spacing_) - 1;
     
+    // 光标的Y轴
     m_ui.animate(CursorY, targetCursorY, 240, EasingType::EASE_IN_OUT_CUBIC);
+    // 反色光标的宽度
     m_ui.animate(CursorWidth, m_ui.getU8G2().getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
+    // 进度条顶端
     m_ui.animate(progress_bar_top, ((float)currentCursor/((float)m_itemLength + 1)) * 64.0f + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    // 进度条底部
     m_ui.animate(progress_bar_bottom, (1/((float)m_itemLength + 1)) * 64.0f - 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
-
 }
 
 void ListView::navigateUp() {
-    if (currentCursor != 0)
+    if (currentCursor != 0) {
+        // syncScrollPosition();  // 在清除动画前先同步位置
         clearNonInitialAnimations();
+    }
     if (currentCursor > 0) {
         currentCursor--;
         scrollToTarget(currentCursor);
@@ -117,8 +117,10 @@ void ListView::navigateUp() {
 }
 
 void ListView::navigateDown() {
-    if (currentCursor != m_itemLength)
+    if (currentCursor != m_itemLength) {
+        // syncScrollPosition();  // 在清除动画前先同步位置
         clearNonInitialAnimations();
+    }
     if (currentCursor < m_itemLength) {
         currentCursor++;
         scrollToTarget(currentCursor);
@@ -130,7 +132,15 @@ void ListView::selectCurrent(){
         returnToPreviousContext();
         return ;
     }
-    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc){ m_itemList[currentCursor].pFunc(); } 
+    // 无nextlist 有function 无int/switch value
+    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc && !m_itemList[currentCursor].extra.intValue && !m_itemList[currentCursor].extra.switchValue){ m_itemList[currentCursor].pFunc(); } // 进入 pFunc
+    else if (m_itemList[currentCursor].extra.intValue) { // 有int value
+        *m_itemList[currentCursor].extra.intValue = !(*m_itemList[currentCursor].extra.intValue);
+        // switch (*m_itemList[currentCursor].extra.intValue) {
+        //     case false: m_itemList[currentCursor];
+        //     case true: break;
+        // }
+    }
     else { 
         // clearNonInitialAnimations();
         m_ui.getAnimationMan().clear();
@@ -148,19 +158,19 @@ void ListView::selectCurrent(){
 
 void ListView::returnToPreviousContext() {
     if (!m_history_stack.empty()){
-            // clearNonInitialAnimations();
-            m_ui.getAnimationMan().clear();
-            etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
-            m_history_stack.pop_back();
-            m_itemList = parent_state.first.first;
-            m_itemLength = parent_state.first.second;
-            currentCursor = parent_state.second;
-            m_ui.markFading();
-            startLoadAnimation();
-            scrollToTarget(currentCursor);
-            return;
-        }
-        else { requestExit(); }
+        // clearNonInitialAnimations();
+        m_ui.getAnimationMan().clear();
+        etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
+        m_history_stack.pop_back();
+        m_itemList = parent_state.first.first;
+        m_itemLength = parent_state.first.second;
+        currentCursor = parent_state.second;
+        m_ui.markFading();
+        startLoadAnimation();
+        scrollToTarget(currentCursor);
+        return;
+    }
+    else { requestExit(); }
 }
 
 void ListView::navigateLeft() {
@@ -228,6 +238,15 @@ void ListView::draw(){
                 }
             }
             u8g2.drawStr(drawX, itemY, m_itemList[itemIndex].Title);
+            
+            if (m_itemList[itemIndex].extra.switchValue) {
+                u8g2.drawFrame(u8g2.getDisplayWidth() - 30, itemY - 6, 14, 7);
+                // u8g2.drawBox(u8g2.getDisplayWidth() - 30 + m_itemList[itemIndex].getVal1()/* +7 or 0 */, itemY - 6, 7, 7);
+            }
+
+            if (m_itemList[itemIndex].extra.intValue) {
+                
+            }
         }
     }
 

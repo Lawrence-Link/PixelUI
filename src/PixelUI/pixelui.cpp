@@ -40,9 +40,8 @@ void PixelUI::animate(float& value, float targetValue, uint32_t duration, Easing
             value = currentValue;
         }
     );
+    if (prot == PROTECTION::PROTECTED) _animationManager.markProtected(animation);
     addAnimation(animation);
-    if (prot == PROTECTION::PROTECTED)
-        _animationManager.markProtected(animation);
 }
 
 void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing, PROTECTION prot) {
@@ -91,10 +90,7 @@ void PixelUI::renderer() {
         for (int fade = 1; fade <= 4; fade++){
             switch (fade)
             {
-                case 1: for (uint16_t i = 0; i < buf_len; ++i)  
-                            if (i % 2 != 0) 
-                                buf_ptr[i] = buf_ptr[i] & 0xAA;
-                        break;
+                case 1: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0xAA; break;
                 case 2: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;
                 case 3: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x55; break;
                 case 4: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;

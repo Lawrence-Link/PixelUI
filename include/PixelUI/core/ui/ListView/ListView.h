@@ -8,12 +8,35 @@
 #include "etl/vector.h"
 #include "etl/delegate.h"
 
+struct ListItemExtra{
+    bool* switchValue = nullptr;
+    int*  intValue = nullptr;
+};
+
 struct ListItem{
     mutable char Title[MAX_LISTITEM_NAME_NUM];
     ListItem * nextList;
     size_t nextListLength;
     // void (*pFunc)();
     std::function<void()> pFunc;
+    ListItemExtra extra;
+private:
+    float anim_val1 = 0;
+    float anim_val2 = 0;
+public:
+    ListItem(const char* title,
+             ListItem* next = nullptr,
+             size_t nextLen = 0,
+             std::function<void()> func = nullptr,
+             ListItemExtra ex = {})
+        : nextList(next), nextListLength(nextLen), pFunc(func), extra(ex)
+    {
+        strncpy(Title, title, sizeof(Title));
+        Title[sizeof(Title)-1] = 0;
+    }
+    // float getVal1 () const {return anim_val1;}
+    // float getVal2 () const {return anim_val2;}
+    // void updateExtra() {}
 };
 
 class ListView : public IApplication {
@@ -86,6 +109,8 @@ private:
     bool shouldScroll(int newCursor);
     float calculateItemY(int itemIndex);
     
+    void updateExtra();
+
     void selectCurrent();
     void returnToPreviousContext();
 
