@@ -107,7 +107,6 @@ void ListView::scrollToTarget(size_t target){
 
 void ListView::navigateUp() {
     if (currentCursor != 0) {
-        // syncScrollPosition();  // 在清除动画前先同步位置
         clearNonInitialAnimations();
     }
     if (currentCursor > 0) {
@@ -118,7 +117,6 @@ void ListView::navigateUp() {
 
 void ListView::navigateDown() {
     if (currentCursor != m_itemLength) {
-        // syncScrollPosition();  // 在清除动画前先同步位置
         clearNonInitialAnimations();
     }
     if (currentCursor < m_itemLength) {

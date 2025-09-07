@@ -24,12 +24,12 @@ public:
         
         timestpNow = m_ui.getCurrentTime();
 
-        if (timestpNow - timestpPrev > 100) {
+        if (timestpNow - timestpPrev > 50) {
             timestpPrev = timestpNow;
             if (state) {
-                m_ui.animate(height, 35, 100, EasingType::LINEAR);
+                m_ui.animate(height, 35, 50, EasingType::LINEAR);
             } else {
-                m_ui.animate(height, 28, 100, EasingType::LINEAR);
+                m_ui.animate(height, 28, 50, EasingType::LINEAR);
             }
             state = !state;
         }

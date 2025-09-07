@@ -32,6 +32,7 @@ set(SOURCES
     src/app_info.cpp
     src/app_dynamic_info.cpp
     src/app_cube_demo.cpp
+    src/charging_animation.cpp
 
     src/PixelUI/core/app/app_system.cpp
     src/PixelUI/core/animation/anime.cpp
