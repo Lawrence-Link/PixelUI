@@ -18,14 +18,18 @@ U8G2Wrapper display;
 PixelUI ui(display);
 
 MainWindow* g_mainWindow = nullptr;
+
+void threadDelay(uint32_t ms) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
+
 class EmulatorThread : public EmuWorker {
 public:
     void grandLoop() override { 
-    ui.begin();
+    ui.setDelayFunction(threadDelay);
 
     auto appView = std::make_shared<AppView>(ui, *ui.getViewManagerPtr());
     ui.getViewManagerPtr()->push(appView);
-
         while (running) {
 
             bool isDirty = ui.isDirty();
@@ -87,7 +91,7 @@ int main(int argc, char *argv[]) {
         emit worker_ptr->updateRequested();
     };
 
-    ui.setEmuRefreshFunc(refreshEmulator);
+    ui.setRefreshCallback(refreshEmulator);
 
     worker.start();  // enable background thread for u8g2 emulation
     int ret = app.exec();

@@ -24,6 +24,8 @@ public:
 
 using InputCallback = std::function<bool(InputEvent)>;
 
+typedef void (*DelayFunction)(uint32_t);
+
 class ViewManager;
 
 class PixelUI
@@ -56,14 +58,16 @@ public:
 
     // setters
     void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
-    void setEmuRefreshFunc(std::function <void()> function) { emu_refresh_func_ = function; }
-    void setInputCallback(InputCallback callback) { inputCallback_ = callback; }
+    void setRefreshCallback(std::function <void()> function) { if (function) emu_refresh_func_ = function; }
+    void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
     void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
+    void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
 
     // getters
     U8G2& getU8G2() const { return u8g2_; }
     std::shared_ptr<AnimationManager> getAnimationManPtr() { return m_animationManagerPtr; }
-    PopupManager& getPopupManager() { return *popupManager_; }
+    // PopupManager& getPopupManager() { return *popupManager_; }
+    
     bool isDirty() const { return isDirty_; }
     bool isFading() const { return isFading_; }
     bool isPointerValid(const void* ptr) const { return ptr != nullptr; }
@@ -71,26 +75,23 @@ public:
     bool isContinousRefreshEnabled() const { return continousMode_; }
     uint32_t getActiveAnimationCount() const { return m_animationManagerPtr->activeCount(); }
 
-    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; } // TBD
+    std::function <void()> getRefreshCallback() {return emu_refresh_func_; }
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
 
     std::shared_ptr<ViewManager> getViewManagerPtr() const { return m_viewManagerPtr; }
 
-    void showInfoPopup(const std::string& message, uint32_t duration = 2000) {
-        popupManager_->showInfo(message, duration);
-    }
-    
-    void showWarningPopup(const std::string& message, uint32_t duration = 3000) {
-        popupManager_->showWarning(message, duration);
-    }
-    
-    void showErrorPopup(const std::string& message, uint32_t duration = 4000) {
-        popupManager_->showError(message, duration);
-    }
-    
-    void showConfirmPopup(const std::string& message, std::function<void(bool)> callback) {
-        popupManager_->showConfirm(message, callback);
-    }
+    // void showInfoPopup(const std::string& message, uint32_t duration = 2000) {
+    //     popupManager_->showInfo(message, duration);
+    // }
+    // void showWarningPopup(const std::string& message, uint32_t duration = 3000) {
+    //     popupManager_->showWarning(message, duration);
+    // }
+    // void showErrorPopup(const std::string& message, uint32_t duration = 4000) {
+    //     popupManager_->showError(message, duration);
+    // }
+    // void showConfirmPopup(const std::string& message, std::function<void(bool)> callback) {
+    //     popupManager_->showConfirm(message, callback);
+    // }
 
     void markDirty() { isDirty_ = true; }
     void markFading() { isFading_ = true; }
@@ -108,15 +109,16 @@ private:
     std::shared_ptr<AnimationManager> m_animationManagerPtr;
     std::shared_ptr<ViewManager> m_viewManagerPtr;
 
-    uint32_t _currentTime;
+    uint32_t _currentTime = 0;
     std::shared_ptr<IDrawable> currentDrawable_;
-    std::unique_ptr<PopupManager> popupManager_;
 
     bool isDirty_ = false;
     bool isFading_ = false;
     bool continousMode_ = false;
 
     std::function<void()> emu_refresh_func_;
+
+    DelayFunction m_func_delay;
 
     InputCallback inputCallback_;
 };

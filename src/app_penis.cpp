@@ -12,7 +12,7 @@ int timestpNow;
 float height = 28;
 bool state = 0;
 // --- 用户自定义的应用 ---
-// 这是一个简单的“关于”页面应用
+// 这是一个简单的“Penis”页面应用
 class Penis : public IApplication {
 private:
     PixelUI& m_ui;

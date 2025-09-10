@@ -1,5 +1,10 @@
 #include "PixelUI/core/animation/animation.h"
 
+/*
+@brief Easing functions implementation
+@param type EasingType enum value
+@param t Normalized time (0.0 to 1.0)
+*/
 float EasingCalculator::calculate(EasingType type, float t) 
 {
     switch (type) 
@@ -50,46 +55,46 @@ void Animation::stop() {
     _isActive = false;
 }
 
-// bool Animation::update(uint32_t currentTime){
-//     if (!_isActive) {
-//         return false;
-//     }
-
-//     uint32_t elapsed = currentTime - _startTime; 
-//     if (elapsed >= _duration) {
-//         _progress = 1.0f;
-//         _isActive = false;
-//         return false;
-//     }
-
-//     float t = static_cast<float> (elapsed) / static_cast<float>(_duration);
-//     _progress = EasingCalculator::calculate(_easing, t);
-//     return true;
-// }
-
 bool Animation::update(uint32_t currentTime){
     if (!_isActive) {
         return false;
     }
 
     uint32_t elapsed = currentTime - _startTime; 
-    
-    // 检查动画是否完成
-    bool completed = (elapsed >= _duration);
-
-    // 计算t值。如果已完成，确保t为1.0
-    float t = completed ? 1.0f : static_cast<float>(elapsed) / static_cast<float>(_duration);
-
-    // 始终通过缓动函数计算进度，确保终点平滑
-    _progress = EasingCalculator::calculate(_easing, t);
-
-    // 如果动画已完成，更新状态并返回
-    if (completed) {
+    if (elapsed >= _duration - 50) { // eliminate overshoot
+        _progress = 1.0f;
         _isActive = false;
         return false;
     }
+
+    float t = static_cast<float> (elapsed) / static_cast<float>(_duration);
+    _progress = EasingCalculator::calculate(_easing, t);
     return true;
 }
+
+// bool Animation::update(uint32_t currentTime){
+//     if (!_isActive) {
+//         return false;
+//     }
+
+//     uint32_t elapsed = currentTime - _startTime; 
+    
+//     // 检查动画是否完成
+//     bool completed = (elapsed >= _duration);
+
+//     // 计算t值。如果已完成，确保t为1.0
+//     float t = completed ? 1.0f : static_cast<float>(elapsed) / static_cast<float>(_duration);
+
+//     // 始终通过缓动函数计算进度，确保终点平滑
+//     _progress = EasingCalculator::calculate(_easing, t);
+
+//     // 如果动画已完成，更新状态并返回
+//     if (completed) {
+//         _isActive = false;
+//         return false;
+//     }
+//     return true;
+// }
 
 void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
     if (!animation) {

@@ -12,16 +12,12 @@ PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
 
 void PixelUI::begin() 
 {
-    _currentTime = 0;
     m_animationManagerPtr->clear();
-    // _totalAnimationsCreated = 0;
-    // _animationUpdateCalls = 0;
 }
 
 void PixelUI::Heartbeat(uint32_t ms) 
 {
     _currentTime += ms;
-    // _animationUpdateCalls++;
     
     size_t beforeCount = m_animationManagerPtr->activeCount();
     m_animationManagerPtr->update(_currentTime);
@@ -102,7 +98,7 @@ void PixelUI::renderer() {
             }
             this->getU8G2().sendBuffer();
             getEmuRefreshFunction()();
-            std::this_thread::sleep_for(std::chrono::milliseconds(40));
+            m_func_delay(40);
         }
         isFading_ = false;
     }
