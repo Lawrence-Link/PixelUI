@@ -20,7 +20,7 @@ public:
     Penis(PixelUI& ui) : m_ui(ui) {}
     void draw() override {
         // 假设可以这样访问UI对象
-        U8G2Wrapper& display = m_ui.getU8G2();
+        U8G2& display = m_ui.getU8G2();
         
         timestpNow = m_ui.getCurrentTime();
 

@@ -1,32 +1,31 @@
 #include "PixelUI/pixelui.h"
 #include "PixelUI/core/ViewManager/ViewManager.h"
-#include <iostream>
 #include <cassert>
 #include "EmuWorker.h"
 #include <functional>
 
-PixelUI::PixelUI(U8G2Wrapper& u8g2) : u8g2_(u8g2), _currentTime(0) {
-    popupManager_ = std::make_unique<PopupManager>(*this, _animationManager);
-    m_viewManager = std::make_shared<ViewManager>(*this);
+PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
+    // popupManager_ = std::make_unique<PopupManager>(*this, _animationManager);
+    m_viewManagerPtr = std::make_shared<ViewManager>(*this);
+    m_animationManagerPtr = std::make_shared<AnimationManager>();
 }
 
 void PixelUI::begin() 
 {
     _currentTime = 0;
-    _animationManager.clear();
-    _totalAnimationsCreated = 0;
-    _animationUpdateCalls = 0;
-    std::cout << "[DEBUG] PixelUI initialized successfully" << std::endl;
+    m_animationManagerPtr->clear();
+    // _totalAnimationsCreated = 0;
+    // _animationUpdateCalls = 0;
 }
 
 void PixelUI::Heartbeat(uint32_t ms) 
 {
     _currentTime += ms;
-    _animationUpdateCalls++;
+    // _animationUpdateCalls++;
     
-    size_t beforeCount = _animationManager.activeCount();
-    _animationManager.update(_currentTime);
-    size_t afterCount = _animationManager.activeCount();
+    size_t beforeCount = m_animationManagerPtr->activeCount();
+    m_animationManagerPtr->update(_currentTime);
+    size_t afterCount = m_animationManagerPtr->activeCount();
     
     // 更新popup
     if (popupManager_) {
@@ -36,7 +35,7 @@ void PixelUI::Heartbeat(uint32_t ms)
 
 void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
     animation->start(_currentTime); // 启动动画
-    _animationManager.addAnimation(animation); // 交给动画管理器
+    m_animationManagerPtr->addAnimation(animation); // 交给动画管理器
 }
 
 void PixelUI::animate(float& value, float targetValue, uint32_t duration, EasingType easing, PROTECTION prot) {
@@ -46,7 +45,7 @@ void PixelUI::animate(float& value, float targetValue, uint32_t duration, Easing
             value = currentValue;
         }
     );
-    if (prot == PROTECTION::PROTECTED) _animationManager.markProtected(animation);
+    if (prot == PROTECTION::PROTECTED) m_animationManagerPtr->markProtected(animation);
     addAnimation(animation);
 }
 
@@ -70,8 +69,8 @@ void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t
     addAnimation(animY);
 
     if (prot == PROTECTION::PROTECTED) {
-        _animationManager.markProtected(animX);
-        _animationManager.markProtected(animY);
+        m_animationManagerPtr->markProtected(animX);
+        m_animationManagerPtr->markProtected(animY);
     }
 }
 

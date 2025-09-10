@@ -9,6 +9,7 @@
 #include "PixelUI/config.h"
 #include "PixelUI/core/CommonTypes.h"
 #include "PixelUI/core/animation/animation.h"
+// #include "PixelUI/core/ViewManager/ViewManager.h"
 
 class EasingCalculator {
 public:
@@ -47,6 +48,8 @@ private:
 
 class AnimationManager {
 public:
+    // AnimationManager{};
+    ~AnimationManager() = default;
     void addAnimation(std::shared_ptr<Animation> animation);
     void update(uint32_t currentTime);
     void clear();
@@ -59,6 +62,7 @@ public:
     size_t activeCount() const;
 private:
     etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
+    // ViewManager& m_viewManager;
 };
 
 class CallbackAnimation : public Animation {

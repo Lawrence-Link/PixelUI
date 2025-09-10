@@ -3,9 +3,6 @@
 #include "PixelUI/pixelui.h"
 #include "functional"
 
-class IDrawable;
-class IInputHandler;
-
 class IApplication : public IDrawable, public IInputHandler {
 public:
 

@@ -93,7 +93,7 @@ public:
     void draw() override {
         extern PixelUI ui;
         ui.markDirty();
-        U8G2Wrapper& display = ui.getU8G2();
+        U8G2& display = ui.getU8G2();
         
         display.setFont(u8g2_font_ncenB10_tr);
         display.drawStr(20, 20, "Cube Demo");

@@ -43,7 +43,7 @@ public:
     // ---------------- Drawing function ----------------
     void draw() override {
         m_ui.markDirty();
-        U8G2Wrapper& display = m_ui.getU8G2();
+        U8G2& display = m_ui.getU8G2();
 
         int centerX = 64 + lightningOffsetX;
         int centerY = 32;
@@ -53,8 +53,6 @@ public:
 
         // Draw the ring (animated)
         drawBatteryRing(display, 64, 32, 15, 2, ringPercent);
-        
-        
 
         // Draw the percentage number
         if (state == ChargeState::MOVE_LIGHTNING || state == ChargeState::DONE) {

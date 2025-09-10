@@ -1,8 +1,6 @@
 #include "PixelUI/core/ui/AppView/AppView.h"
-#include <iostream>
 #include <algorithm>
 #include <cstring>
-
 
 AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(AppManager::getInstance()), m_viewManager(viewManager) {
     // currentIndex_ = 0;  // 初始化当前索引为0
@@ -32,9 +30,6 @@ void AppView::updateProgressBar() {
 void AppView::onEnter(ExitCallback exitCallback) {
     const auto& apps = appManager_.getAppVector();
     IApplication::onEnter(exitCallback);
-    #ifdef DEBUG
-    std::cout << "[AppView] Entered." << std::endl;
-    #endif
     // 可以在这里开始进入动画
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
     // ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 700, EasingType::EASE_OUT_QUAD);
@@ -43,10 +38,6 @@ void AppView::onEnter(ExitCallback exitCallback) {
 }
 
 void AppView::onResume() {
-    #ifdef DEBUG
-    std::cout << "[AppView] Resumed." << std::endl;
-    #endif
-    
     animation_scroll_bar = 0;
     scrollOffset_ -= 50;
 
@@ -90,7 +81,7 @@ void AppView::navigateRight() {
 }
 
 void AppView::draw() {
-    U8G2Wrapper& display = ui_.getU8G2();
+    U8G2& display = ui_.getU8G2();
     
     static bool run_once = false;
 
@@ -142,7 +133,7 @@ void AppView::selectCurrentApp() {
 
 // draw Selector by center coordinate.
 void AppView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
-    U8G2Wrapper& display = ui_.getU8G2();
+    U8G2& display = ui_.getU8G2();
 
     int half_length = 0.5 * length;
 
@@ -188,7 +179,7 @@ int AppView::calculateIconX(int index) {
 void AppView::drawHorizontalAppList() {
     const auto& apps = appManager_.getAppVector();
     if (apps.empty()) {
-        U8G2Wrapper& display = ui_.getU8G2();
+        U8G2& display = ui_.getU8G2();
         display.drawStr(centerX_ - 20, iconY_ + 16, "No Apps");
         return;
     }
@@ -204,16 +195,12 @@ void AppView::drawHorizontalAppList() {
         int iconX = calculateIconX(i);
         // 判断是否在中心区域
         bool inCenter = (i == currentIndex_);
-
-        #ifdef DEBUG
-        std::cout << "[DEBUG] Icon " << i << " at X=" << iconX << (inCenter ? " [CENTER]" : "") << std::endl;
-        #endif
         drawAppIcon(apps[i], iconX, iconY_, inCenter);
     }
 }
 
 void AppView::drawAppIcon(const AppItem& app, int x, int y, bool inCenter) {
-    U8G2Wrapper& display = ui_.getU8G2();
+    U8G2& display = ui_.getU8G2();
     
     // 绘制应用图标
     if (app.bitmap) {
@@ -270,7 +257,7 @@ void AppView::scrollToIndex(int newIndex) {
     int totalApps = apps.size();
     if (totalApps == 0) return;
 
-    ui_.getAnimationMan().clearUnprotected();
+    ui_.getAnimationManPtr()->clearUnprotected();
 
     int targetSlot;
     if (newIndex == 0) {

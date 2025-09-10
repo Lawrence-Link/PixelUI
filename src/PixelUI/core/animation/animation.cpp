@@ -102,7 +102,8 @@ void AnimationManager::update(uint32_t currentTime) {
     if (_animations.empty()) {
         return;
     }
-    
+    // if (m_viewManager.isTransitioning()) return;
+
         auto writePos = _animations.begin();
         for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
             if ((*readPos)->update(currentTime)) {

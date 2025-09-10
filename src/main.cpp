@@ -14,31 +14,17 @@
 #include "PixelUI/pixelui.h"
 #include "PixelUI/core/ui/AppView/AppView.h"
 
-// #include "PixelUI/menu_system.h"
-// #include "PixelUI/app_example.h"
-
-// #include "PixelUI/PSUI_animation.h"
-
 U8G2Wrapper display;
 PixelUI ui(display);
-// void renderMenu(const MenuLevel* menu) {
-//     if (!menu) return;
-    
-//     std::cout << "\n=== " << menu->title << " ===\n";
-//     for (size_t i = 0; i < menu->itemCount; ++i) {
-//         std::cout << (i == menu->selectedIndex ? "> " : "  ");
-//         std::cout << menu->items[i].title << "\n";
-//     }
-//     std::cout << "========================\n";
-// }
+
 MainWindow* g_mainWindow = nullptr;
 class EmulatorThread : public EmuWorker {
 public:
     void grandLoop() override { 
     ui.begin();
 
-    auto appView = std::make_shared<AppView>(ui, *ui.getViewManager());
-    ui.getViewManager()->push(appView);
+    auto appView = std::make_shared<AppView>(ui, *ui.getViewManagerPtr());
+    ui.getViewManagerPtr()->push(appView);
 
         while (running) {
 
@@ -46,14 +32,9 @@ public:
         
             auto eventOpt = g_mainWindow->popInputEvent();
             if (eventOpt.has_value()) {
-                // 如果有事件，就交给PixelUI处理
                 ui.handleInput(eventOpt.value());
-            } else {
-                // 队列为空，退出循环
-                
             }
-            
-        // 只在内容改变时重绘
+            // 只在内容改变时重绘
             if (isDirty) {
                 ui.renderer();  // 调用 AppView::draw()
                 emit updateRequested(); // 通知Qt更新

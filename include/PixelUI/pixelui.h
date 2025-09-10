@@ -26,10 +26,10 @@ using InputCallback = std::function<bool(InputEvent)>;
 
 class ViewManager;
 
-class PixelUI : public IPopupRenderer
+class PixelUI
 {
 public:
-    PixelUI(U8G2Wrapper& u8g2);
+    PixelUI(U8G2& u8g2);
     ~PixelUI() = default;
 
     void begin();
@@ -40,20 +40,19 @@ public:
 
     void addAnimation(std::shared_ptr<Animation> animation);
 
-    // IPopupRenderer接口实现
-    uint32_t getCurrentTime() const override { return _currentTime; }
+    uint32_t getCurrentTime() const { return _currentTime; }
 
-    void markAnimationProtected(std::shared_ptr<Animation> animation) override {
-        _animationManager.markProtected(animation);
-    }
-    
-    // 绘制接口实现
-    void setDrawColor(int color) override { u8g2_.setDrawColor(color); }
-    void drawRBox(int x, int y, int w, int h, int r) override { u8g2_.drawRBox(x, y, w, h, r); }
-    void drawRFrame(int x, int y, int w, int h, int r) override { u8g2_.drawRFrame(x, y, w, h, r); }
-    void drawStr(int x, int y, const char* str) override { u8g2_.drawStr(x, y, str); }
-    void drawPixel(int x, int y) override { u8g2_.drawPixel(x, y); }
-    void setFont(const uint8_t* font) override { u8g2_.setFont(font); }
+    void markAnimationProtected(std::shared_ptr<Animation> animation) { m_animationManagerPtr->markProtected(animation); }
+    void clearUnprotectedAnimations() { m_animationManagerPtr->clearUnprotected(); }
+    void clearAllProtectionMarks() { m_animationManagerPtr->clearAllProtectionMarks(); }
+    void clearAllAnimations() { m_animationManagerPtr->clear(); }
+
+    // void setDrawColor(int color) override { u8g2_.setDrawColor(color); }
+    // void drawRBox(int x, int y, int w, int h, int r) override { u8g2_.drawRBox(x, y, w, h, r); }
+    // void drawRFrame(int x, int y, int w, int h, int r) override { u8g2_.drawRFrame(x, y, w, h, r); }
+    // void drawStr(int x, int y, const char* str) override { u8g2_.drawStr(x, y, str); }
+    // void drawPixel(int x, int y) override { u8g2_.drawPixel(x, y); }
+    // void setFont(const uint8_t* font) override { u8g2_.setFont(font); }
 
     // setters
     void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
@@ -62,16 +61,20 @@ public:
     void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
 
     // getters
-    U8G2Wrapper& getU8G2() const { return u8g2_; }
-    AnimationManager& getAnimationMan() { return _animationManager; }
+    U8G2& getU8G2() const { return u8g2_; }
+    std::shared_ptr<AnimationManager> getAnimationManPtr() { return m_animationManagerPtr; }
     PopupManager& getPopupManager() { return *popupManager_; }
     bool isDirty() const { return isDirty_; }
     bool isFading() const { return isFading_; }
     bool isPointerValid(const void* ptr) const { return ptr != nullptr; }
+
     bool isContinousRefreshEnabled() const { return continousMode_; }
-    uint32_t getActiveAnimationCount() const { return _animationManager.activeCount(); }
+    uint32_t getActiveAnimationCount() const { return m_animationManagerPtr->activeCount(); }
+
+    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; } // TBD
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
-    std::shared_ptr<ViewManager> getViewManager() const { return m_viewManager; }
+
+    std::shared_ptr<ViewManager> getViewManagerPtr() const { return m_viewManagerPtr; }
 
     void showInfoPopup(const std::string& message, uint32_t duration = 2000) {
         popupManager_->showInfo(message, duration);
@@ -97,11 +100,13 @@ public:
         return false;
     }
     void renderer();
+
 protected:
 private:
-    U8G2Wrapper& u8g2_;
-    AnimationManager _animationManager;
-    std::shared_ptr<ViewManager> m_viewManager;
+    U8G2& u8g2_;
+
+    std::shared_ptr<AnimationManager> m_animationManagerPtr;
+    std::shared_ptr<ViewManager> m_viewManagerPtr;
 
     uint32_t _currentTime;
     std::shared_ptr<IDrawable> currentDrawable_;
@@ -114,7 +119,4 @@ private:
     std::function<void()> emu_refresh_func_;
 
     InputCallback inputCallback_;
-
-    mutable size_t _totalAnimationsCreated = 0;
-    mutable size_t _animationUpdateCalls = 0;
 };

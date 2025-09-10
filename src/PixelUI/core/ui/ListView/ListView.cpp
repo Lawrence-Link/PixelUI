@@ -39,20 +39,20 @@ void ListView::startLoadAnimation() {
             
             if (isLastAnimation && value >= 1.0f) {
                 this->isInitialLoad_ = false;
-                this->m_ui.getAnimationMan().clearAllProtectionMarks();
+                this->m_ui.getAnimationManPtr()->clearAllProtectionMarks();
             }
         };
 
         auto animation = std::make_shared<CallbackAnimation>(0.0f, 1.0f, duration, EasingType::EASE_IN_OUT_CUBIC, callback);
         animation->start(m_ui.getCurrentTime());
 
-        m_ui.getAnimationMan().markProtected(animation);
-        m_ui.getAnimationMan().addAnimation(animation);
+        m_ui.getAnimationManPtr()->markProtected(animation);
+        m_ui.getAnimationManPtr()->addAnimation(animation);
     }
 }
 
 void ListView::clearNonInitialAnimations() {
-    m_ui.getAnimationMan().clearUnprotected();
+    m_ui.getAnimationManPtr()->clearUnprotected();
 }
 
 bool ListView::shouldScroll(int newCursor) {
@@ -141,7 +141,7 @@ void ListView::selectCurrent(){
     }
     else { 
         // clearNonInitialAnimations();
-        m_ui.getAnimationMan().clear();
+        m_ui.getAnimationManPtr()->clear();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
         m_itemLength = m_itemList[currentCursor].nextListLength - 1;
         m_itemList = m_itemList[currentCursor].nextList;
@@ -157,7 +157,7 @@ void ListView::selectCurrent(){
 void ListView::returnToPreviousContext() {
     if (!m_history_stack.empty()){
         // clearNonInitialAnimations();
-        m_ui.getAnimationMan().clear();
+        m_ui.getAnimationManPtr()->clear();
         etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
         m_history_stack.pop_back();
         m_itemList = parent_state.first.first;
@@ -205,7 +205,7 @@ void ListView::drawCursor() {
 
 void ListView::onResume() {
     isInitialLoad_ = false;
-    m_ui.getAnimationMan().clearAllProtectionMarks();
+    m_ui.getAnimationManPtr()->clearAllProtectionMarks();
 }
 
 void ListView::onPause() {}
@@ -213,7 +213,7 @@ void ListView::onPause() {}
 void ListView::onExit() {
     m_ui.markFading();
     m_ui.setContinousDraw(false);
-    m_ui.getAnimationMan().clearAllProtectionMarks();
+    m_ui.getAnimationManPtr()->clearAllProtectionMarks();
 }
 
 void ListView::draw(){

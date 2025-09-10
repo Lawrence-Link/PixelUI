@@ -20,7 +20,7 @@ public:
     void draw() override {
         // 假设可以这样访问UI对象
         extern PixelUI ui;
-        U8G2Wrapper& display = ui.getU8G2();
+        U8G2& display = ui.getU8G2();
         
         display.setFont(u8g2_font_ncenB10_tr);
         display.drawStr(40, Y_Title, "PixelUI");
