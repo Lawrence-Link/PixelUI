@@ -21,7 +21,6 @@
 
 U8G2Wrapper display;
 PixelUI ui(display);
-ViewManager viewManager(ui);
 // void renderMenu(const MenuLevel* menu) {
 //     if (!menu) return;
     
@@ -38,9 +37,8 @@ public:
     void grandLoop() override { 
     ui.begin();
 
-    auto appView = std::make_shared<AppView>(ui, viewManager);
-    
-    viewManager.push(appView); // load appView
+    auto appView = std::make_shared<AppView>(ui, *ui.getViewManager());
+    ui.getViewManager()->push(appView);
 
         while (running) {
 

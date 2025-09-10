@@ -24,12 +24,12 @@ public:
 
 using InputCallback = std::function<bool(InputEvent)>;
 
+class ViewManager;
+
 class PixelUI : public IPopupRenderer
 {
 public:
-    PixelUI(U8G2Wrapper& u8g2) : u8g2_(u8g2), _currentTime(0) {
-        popupManager_ = std::make_unique<PopupManager>(*this, _animationManager);
-    }
+    PixelUI(U8G2Wrapper& u8g2);
     ~PixelUI() = default;
 
     void begin();
@@ -70,8 +70,8 @@ public:
     bool isPointerValid(const void* ptr) const { return ptr != nullptr; }
     bool isContinousRefreshEnabled() const { return continousMode_; }
     uint32_t getActiveAnimationCount() const { return _animationManager.activeCount(); }
-    std::function <void()> getEmuRefreshFunction() {return emu_refresh_func_; } // TBD
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
+    std::shared_ptr<ViewManager> getViewManager() const { return m_viewManager; }
 
     void showInfoPopup(const std::string& message, uint32_t duration = 2000) {
         popupManager_->showInfo(message, duration);
@@ -101,6 +101,8 @@ protected:
 private:
     U8G2Wrapper& u8g2_;
     AnimationManager _animationManager;
+    std::shared_ptr<ViewManager> m_viewManager;
+
     uint32_t _currentTime;
     std::shared_ptr<IDrawable> currentDrawable_;
     std::unique_ptr<PopupManager> popupManager_;

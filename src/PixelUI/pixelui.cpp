@@ -1,8 +1,14 @@
 #include "PixelUI/pixelui.h"
+#include "PixelUI/core/ViewManager/ViewManager.h"
 #include <iostream>
 #include <cassert>
 #include "EmuWorker.h"
 #include <functional>
+
+PixelUI::PixelUI(U8G2Wrapper& u8g2) : u8g2_(u8g2), _currentTime(0) {
+    popupManager_ = std::make_unique<PopupManager>(*this, _animationManager);
+    m_viewManager = std::make_shared<ViewManager>(*this);
+}
 
 void PixelUI::begin() 
 {

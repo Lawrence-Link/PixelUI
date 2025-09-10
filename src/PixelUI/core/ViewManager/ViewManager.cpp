@@ -11,7 +11,7 @@ void ViewManager::push(std::shared_ptr<IApplication> app) {
 
         m_viewStack.push(app);          // 压入app
         m_ui.setDrawable(app);    // 绘制/Input控制权移交给当前app
-
+        
         app->onEnter([this]() {this->pop();}); // 给app传入退出pop回调方法
         m_ui.markDirty();
 
