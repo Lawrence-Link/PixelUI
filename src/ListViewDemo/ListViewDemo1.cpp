@@ -39,6 +39,4 @@ static AppRegistrar registrar_about_app({
         return std::make_unique<ListView>(ui, ItemList, 10);
     },
     .type = MenuItemType::App,
-    .w = 24,
-    .h = 24
 });

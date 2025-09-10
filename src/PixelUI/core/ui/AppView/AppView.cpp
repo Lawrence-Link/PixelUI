@@ -38,7 +38,7 @@ void AppView::onEnter(ExitCallback exitCallback) {
     // 可以在这里开始进入动画
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
     // ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 700, EasingType::EASE_OUT_QUAD);
-    ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
+    ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     ui_.markDirty();
 }
 
@@ -131,25 +131,12 @@ void AppView::selectCurrentApp() {
     
     // 检查这个AppItem是否有关联的工厂函数
     if (selectedAppItem.createApp) {
-        // 1. 调用工厂函数，创建应用的一个新实例
-        #ifdef DEBUG
-        std::cout << "[AppView] Creating instance for: " << selectedAppItem.title << std::endl;
-        #endif
         auto appInstance = selectedAppItem.createApp(ui_);
 
         if (appInstance) {
             // 2. 将创建的实例推入视图管理器，完成启动
-            #ifdef DEBUG
-            std::cout << "[AppView] Pushing app to ViewManager." << std::endl;
-            #endif
             m_viewManager.push(appInstance);
-        } else {
-            std::cerr << "[AppView] Error: createApp factory returned a null instance for " 
-                      << selectedAppItem.title << std::endl;
         }
-    } else {
-        std::cout << "[AppView] Info: No createApp factory associated with " 
-                  << selectedAppItem.title << std::endl;
     }
 }
 
@@ -231,9 +218,9 @@ void AppView::drawAppIcon(const AppItem& app, int x, int y, bool inCenter) {
     // 绘制应用图标
     if (app.bitmap) {
         // 居中绘制图标
-        int iconX = x + (iconWidth_ - app.w) / 2;
-        int iconY = y + (iconHeight_ - app.h) / 2;
-        display.drawXBM(iconX, iconY, app.w, app.h, app.bitmap);
+        int iconX = x + (iconWidth_ - 24) / 2;
+        int iconY = y + (iconHeight_ - 24) / 2;
+        display.drawXBM(iconX, iconY, 24, 24, app.bitmap);
         
     } else {
         // 如果没有图标，绘制一个简单的矩形
@@ -246,15 +233,8 @@ void AppView::drawAppIcon(const AppItem& app, int x, int y, bool inCenter) {
     // 计算文字居中位置
     int textWidth = strlen(app.title) * 4; // 大概估算
     int textX = x + (iconWidth_ - textWidth) / 2;
-    
-    // display.drawStr(textX, y + iconHeight_ + 8, app.title);
-    
-    // 如果在中心，可以添加特殊效果
+
     if (inCenter) {
-        // 可以添加高亮效果，但选择框已经在drawCenterSelector中绘制了
-        #ifdef DEBUG
-        std::cout << "[DEBUG] Drew center app: " << app.title << " at (" << x << "," << y << ")" << std::endl;
-        #endif
         display.drawStr((display.getWidth() - display.getStrWidth(app.title)) / 2, appTitle_Y, app.title);
     }
 }
@@ -290,7 +270,7 @@ void AppView::scrollToIndex(int newIndex) {
     int totalApps = apps.size();
     if (totalApps == 0) return;
 
-    ui_.getAnimationMan().clear();
+    ui_.getAnimationMan().clearUnprotected();
 
     int targetSlot;
     if (newIndex == 0) {
@@ -314,7 +294,7 @@ void AppView::scrollToIndex(int newIndex) {
     
     updateProgressBar();
     
-    // popup effect
+    // name popup effect
     appTitle_Y = 70;
     ui_.animate(appTitle_Y, 60, 300, EasingType::EASE_OUT_CUBIC);
 
@@ -322,29 +302,6 @@ void AppView::scrollToIndex(int newIndex) {
     ui_.markDirty(); 
 }
 
-// void AppView::selectCurrentApp() {
-//     const auto& apps = appManager_.getAppVector();
-//     if (currentIndex_ >= 0 && currentIndex_ < static_cast<int>(apps.size())) {
-//         if (apps[currentIndex_].action) {
-//             apps[currentIndex_].action();
-//         }
-//     }
-// }
-
 void AppView::setIconSpacing(int spacing) {
     iconSpacing_ = spacing;
 }
-
-// void AppView::update(uint32_t currentTime) {
-
-// }
-
-// void AppView::goBack() {
-//     std::cout << "[DEBUG] AppView go back requested" << std::endl;
-// }
-
-// void startAppView(PixelUI& ui) {
-//     auto appView = new AppView(ui);
-//     ui.setDrawable(appView);
-//     std::cout << "[DEBUG] Horizontal scrolling AppView started successfully" << std::endl;
-// }

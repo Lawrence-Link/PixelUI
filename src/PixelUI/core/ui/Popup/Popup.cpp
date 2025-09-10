@@ -1,5 +1,5 @@
 #include "PixelUI/core/ui/Popup/Popup.h"
-#include "PixelUI/core/animation/anime.h"
+#include "PixelUI/core/animation/animation.h"
 #include "PixelUI/pixelui.h"
 
 Popup::Popup(IPopupRenderer& renderer, AnimationManager& animManager,

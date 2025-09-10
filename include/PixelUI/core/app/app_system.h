@@ -18,7 +18,6 @@ struct AppItem {
     // 工厂函数 创建App实例
     std::function<std::shared_ptr<IApplication>(PixelUI&)> createApp;
     MenuItemType type;
-    int w, h = 0;
     bool useUnifiedEnterAnimation = false;
 };
 

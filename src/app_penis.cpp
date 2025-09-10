@@ -71,6 +71,4 @@ static AppRegistrar registrar_about_app({
     },
     
     .type = MenuItemType::App,
-    .w = 24, 
-    .h = 24
 });

@@ -8,6 +8,7 @@
 #include <functional>
 #include "PixelUI/config.h"
 #include "PixelUI/core/CommonTypes.h"
+#include "PixelUI/core/animation/animation.h"
 
 class EasingCalculator {
 public:
@@ -58,7 +59,6 @@ public:
     size_t activeCount() const;
 private:
     etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
-    // etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _protectedAnimations;
 };
 
 class CallbackAnimation : public Animation {

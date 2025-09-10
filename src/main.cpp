@@ -36,13 +36,11 @@ MainWindow* g_mainWindow = nullptr;
 class EmulatorThread : public EmuWorker {
 public:
     void grandLoop() override { 
-    AppManager& manager = AppManager::getInstance();
-    const auto& apps = manager.getAppVector();
     ui.begin();
 
     auto appView = std::make_shared<AppView>(ui, viewManager);
     
-    viewManager.push(appView);
+    viewManager.push(appView); // load appView
 
         while (running) {
 
@@ -59,12 +57,8 @@ public:
             
         // 只在内容改变时重绘
             if (isDirty) {
-                
                 ui.renderer();  // 调用 AppView::draw()
                 emit updateRequested(); // 通知Qt更新
-                #ifdef DEBUG
-                std::cout << "[DEBUG] Frame rendered and sent to display" << std::endl;
-                #endif
             }
         
         // 检查动画是否在运行，如果有动画则持续标记为dirty

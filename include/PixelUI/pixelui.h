@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include "PixelUI/core/animation/anime.h"
+#include "PixelUI/core/animation/animation.h"
 #include <u8g2_wrapper.h>
 #include "PixelUI/core/ui/Popup/IPopupRenderer.h"
 #include "PixelUI/core/ui/Popup/PopupManager.h"
@@ -66,6 +66,7 @@ public:
     AnimationManager& getAnimationMan() { return _animationManager; }
     PopupManager& getPopupManager() { return *popupManager_; }
     bool isDirty() const { return isDirty_; }
+    bool isFading() const { return isFading_; }
     bool isPointerValid(const void* ptr) const { return ptr != nullptr; }
     bool isContinousRefreshEnabled() const { return continousMode_; }
     uint32_t getActiveAnimationCount() const { return _animationManager.activeCount(); }

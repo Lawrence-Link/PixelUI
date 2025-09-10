@@ -35,13 +35,16 @@ set(SOURCES
     src/charging_animation.cpp
 
     src/PixelUI/core/app/app_system.cpp
-    src/PixelUI/core/animation/anime.cpp
+    src/PixelUI/core/animation/animation.cpp
     src/PixelUI/core/ui/AppView/AppView.cpp
     src/PixelUI/core/ui/Popup/Popup.cpp
     src/PixelUI/core/ui/Popup/PopupManager.cpp
     src/PixelUI/core/ViewManager/ViewManager.cpp
     src/PixelUI/core/ui/ListView/ListView.cpp
     src/ListViewDemo/ListViewDemo1.cpp
+    src/PixelUI/core/widgets/histogram/histogram.cpp
+    src/PixelUI/core/widgets/brace/brace.cpp
+    src/app_counter.cpp
 )
 
 set(HEADERS
@@ -51,11 +54,7 @@ set(HEADERS
     include/PixelUI/pixelui.h
     include/PixelUI/core/menu/menu_system.h
 
-    include/app_example.h
-    include/app_example2.h
-    include/app_example3.h
-
-    include/PixelUI/core/animation/anime.h
+    include/PixelUI/core/animation/animation.h
     include/PixelUI/core/app/app_system.h
     include/PixelUI/core/app/IApplication.h
     include/PixelUI/core/ui/AppView/AppView.h
@@ -67,6 +66,8 @@ set(HEADERS
     include/PixelUI/config.h
     include/PixelUI/core/ui/ListView/ListView.h
     include/PixelUI/core/CommonTypes.h
+    include/PixelUI/core/widgets/histogram/histogram.h
+    include/PixelUI/core/widgets/brace/brace.h
 )
 
 find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)

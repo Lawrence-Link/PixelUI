@@ -1,4 +1,4 @@
-#include "PixelUI/core/animation/anime.h"
+#include "PixelUI/core/animation/animation.h"
 
 float EasingCalculator::calculate(EasingType type, float t) 
 {
@@ -50,35 +50,52 @@ void Animation::stop() {
     _isActive = false;
 }
 
+// bool Animation::update(uint32_t currentTime){
+//     if (!_isActive) {
+//         return false;
+//     }
+
+//     uint32_t elapsed = currentTime - _startTime; 
+//     if (elapsed >= _duration) {
+//         _progress = 1.0f;
+//         _isActive = false;
+//         return false;
+//     }
+
+//     float t = static_cast<float> (elapsed) / static_cast<float>(_duration);
+//     _progress = EasingCalculator::calculate(_easing, t);
+//     return true;
+// }
+
 bool Animation::update(uint32_t currentTime){
     if (!_isActive) {
         return false;
     }
 
     uint32_t elapsed = currentTime - _startTime; 
-    if (elapsed >= _duration) {
-        _progress = 1.0f;
+    
+    // 检查动画是否完成
+    bool completed = (elapsed >= _duration);
+
+    // 计算t值。如果已完成，确保t为1.0
+    float t = completed ? 1.0f : static_cast<float>(elapsed) / static_cast<float>(_duration);
+
+    // 始终通过缓动函数计算进度，确保终点平滑
+    _progress = EasingCalculator::calculate(_easing, t);
+
+    // 如果动画已完成，更新状态并返回
+    if (completed) {
         _isActive = false;
         return false;
     }
-
-    float t = static_cast<float> (elapsed) / static_cast<float>(_duration);
-    _progress = EasingCalculator::calculate(_easing, t);
     return true;
 }
 
 void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
     if (!animation) {
-        std::cerr << "[ERROR] Trying to add null animation!" << std::endl;
         return;
     }
-    #ifdef DEBUG
-    std::cout << "[DEBUG] Adding animation to manager. Current count: " << _animations.size() << std::endl;
-    #endif
     _animations.push_back(animation);
-    #ifdef DEBUG
-    std::cout << "[DEBUG] Animation added. New count: " << _animations.size() << std::endl;
-    #endif
 }
 
 void AnimationManager::update(uint32_t currentTime) {
@@ -86,29 +103,14 @@ void AnimationManager::update(uint32_t currentTime) {
         return;
     }
     
-    try {
         auto writePos = _animations.begin();
         for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
-            if (!*readPos) {
-                #ifdef DEBUG
-                std::cerr << "[ERROR] Null animation found in manager!" << std::endl;
-                #endif
-                continue;
-            }
-            
             if ((*readPos)->update(currentTime)) {
                 if (writePos != readPos) {
                     *writePos = std::move(*readPos);
                 }
                 ++writePos;
             } else { // deploy delete algorithm here.
-                #ifdef DEBUG
-                std::cout << "[DEBUG] Animation completed, removing" << std::endl;
-                #endif
-                // auto protectedIt = std::find(_protectedAnimations.begin(), _protectedAnimations.end(), *readPos);
-                // if (protectedIt != _protectedAnimations.end()) { = false
-                //     _protectedAnimations.erase(protectedIt);
-                // }
                 if (!(readPos->get()->isProtected())) {
                     readPos->get()->setProtected(false); // remove from protection after it was done :()
                 }
@@ -116,10 +118,6 @@ void AnimationManager::update(uint32_t currentTime) {
         }
         
         _animations.erase(writePos, _animations.end());
-        
-    } catch (const std::exception& e) {
-        std::cerr << "[ERROR] Exception in AnimationManager::update: " << e.what() << std::endl;
-    }
 }
 
 void AnimationManager::clear(){
@@ -129,9 +127,6 @@ void AnimationManager::clear(){
 void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
     if (animation) {
         animation->setProtected(true);
-        #ifdef DEBUG
-        std::cout << "[DEBUG] Marked animation as protected. Protected count: " << _protectedAnimations.size() << std::endl;
-        #endif
     }
 }
 
