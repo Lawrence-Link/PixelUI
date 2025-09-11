@@ -23,22 +23,26 @@
 #include <cstring>
 #include "etl/vector.h"
 #include "etl/delegate.h"
+#include "PixelUI/core/animation/animation.h" // 确保包含 animation.h 以访问定点数宏
+
+// 定义一个宏，用于将浮点数常量转换为定点数
+
 
 struct ListItemExtra{
     bool* switchValue = nullptr;
-    int*  intValue = nullptr;
+    int* intValue = nullptr;
 };
 
 struct ListItem{
     mutable char Title[MAX_LISTITEM_NAME_NUM];
     ListItem * nextList;
     size_t nextListLength;
-    // void (*pFunc)();
     std::function<void()> pFunc;
     ListItemExtra extra;
 private:
-    float anim_val1 = 0;
-    float anim_val2 = 0;
+    // 将 ListItem 内部的动画值也改为定点数
+    int32_t anim_val1 = 0;
+    int32_t anim_val2 = 0;
 public:
     ListItem(const char* title,
              ListItem* next = nullptr,
@@ -50,8 +54,8 @@ public:
         strncpy(Title, title, sizeof(Title));
         Title[sizeof(Title)-1] = 0;
     }
-    // float getVal1 () const {return anim_val1;}
-    // float getVal2 () const {return anim_val2;}
+    // int32_t getVal1 () const {return anim_val1;}
+    // int32_t getVal2 () const {return anim_val2;}
     // void updateExtra() {}
 };
 
@@ -80,35 +84,35 @@ private:
     etl::vector<etl::pair<etl::pair<ListItem*, size_t>, size_t>, MAX_LISTVIEW_DEPTH> m_history_stack;
 
     // 光标相关
-    float CursorY = -6;
-    float CursorX = 1;
-    float CursorWidth = 0;
+    int32_t CursorY = -6;
+    int32_t CursorX = 1;
+    int32_t CursorWidth = 0;
     
     // 滚动相关
-    float scrollOffset_ = 0.0f;
+    int32_t scrollOffset_ = 0; // 修改为 int32_t
     int topVisibleIndex_ = 0;
     int visibleItemCount_ = LISTVIEW_ITEMS_PER_PAGE;
     
     // 载入动画相关
-    float itemLoadAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
+    int32_t itemLoadAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1]; // 修改为 int32_t 数组
     bool isInitialLoad_ = true;
-    float animation_pixel_dots = 0.0f;
-    float animation_scroll_bar = 0.0f;
+    int32_t animation_pixel_dots = 0; // 修改为 int32_t
+    int32_t animation_scroll_bar = 0; // 修改为 int32_t
     
     // 过渡动画相关
     bool isTransitioning_ = false;
-    float transitionProgress_ = 0.0f;
+    int32_t transitionProgress_ = 0;
     int selectedItemForTransition_ = -1;
-    float itemExitAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
-    float itemEnterAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
-    float selectedItemY_ = 0.0f;
+    int32_t itemExitAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
+    int32_t itemEnterAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1];
+    int32_t selectedItemY_ = 0;
     ListItem* oldItemList_ = nullptr;
     size_t oldItemLength_ = 0;
     int oldTopVisibleIndex_ = 0;
 
     // progess bar related
-    float progress_bar_top = 0;
-    float progress_bar_bottom = 0;
+    int32_t progress_bar_top = 0;
+    int32_t progress_bar_bottom = 0;
 
     void navigateLeft();
     void navigateRight();
@@ -123,7 +127,7 @@ private:
     void startBackTransitionAnimation();
     int getVisibleItemIndex(int screenIndex);
     bool shouldScroll(int newCursor);
-    float calculateItemY(int itemIndex);
+    int32_t calculateItemY(int itemIndex);
     
     void updateExtra();
 

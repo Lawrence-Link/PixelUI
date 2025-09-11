@@ -38,8 +38,8 @@ private:
 
     std::function<void()> contentWithinBrace;
     // animation related varibles:
-    float anim_w = 0;
-    float anim_h = 0;
-    float anim_x = 0;
-    float anim_y = 0;
+    int32_t anim_w = 0;
+    int32_t anim_h = 0;
+    int32_t anim_x = 0;
+    int32_t anim_y = 0;
 };

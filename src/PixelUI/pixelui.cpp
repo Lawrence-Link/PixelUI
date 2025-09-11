@@ -21,45 +21,41 @@
 #include "EmuWorker.h"
 #include <functional>
 #include "PixelUI/core/app/app_system.h"
+#include "PixelUI/core/animation/animation.h" // 确保包含 animation.h 以访问 CallbackAnimation
 
 PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
-    // popupManager_ = std::make_unique<PopupManager>(*this, _animationManager); // TBD
-
-    // To prevent from circular dependency, we use shared_ptr for both ViewManager and AnimationManager
-    
     m_viewManagerPtr = std::make_shared<ViewManager>(*this);
     m_animationManagerPtr = std::make_shared<AnimationManager>();
-    // sort app by order
-    
 }
 
 void PixelUI::begin() {
-    AppManager::getInstance().sortByOrder(); // sort app after registration
+    AppManager::getInstance().sortByOrder();
 }
 
 void PixelUI::Heartbeat(uint32_t ms) 
 {
     _currentTime += ms;
     
-    size_t beforeCount = m_animationManagerPtr->activeCount();
     m_animationManagerPtr->update(_currentTime);
-    size_t afterCount = m_animationManagerPtr->activeCount();
-    
-    // 更新popup
-    // if (popupManager_) {
-    //     popupManager_->update(_currentTime);
-    // }
 }
 
 void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
-    animation->start(_currentTime); // begin the animation
-    m_animationManagerPtr->addAnimation(animation); // add to manager
+    animation->start(_currentTime);
+    m_animationManagerPtr->addAnimation(animation);
 }
 
-void PixelUI::animate(float& value, float targetValue, uint32_t duration, EasingType easing, PROTECTION prot) {
+/**
+ * @brief 创建并启动一个单值动画。
+ * @param value 引用要进行动画的整数值（定点数）。
+ * @param targetValue 目标整数值（定点数）。
+ * @param duration 动画持续时间（毫秒）。
+ * @param easing 缓动类型。
+ * @param prot 动画保护状态。
+ */
+void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration, EasingType easing, PROTECTION prot) {
     auto animation = std::make_shared<CallbackAnimation>(
         value, targetValue, duration, easing,
-        [&value](float currentValue) {
+        [&value](int32_t currentValue) {
             value = currentValue;
         }
     );
@@ -67,19 +63,30 @@ void PixelUI::animate(float& value, float targetValue, uint32_t duration, Easing
     addAnimation(animation);
 }
 
-void PixelUI::animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing, PROTECTION prot) {
-    // Create animation for both X and Y coordinates
+/**
+ * @brief 创建并启动一个二维坐标动画。
+ * @param x 引用要进行动画的 x 坐标（定点数）。
+ * @param y 引用要进行动画的 y 坐标（定点数）。
+ * @param targetX 目标 x 坐标（定点数）。
+ * @param targetY 目标 y 坐标（定点数）。
+ * @param duration 动画持续时间（毫秒）。
+ * @param easing 缓动类型。
+ * @param prot 动画保护状态。
+ */
+void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing, PROTECTION prot) {
+    // 为 X 坐标创建动画
     auto animX = std::make_shared<CallbackAnimation>(
         x, targetX, duration, easing,
-        [&x](float currentValue) {
+        [&x](int32_t currentValue) {
             x = currentValue;
         }
     );
     addAnimation(animX);
 
+    // 为 Y 坐标创建动画
     auto animY = std::make_shared<CallbackAnimation>(
         y, targetY, duration, easing,
-        [&y](float currentValue) {
+        [&y](int32_t currentValue) {
             y = currentValue;
         }
     );
@@ -100,17 +107,11 @@ void PixelUI::renderer() {
             isDirty_ = false;
         }
         
-        // 绘制popup
-        // if (popupManager_) {
-        //     popupManager_->draw();
-        // }
-        
         this->getU8G2().sendBuffer();
-    } else { // isFading
+    } else {
         uint8_t * buf_ptr = this->getU8G2().getBufferPtr();
         uint16_t buf_len = 1024;
         for (int fade = 1; fade <= 4; fade++){
-            // different fade stages, directly manipulate the buffer
             switch (fade)
             {
                 case 1: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0xAA; break;

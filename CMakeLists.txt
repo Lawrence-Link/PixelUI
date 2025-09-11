@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(U8g2Emulator LANGUAGES CXX)
+project(U8g2Emulator LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,20 +14,31 @@ option(WITH_QT "Enable Qt GUI mode" OFF)
 # ==============================
 # 1. u8g2 submodule
 # ==============================
-add_subdirectory(third_party/u8g2 EXCLUDE_FROM_ALL)
+
 set(GIT_DIR_LOOKUP_POLICY ALLOW_LOOKING_ABOVE_CMAKE_SOURCE_DIR)
 add_subdirectory(third_party/etl)
-# ==============================
-# 2. Source files
-# ==============================
+
+set(U8G2_C_SRC_DIR "third_party/u8g2/csrc")
+set(U8G2_CPP_SRC_DIR "third_party/u8g2/cppsrc")
+
+# --- u8g2 core C library ---
+file(GLOB U8G2_C_SOURCES "${U8G2_C_SRC_DIR}/*.c")
+add_library(u8g2_c STATIC ${U8G2_C_SOURCES})
+target_include_directories(u8g2_c PUBLIC ${U8G2_C_SRC_DIR})
+
+# --- u8g2 C++ wrapper sources ---
+file(GLOB U8G2_CPP_SOURCES "${U8G2_CPP_SRC_DIR}/*.cpp")
+file(GLOB U8G2_HEADERS "${U8G2_C_SRC_DIR}/*.h" "${U8G2_CPP_SRC_DIR}/*.h")
+
 set(SOURCES
+    ${U8G2_CPP_SOURCES}
     src/main.cpp
     src/u8g2_wrapper.cpp
     src/MainWindow.cpp
     src/EmuWorker.cpp
     src/PixelUI/pixelui.cpp
     src/PixelUI/core/menu/menu_system.cpp
-    
+
     src/app_penis.cpp
     src/app_info.cpp
     src/app_dynamic_info.cpp
@@ -48,6 +59,7 @@ set(SOURCES
 )
 
 set(HEADERS
+    ${U8G2_HEADERS}
     include/u8g2_wrapper.h
     include/MainWindow.h
     include/EmuWorker.h
@@ -76,21 +88,18 @@ add_executable(u8g2_emulator ${SOURCES} ${HEADERS})
 
 target_link_libraries(u8g2_emulator
     PRIVATE
-    u8g2
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
     etl::etl
+    u8g2_c         # <- 链接上C库
 )
 
 target_compile_definitions(u8g2_emulator PRIVATE USE_QT_GUI)
 
-# ==============================
-# 3. Headers
-# ==============================
 target_include_directories(u8g2_emulator
     PRIVATE
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/third_party/u8g2/csrc
+        ${U8G2_CPP_SRC_DIR}
     SYSTEM PRIVATE
 )

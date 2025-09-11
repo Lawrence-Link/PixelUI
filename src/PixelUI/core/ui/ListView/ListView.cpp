@@ -16,6 +16,7 @@
  */
 
 #include "PixelUI/core/ui/ListView/ListView.h"
+#include "PixelUI/core/animation/animation.h" // 包含定点数宏
 
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
@@ -26,12 +27,12 @@ void ListView::onEnter(ExitCallback exitCallback){
     FontHeight = u8g2.getFontAscent() - u8g2.getFontDescent();
     
     topVisibleIndex_ = 0;
-    scrollOffset_ = 0.0f;
+    scrollOffset_ = 0; // 修改为整数
     currentCursor = 0;
     isInitialLoad_ = true;
     
     for (int i = 0; i < visibleItemCount_; i++) {
-        itemLoadAnimations_[i] = 0.0f;
+        itemLoadAnimations_[i] = 0; // 修改为整数
     }
     
     // animation: scrollbar
@@ -51,20 +52,21 @@ void ListView::startLoadAnimation() {
         
         bool isLastAnimation = (i == maxVisible - 1);
         
-        auto callback = [this, i, isLastAnimation](float value) {
+        auto callback = [this, i, isLastAnimation](int32_t value) {
             this->itemLoadAnimations_[i] = value;
             
-            if (isLastAnimation && value >= 1.0f) {
+            if (isLastAnimation && value >= FIXED_POINT_ONE) { // 使用 FIXED_POINT_ONE 进行比较
                 this->isInitialLoad_ = false;
                 this->m_ui.getAnimationManPtr()->clearAllProtectionMarks();
             }
         };
 
-        auto animation = std::make_shared<CallbackAnimation>(0.0f, 1.0f, duration, EasingType::EASE_IN_OUT_CUBIC, callback);
-        animation->start(m_ui.getCurrentTime());
-
+        // 修改 CallbackAnimation 的参数为定点数
+        auto animation = std::make_shared<CallbackAnimation>(0, FIXED_POINT_ONE, duration, EasingType::EASE_IN_OUT_CUBIC, callback);
+        
+        // 确保只通过 addAnimation 接口添加动画
         m_ui.getAnimationManPtr()->markProtected(animation);
-        m_ui.getAnimationManPtr()->addAnimation(animation);
+        m_ui.addAnimation(animation);
     }
 }
 
@@ -93,15 +95,15 @@ void ListView::updateScrollPosition() {
     newTopIndex = std::max(0, std::min(newTopIndex, maxTopIndex));
     
     if (newTopIndex != topVisibleIndex_) {
-        float targetScrollOffset = -newTopIndex * (FontHeight + spacing_);
+        int32_t targetScrollOffset = -newTopIndex * (FontHeight + spacing_);
         m_ui.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
         topVisibleIndex_ = newTopIndex;
     }
 }
 
-float ListView::calculateItemY(int itemIndex) {
+int32_t ListView::calculateItemY(int itemIndex) {
     U8G2& u8g2 = m_ui.getU8G2();
-    float baseY = topMargin_ + itemIndex * (FontHeight + spacing_) + u8g2.getFontAscent();
+    int32_t baseY = topMargin_ + itemIndex * (FontHeight + spacing_) + u8g2.getFontAscent();
     return baseY + scrollOffset_;
 }
 
@@ -110,16 +112,16 @@ void ListView::scrollToTarget(size_t target){
     
     U8G2& u8g2 = m_ui.getU8G2();
     int screenCursorIndex = currentCursor - topVisibleIndex_;
-    float targetCursorY = topMargin_ + screenCursorIndex * (FontHeight + spacing_) - 1;
+    int32_t targetCursorY = topMargin_ + screenCursorIndex * (FontHeight + spacing_) - 1;
     
     // 光标的Y轴
     m_ui.animate(CursorY, targetCursorY, 240, EasingType::EASE_IN_OUT_CUBIC);
     // 反色光标的宽度
-    m_ui.animate(CursorWidth, m_ui.getU8G2().getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
+    m_ui.animate(CursorWidth, u8g2.getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
     // 进度条顶端
-    m_ui.animate(progress_bar_top, ((float)currentCursor/((float)m_itemLength + 1)) * 64.0f + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    m_ui.animate(progress_bar_top, ((int64_t)currentCursor * 64) / (m_itemLength + 1) + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED); // 修正为定点数运算
     // 进度条底部
-    m_ui.animate(progress_bar_bottom, (1/((float)m_itemLength + 1)) * 64.0f - 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    m_ui.animate(progress_bar_bottom, ((int64_t)1 * 64) / (m_itemLength + 1), 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED); // 修正为定点数运算
 }
 
 void ListView::navigateUp() {
@@ -240,16 +242,17 @@ void ListView::draw(){
     int endIndex = std::min((int)m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
     
     for (int itemIndex = startIndex; itemIndex <= endIndex; itemIndex++) {
-        float itemY = calculateItemY(itemIndex);
+        int32_t itemY = calculateItemY(itemIndex);
         
         if (itemY >= -FontHeight && itemY <= u8g2.getDisplayHeight() + FontHeight) {
-            float drawX = 4;
+            int32_t drawX = 4;
             
             if (isInitialLoad_) {
                 int animIndex = itemIndex - topVisibleIndex_;
                 if (animIndex >= 0 && animIndex < visibleItemCount_ + 1) {
-                    float loadProgress = itemLoadAnimations_[animIndex];
-                    drawX = 4 + (1.0f - loadProgress) * 30;
+                    int32_t loadProgress = itemLoadAnimations_[animIndex];
+                    // 修正浮点数运算为定点数运算
+                    drawX = 4 + (FIXED_POINT_ONE - loadProgress) * 30 / FIXED_POINT_ONE;
                 }
             }
             u8g2.drawStr(drawX, itemY, m_itemList[itemIndex].Title);
@@ -268,7 +271,7 @@ void ListView::draw(){
     /* Draw the side progress bar */
 
     // for (int i = 0; i <= static_cast<int> (animation_pixel_dots); i++)
-    //     u8g2.drawPixel(126, 2 * i);
+    //  u8g2.drawPixel(126, 2 * i);
 
     // display.drawBox(0, 49, animation_scroll_bar, 3);
     // u8g2.drawVLine(u8g2.getDisplayWidth() - 2, 50, animation_scroll_bar);
@@ -276,4 +279,20 @@ void ListView::draw(){
     u8g2.drawVLine(126, progress_bar_top, progress_bar_bottom);
 
     drawCursor();
+}
+
+void ListView::startTransitionAnimation(int selectedItemIndex) {
+    // 尚未实现，可以根据需要使用整数动画进行实现
+}
+
+void ListView::startBackTransitionAnimation() {
+    // 尚未实现，可以根据需要使用整数动画进行实现
+}
+
+int ListView::getVisibleItemIndex(int screenIndex) {
+    return topVisibleIndex_ + screenIndex;
+}
+
+void ListView::updateExtra() {
+    // 尚未实现，根据需要更新
 }

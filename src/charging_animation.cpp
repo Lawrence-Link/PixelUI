@@ -42,11 +42,11 @@ private:
     PixelUI& m_ui;
 
     // Animation variables
-    float lightIconSize = 0;
-    float batteryPercent_anim = 0;
-    float ringPercent = 0;         // Ring animation variable
-    float lightningOffsetX = 0;    // Lightning offset
-    float rectWidth = 10;           // Background rectangle width
+    int32_t lightIconSize = 0;
+    int32_t batteryPercent_anim = 0;
+    int32_t ringPercent = 0;         // Ring animation variable
+    int32_t lightningOffsetX = 0;    // Lightning offset
+    int32_t rectWidth = 10;           // Background rectangle width
     int batteryPercent = 50;       // Assumed battery level is 50%
 
     // State machine

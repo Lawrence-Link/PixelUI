@@ -53,9 +53,9 @@ private:
     bool first_time = false;
 
     // 动画变量
-    float anim_mark_m = 0;
-    float anim_bg = 0;
-    float anim_status_x = -27;
+    int32_t anim_mark_m = 0;
+    int32_t anim_bg = 0;
+    int32_t anim_status_x = -27;
 public:
     APP_COUNTER(PixelUI& ui) : m_ui(ui), histogram(ui), brace(ui) {}
 

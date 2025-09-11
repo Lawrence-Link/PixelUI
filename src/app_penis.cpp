@@ -25,7 +25,7 @@ static const unsigned char image_sans4_bits[] = {
 
 static int timestpPrev = 0;
 int timestpNow;
-float height = 28;
+int32_t height = 28;
 bool state = 0;
 
 // user defined "Application"

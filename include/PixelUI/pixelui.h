@@ -23,6 +23,9 @@
 #include "PixelUI/core/ui/Popup/PopupManager.h"
 #include "PixelUI/core/ui/IDrawable.h"
 
+// 引入定点数定义，确保 PixelUI 类中的动画函数能正确使用整数类型
+#include "PixelUI/core/animation/animation.h"
+
 enum class InputEvent {
     UP, DOWN, LEFT, RIGHT, SELECT, BACK
 };
@@ -54,8 +57,8 @@ public:
 
     void Heartbeat(uint32_t ms);
     
-    void animate(float& value, float targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
-    void animate(float& x, float& y, float targetX, float targetY, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
+    void animate(int32_t& value, int32_t targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
+    void animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
 
     void addAnimation(std::shared_ptr<Animation> animation);
 
@@ -66,14 +69,6 @@ public:
     void clearAllProtectionMarks() { m_animationManagerPtr->clearAllProtectionMarks(); }
     void clearAllAnimations() { m_animationManagerPtr->clear(); }
 
-    // void setDrawColor(int color) override { u8g2_.setDrawColor(color); }
-    // void drawRBox(int x, int y, int w, int h, int r) override { u8g2_.drawRBox(x, y, w, h, r); }
-    // void drawRFrame(int x, int y, int w, int h, int r) override { u8g2_.drawRFrame(x, y, w, h, r); }
-    // void drawStr(int x, int y, const char* str) override { u8g2_.drawStr(x, y, str); }
-    // void drawPixel(int x, int y) override { u8g2_.drawPixel(x, y); }
-    // void setFont(const uint8_t* font) override { u8g2_.setFont(font); }
-
-    // setters
     void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
     void setRefreshCallback(std::function <void()> function) { if (function) m_refresh_callback = function; }
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
@@ -83,7 +78,6 @@ public:
     // getters
     U8G2& getU8G2() const { return u8g2_; }
     std::shared_ptr<AnimationManager> getAnimationManPtr() { return m_animationManagerPtr; }
-    // PopupManager& getPopupManager() { return *popupManager_; }
 
     bool isDirty() const { return isDirty_; }
     bool isFading() const { return isFading_; }
@@ -95,19 +89,6 @@ public:
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
 
     std::shared_ptr<ViewManager> getViewManagerPtr() const { return m_viewManagerPtr; }
-
-    // void showInfoPopup(const std::string& message, uint32_t duration = 2000) {
-    //     popupManager_->showInfo(message, duration);
-    // }
-    // void showWarningPopup(const std::string& message, uint32_t duration = 3000) {
-    //     popupManager_->showWarning(message, duration);
-    // }
-    // void showErrorPopup(const std::string& message, uint32_t duration = 4000) {
-    //     popupManager_->showError(message, duration);
-    // }
-    // void showConfirmPopup(const std::string& message, std::function<void(bool)> callback) {
-    //     popupManager_->showConfirm(message, callback);
-    // }
 
     void markDirty() { isDirty_ = true; }
     void markFading() { isFading_ = true; }

@@ -31,7 +31,7 @@ private:
 public:
     Dynamic_Info(PixelUI& ui) : m_ui(ui) {};
     ~Dynamic_Info() = default;
-    float Y_Title = 0, Y_Version = 0, Y_description = 0;
+    int32_t Y_Title = 0, Y_Version = 0, Y_description = 0;
     void draw() override {
         U8G2& display = m_ui.getU8G2();
         

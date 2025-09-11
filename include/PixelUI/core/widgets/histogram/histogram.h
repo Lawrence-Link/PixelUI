@@ -49,8 +49,8 @@ private:
     uint16_t m_head_index = 0;       // Current head index of the circular buffer
 
     // animation related variables:
-    float anim_w = 0;
-    float anim_h = 0;
-    float anim_x = 0;
-    float anim_y = 0;
+    int32_t anim_w = 0;
+    int32_t anim_h = 0;
+    int32_t anim_x = 0;
+    int32_t anim_y = 0;
 };

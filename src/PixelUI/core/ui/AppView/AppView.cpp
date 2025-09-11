@@ -32,9 +32,6 @@ AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(A
     scrollToIndex(0);
 }
 
-static float animation_selector_coord_x = 128;
-static float animation_selector_length = 10;
-
 /*
     @brief Update the progress bar based on the current app index
 */
