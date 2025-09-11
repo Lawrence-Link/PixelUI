@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2025 Lawrence Li
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <iostream>
 #include "u8g2_wrapper.h"
 
@@ -27,7 +44,7 @@ class EmulatorThread : public EmuWorker {
 public:
     void grandLoop() override { 
     ui.setDelayFunction(threadDelay);
-
+    ui.begin();
     auto appView = std::make_shared<AppView>(ui, *ui.getViewManagerPtr());
     ui.getViewManagerPtr()->push(appView);
         while (running) {

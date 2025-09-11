@@ -1,10 +1,25 @@
+/*
+ * Copyright (C) 2025 Lawrence Li
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "PixelUI/core/ui/AppView/AppView.h"
 #include <algorithm>
 #include <cstring>
 
 AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(AppManager::getInstance()), m_viewManager(viewManager) {
-    // currentIndex_ = 0;  // 初始化当前索引为0
-    // appSelected_ = false; // 初始化应用未被选中
     iconSpacing_ = (ui.getU8G2().getWidth() - 3 * iconWidth_ )* 0.25;
 
     float totalListWidth = 3 * iconWidth_ + 2 * iconSpacing_;
@@ -13,27 +28,26 @@ AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(A
     slotPositionsX_.push_back(firstSlotX);
     slotPositionsX_.push_back(firstSlotX + iconWidth_ + iconSpacing_);
     slotPositionsX_.push_back(firstSlotX + iconWidth_ * 2 + iconSpacing_ * 2);
-    scrollOffset_ = slotPositionsX_[0] -  /*calculateIconX(0)*/  + scrollOffset_;
+    scrollOffset_ = slotPositionsX_[0] - /*calculateIconX(0)*/ + scrollOffset_;
     scrollToIndex(0);
-
-    // ui_.animate(appTitle_Y, 59, 300, EasingType::EASE_IN_OUT_CUBIC);
 }
 
 static float animation_selector_coord_x = 128;
 static float animation_selector_length = 10;
 
+/*
+    @brief Update the progress bar based on the current app index
+*/
 void AppView::updateProgressBar() {
     const auto& apps = appManager_.getAppVector();
     ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 300, EasingType::EASE_OUT_QUAD);
 }
 
 void AppView::onEnter(ExitCallback exitCallback) {
-    const auto& apps = appManager_.getAppVector();
     IApplication::onEnter(exitCallback);
-    // 可以在这里开始进入动画
+    // Start entry animations
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
-    // ui_.animate(animation_scroll_bar, (static_cast<float>((currentIndex_ + 1)) / static_cast<float>(apps.size())) * ui_.getU8G2().getWidth(), 700, EasingType::EASE_OUT_QUAD);
-    ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+    ui_.animate(animation_selector_length, selector_length, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     ui_.markDirty();
 }
 
@@ -44,7 +58,7 @@ void AppView::onResume() {
     ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC);
     updateProgressBar();
     scrollToIndex(currentIndex_);
-    ui_.animate(animation_selector_length, selector_length,  700, EasingType::EASE_IN_OUT_CUBIC);
+    ui_.animate(animation_selector_length, selector_length, 700, EasingType::EASE_IN_OUT_CUBIC);
     ui_.markDirty();
 }
 
@@ -54,17 +68,17 @@ void AppView::onPause() {
 
 bool AppView::handleInput(InputEvent event) {
     switch (event) {
-        case InputEvent::LEFT:  navigateLeft(); return true;
+        case InputEvent::LEFT: navigateLeft(); return true;
         case InputEvent::RIGHT: navigateRight(); return true;
         case InputEvent::SELECT: selectCurrentApp(); return true;
-        case InputEvent::BACK: /* 在根视图，通常无操作 */ return true;
+        case InputEvent::BACK: return true;
         default: return false;
     }
 }
 
 void AppView::navigateLeft() {
     const auto& apps = appManager_.getAppVector();
-    currentIndex_ --;
+    currentIndex_--;
     if (currentIndex_ < 0) {
         currentIndex_ = apps.size() - 1;
     }
@@ -73,8 +87,8 @@ void AppView::navigateLeft() {
 
 void AppView::navigateRight() {
     const auto& apps = appManager_.getAppVector();
-    currentIndex_ ++;
-    if (currentIndex_ >= apps.size()) {
+    currentIndex_++;
+    if (currentIndex_ >= static_cast<int>(apps.size())) {
         currentIndex_ = 0;
     }
     scrollToIndex(currentIndex_);
@@ -83,27 +97,21 @@ void AppView::navigateRight() {
 void AppView::draw() {
     U8G2& display = ui_.getU8G2();
     
-    static bool run_once = false;
-
-    // 设置字体
+    // Set font and draw title
     display.setFont(u8g2_font_tom_thumb_4x6_mf);
-    
-    // 绘制标题
     display.drawStr((display.getWidth() - display.getStrWidth("< Apps >")) / 2, 10, "< Apps >");
     
-    // 绘制选择框
+    // Draw selector and app list
     drawSelector(animation_selector_coord_x, 30, animation_selector_length);
-    
-    // 绘制水平应用列表
     drawHorizontalAppList();
     
-    // draw dotline to the progress bar:
-    for (int i = 0; i <= static_cast<int> (animation_pixel_dots); i++)
+    // Draw progress bar
+    for (int i = 0; i <= static_cast<int>(animation_pixel_dots); i++) {
         display.drawPixel(i * 2, 50);
-    // display.drawBox(0, 49, animation_scroll_bar, 3);
+    }
     display.drawHLine(0, 50, animation_scroll_bar);
 
-    // 绘制状态信息
+    // Draw status info
     const auto& apps = appManager_.getAppVector();
     if (!apps.empty()) {
         char statusText[16];
@@ -120,57 +128,35 @@ void AppView::selectCurrentApp() {
 
     const auto& selectedAppItem = apps[currentIndex_];
     
-    // 检查这个AppItem是否有关联的工厂函数
     if (selectedAppItem.createApp) {
         auto appInstance = selectedAppItem.createApp(ui_);
 
         if (appInstance) {
-            // 2. 将创建的实例推入视图管理器，完成启动
+            // Push the new app instance to the view manager
             m_viewManager.push(appInstance);
         }
     }
 }
 
-// draw Selector by center coordinate.
+// Draw the selector box at the specified coordinates
 void AppView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
     U8G2& display = ui_.getU8G2();
 
     int half_length = 0.5 * length;
 
-    // Top left corner of the selector
+    // Top left corner
     display.drawLine(x - half_length + 1, y - half_length, x - half_length + 5, y - half_length);
-    display.drawLine(x - half_length, y+1 - half_length, x - half_length, y+5 - half_length);
-    // Top right corner of the selector
-    display.drawLine(x-1 + half_length, y - half_length, x-5 + half_length, y - half_length);
-    display.drawLine(x + half_length, y+1 - half_length, x + half_length, y+5 - half_length);
-    // Bottom left corner of the selector
-    display.drawLine(x+1 - half_length, y-1 + half_length, x+5 - half_length, y-1 + half_length);
-    display.drawLine(x - half_length, y-2 + half_length, x - half_length, y-6 + half_length);
-    // Bottom right corner of the selector
-    display.drawLine(x - 1 + half_length, y - 6 + half_length, x-1 + half_length, y-2 + half_length);
-    display.drawLine(x - 2 + half_length, y -1 + half_length, x-6 + half_length, y-1 + half_length);
+    display.drawLine(x - half_length, y + 1 - half_length, x - half_length, y + 5 - half_length);
+    // Top right corner
+    display.drawLine(x - 1 + half_length, y - half_length, x - 5 + half_length, y - half_length);
+    display.drawLine(x + half_length, y + 1 - half_length, x + half_length, y + 5 - half_length);
+    // Bottom left corner
+    display.drawLine(x + 1 - half_length, y - 1 + half_length, x + 5 - half_length, y - 1 + half_length);
+    display.drawLine(x - half_length, y - 2 + half_length, x - half_length, y - 6 + half_length);
+    // Bottom right corner
+    display.drawLine(x - 1 + half_length, y - 6 + half_length, x - 1 + half_length, y - 2 + half_length);
+    display.drawLine(x - 2 + half_length, y - 1 + half_length, x - 6 + half_length, y - 1 + half_length);
 }
-
-/*
-
-void AppView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
-    U8G2Wrapper& display = ui_.getU8G2();
-
-    // Top left corner of the selector
-    display.drawLine(x+1, y, x+5, y);
-    display.drawLine(x, y+1, x, y+5);
-    // Top right corner of the selector
-    display.drawLine(x+length-1, y, x+length-5, y);
-    display.drawLine(x+length, y+1, x+length, y+5);
-    // Bottom left corner of the selector
-    display.drawLine(x+1, y+length-1, x+5, y+length-1);
-    display.drawLine(x, y+length-2, x, y+length-6);
-    // Bottom right corner of the selector
-    display.drawLine(x+length-1, y+length-6, x+length-1, y+length-2);
-    display.drawLine(x+length-2, y+length-1, x+length-6, y+length-1);
-}
-
-*/
 
 int AppView::calculateIconX(int index) {
     return (index * (iconWidth_ + iconSpacing_)) + scrollOffset_;
@@ -184,16 +170,12 @@ void AppView::drawHorizontalAppList() {
         return;
     }
     
-    // 计算可见范围（包括画布外的图标）
     int startIndex = getVisibleStartIndex();
     int endIndex = getVisibleEndIndex();
 
-    // std::cout << "[DEBUG] Drawing icons from " << startIndex << " to " << endIndex << std::endl;
-
-    // 绘制所有可能可见的图标（包括部分可见的）
+    // Draw all visible icons
     for (int i = startIndex; i <= endIndex && i < static_cast<int>(apps.size()); ++i) {
         int iconX = calculateIconX(i);
-        // 判断是否在中心区域
         bool inCenter = (i == currentIndex_);
         drawAppIcon(apps[i], iconX, iconY_, inCenter);
     }
@@ -202,51 +184,41 @@ void AppView::drawHorizontalAppList() {
 void AppView::drawAppIcon(const AppItem& app, int x, int y, bool inCenter) {
     U8G2& display = ui_.getU8G2();
     
-    // 绘制应用图标
+    // Draw the app icon
     if (app.bitmap) {
-        // 居中绘制图标
         int iconX = x + (iconWidth_ - 24) / 2;
         int iconY = y + (iconHeight_ - 24) / 2;
         display.drawXBM(iconX, iconY, 24, 24, app.bitmap);
-        
     } else {
-        // 如果没有图标，绘制一个简单的矩形
+        // Draw a placeholder rectangle if no icon is provided
         display.drawRBox(x + 4, y + 4, iconWidth_ - 8, iconHeight_ - 8, 2);
     }
     
-    // 绘制应用标题（在图标下方）
+    // Draw the app title below the icon
     display.setFont(u8g2_font_tom_thumb_4x6_mf);
     
-    // 计算文字居中位置
-    int textWidth = strlen(app.title) * 4; // 大概估算
-    int textX = x + (iconWidth_ - textWidth) / 2;
-
     if (inCenter) {
         display.drawStr((display.getWidth() - display.getStrWidth(app.title)) / 2, appTitle_Y, app.title);
     }
 }
 
 int AppView::getVisibleStartIndex() {
-    // 计算最左边可能可见的图标索引（包括部分可见）
     const auto& apps = appManager_.getAppVector();
-    int leftmostX = -iconWidth_; // 允许完全在左边画布外
-
+    int leftmostX = -iconWidth_; // Account for icons partially off-screen
     for (int i = 0; i < static_cast<int>(apps.size()); ++i) {
         if (calculateIconX(i) >= leftmostX) {
-            return std::max(0, i - 1); // 多绘制一个以防万一
+            return std::max(0, i - 1);
         }
     }
     return 0;
 }
 
 int AppView::getVisibleEndIndex() {
-    // 计算最右边可能可见的图标索引（包括部分可见）
     const auto& apps = appManager_.getAppVector();
-    int rightmostX = 128 + iconWidth_; // 允许完全在右边画布外
-    
+    int rightmostX = 128 + iconWidth_; // Account for icons partially off-screen
     for (int i = static_cast<int>(apps.size()) - 1; i >= 0; --i) {
         if (calculateIconX(i) <= rightmostX) {
-            return std::min(static_cast<int>(apps.size()) - 1, i + 1); // 多绘制一个以防万一
+            return std::min(static_cast<int>(apps.size()) - 1, i + 1);
         }
     }
     return static_cast<int>(apps.size()) - 1;
@@ -271,7 +243,7 @@ void AppView::scrollToIndex(int newIndex) {
         targetSlot = 1;
     }
 
-    float targetSelectorX = slotPositionsX_[targetSlot] + 0.5 * iconWidth_ /*- (selector_length - iconWidth_) / 2.0f*/;
+    float targetSelectorX = slotPositionsX_[targetSlot] + 0.5 * iconWidth_;
     float iconTargetCenterX = slotPositionsX_[targetSlot] + iconWidth_ / 2.0f;
     float iconOriginalCenterX = newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2.0f;
     float targetScrollOffset = iconTargetCenterX - iconOriginalCenterX;
@@ -281,7 +253,7 @@ void AppView::scrollToIndex(int newIndex) {
     
     updateProgressBar();
     
-    // name popup effect
+    // Title popup effect
     appTitle_Y = 70;
     ui_.animate(appTitle_Y, 60, 300, EasingType::EASE_OUT_CUBIC);
 

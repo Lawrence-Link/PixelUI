@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2025 Lawrence Li
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "PixelUI/pixelui.h"
 #include "PixelUI/core/app/app_system.h"
 #include "PixelUI/core/ui/ListView/ListView.h"
@@ -9,22 +26,22 @@ bool bool_state = false;
 extern PixelUI ui;
 
 ListItem sub_CathyFlower[3] = {
-    ListItem(">>> Sub Menu <<<", nullptr, 0, [](){ std::cout << "Item C\n"; }),
-    ListItem("- Progress", nullptr, 0, [](){ std::cout << "Item C\n"; }),
-    ListItem("- Alert", nullptr, 0, [](){ std::cout << "Item C\n"; })
+    ListItem(">>> Sub Menu <<<", nullptr, 0, [](){  }),
+    ListItem("- Progress", nullptr, 0, [](){  }),
+    ListItem("- Alert", nullptr, 0, [](){  })
 };
 
 ListItem ItemList[10] = {
     ListItem(">>> ListDemo <<<"),
-    ListItem("- Show pop", nullptr, 0, [](){ ui.showInfoPopup("Seven human souls.", 1000); }),
+    ListItem("- Show pop", nullptr, 0, [](){ /*ui.showInfoPopup("Seven human souls.", 1000);*/ }),
     ListItem("- Sub Menu", sub_CathyFlower, 3),
     ListItem("- Bool State", nullptr, 0, nullptr, {.switchValue = &bool_state}),
-    ListItem("- Switch", nullptr, 0, [](){ std::cout << "Item E\n"; }),
-    ListItem("- Alert", nullptr, 0, [](){ std::cout << "Item F\n"; }),
-    ListItem("- Progress", nullptr, 0, [](){ std::cout << "Item G\n"; }),
-    ListItem("- Anytone", nullptr, 0, [](){ std::cout << "Item H\n"; }),
-    ListItem("- Potato", nullptr, 0, [](){ std::cout << "Item I\n"; }),
-    ListItem("- Tomato", nullptr, 0, [](){ std::cout << "Item J\n"; })
+    ListItem("- Switch", nullptr, 0, [](){  }),
+    ListItem("- Alert", nullptr, 0, [](){  }),
+    ListItem("- Progress", nullptr, 0, [](){  }),
+    ListItem("- Anytone", nullptr, 0, [](){  }),
+    ListItem("- Potato", nullptr, 0, [](){  }),
+    ListItem("- Tomato", nullptr, 0, [](){  })
 };
 
 class ListViewDemo : public ListView {
@@ -39,4 +56,5 @@ static AppRegistrar registrar_about_app({
         return std::make_unique<ListView>(ui, ItemList, 10);
     },
     .type = MenuItemType::App,
+    .order = 6
 });

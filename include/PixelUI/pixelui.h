@@ -1,6 +1,22 @@
+/*
+ * Copyright (C) 2025 Lawrence Li
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <iostream>
 #include "PixelUI/core/animation/animation.h"
 #include <u8g2_wrapper.h>
 #include "PixelUI/core/ui/Popup/IPopupRenderer.h"
@@ -35,6 +51,7 @@ public:
     ~PixelUI() = default;
 
     void begin();
+
     void Heartbeat(uint32_t ms);
     
     void animate(float& value, float targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
@@ -58,7 +75,7 @@ public:
 
     // setters
     void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
-    void setRefreshCallback(std::function <void()> function) { if (function) emu_refresh_func_ = function; }
+    void setRefreshCallback(std::function <void()> function) { if (function) m_refresh_callback = function; }
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
     void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
     void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
@@ -67,7 +84,7 @@ public:
     U8G2& getU8G2() const { return u8g2_; }
     std::shared_ptr<AnimationManager> getAnimationManPtr() { return m_animationManagerPtr; }
     // PopupManager& getPopupManager() { return *popupManager_; }
-    
+
     bool isDirty() const { return isDirty_; }
     bool isFading() const { return isFading_; }
     bool isPointerValid(const void* ptr) const { return ptr != nullptr; }
@@ -75,7 +92,6 @@ public:
     bool isContinousRefreshEnabled() const { return continousMode_; }
     uint32_t getActiveAnimationCount() const { return m_animationManagerPtr->activeCount(); }
 
-    std::function <void()> getRefreshCallback() {return emu_refresh_func_; }
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
 
     std::shared_ptr<ViewManager> getViewManagerPtr() const { return m_viewManagerPtr; }
@@ -116,7 +132,7 @@ private:
     bool isFading_ = false;
     bool continousMode_ = false;
 
-    std::function<void()> emu_refresh_func_;
+    std::function<void()> m_refresh_callback;
 
     DelayFunction m_func_delay;
 

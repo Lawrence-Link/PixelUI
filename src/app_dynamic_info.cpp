@@ -1,8 +1,23 @@
-// app_example.cpp (或者任何用户自定义的 app_*.cpp 文件)
+/*
+ * Copyright (C) 2025 Lawrence Li
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "PixelUI/core/app/IApplication.h"
 #include "PixelUI/core/app/app_system.h"
 #include <memory>
-#include <iostream>
 
 static const unsigned char image_sans3_bits[] = {
     0xf0,0xff,0x0f,0xfc,0xff,0x3f,0xfe,0xff,0x7f,0xfe,0xff,0x7f,0xff,0x81,0xff,0xff,0x00,0xff,0x7f,0x3e,0xff,0x7f,0x3f,0xff,0xff,0x3f,0xff,0xff,0x1f,0xff,0xff,0x0f,0xff,0xff,0x87,0xff,0xff,0xc7,0xff,0xff,0xe3,0xff,0xff,0xf3,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xf3,0xff,0xff,0xe3,0xff,0xff,0xe7,0xff,0xfe,0xff,0x7f,0xfe,0xff,0x7f,0xfc,0xff,0x3f,0xf0,0xff,0x0f};
@@ -18,9 +33,7 @@ public:
     ~Dynamic_Info() = default;
     float Y_Title = 0, Y_Version = 0, Y_description = 0;
     void draw() override {
-        // 假设可以这样访问UI对象
-        extern PixelUI ui;
-        U8G2& display = ui.getU8G2();
+        U8G2& display = m_ui.getU8G2();
         
         display.setFont(u8g2_font_ncenB10_tr);
         display.drawStr(40, Y_Title, "PixelUI");
@@ -40,10 +53,9 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
-        extern PixelUI ui;
-        ui.animate(Y_Title,        20, 600, EasingType::EASE_OUT_BOUNCE);
-        ui.animate(Y_Version,      35, 700, EasingType::EASE_OUT_BOUNCE);
-        ui.animate(Y_description,  58, 800, EasingType::EASE_OUT_BOUNCE);
+        m_ui.animate(Y_Title,        20, 600, EasingType::EASE_OUT_BOUNCE);
+        m_ui.animate(Y_Version,      35, 700, EasingType::EASE_OUT_BOUNCE);
+        m_ui.animate(Y_description,  58, 800, EasingType::EASE_OUT_BOUNCE);
     }
 };
 
@@ -59,4 +71,5 @@ static AppRegistrar registrar_about_app({
     },
     
     .type = MenuItemType::App,
+    .order = 2
 });

@@ -1,7 +1,23 @@
+/*
+ * Copyright (C) 2025 Lawrence Li
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "PixelUI/core/app/IApplication.h"
 #include "PixelUI/core/app/app_system.h"
 #include <memory>
-#include <iostream>
 
 // Icon bitmap
 static const unsigned char image_sans2_bits[] = {
@@ -121,14 +137,13 @@ public:
     // ---------------- Lifecycle ----------------
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
-        extern PixelUI ui;
 
         // Lightning size animation
-        ui.animate(lightIconSize, 7, 400, EasingType::EASE_IN_CUBIC, PROTECTION::PROTECTED);
+        m_ui.animate(lightIconSize, 7, 400, EasingType::EASE_IN_CUBIC, PROTECTION::PROTECTED);
 
         // Ring animates from 0 to the battery percentage
         ringPercent = 0;
-        ui.animate(ringPercent, batteryPercent, 600, EasingType::EASE_OUT_CUBIC);
+        m_ui.animate(ringPercent, batteryPercent, 600, EasingType::EASE_OUT_CUBIC);
 
         batteryPercent_anim = 0; // Percentage text is hidden initially
         lightningOffsetX = 0;    // Initial lightning position
@@ -136,14 +151,13 @@ public:
         state = ChargeState::LIGHTNING_AND_RING;
         stateEnterTime = m_ui.getCurrentTime();
 
-        ui.setContinousDraw(true);
-        ui.markDirty();
+        m_ui.setContinousDraw(true);
+        m_ui.markDirty();
     }
 
     void onExit() override {
-        extern PixelUI ui;
-        ui.setContinousDraw(false);
-        ui.markFading();
+        m_ui.setContinousDraw(false);
+        m_ui.markFading();
     }
 
 private:
@@ -192,5 +206,5 @@ static AppRegistrar registrar_about_app({
         return std::make_unique<ChargeDemo>(ui);
     },
     .type = MenuItemType::App,
-    .useUnifiedEnterAnimation = true
+    .order = 5
 });
