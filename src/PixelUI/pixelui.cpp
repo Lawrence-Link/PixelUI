@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,40 +17,50 @@
 
 #include "PixelUI/pixelui.h"
 #include "PixelUI/core/ViewManager/ViewManager.h"
-#include <cassert>
-#include "EmuWorker.h"
 #include <functional>
 #include "PixelUI/core/app/app_system.h"
-#include "PixelUI/core/animation/animation.h" // 确保包含 animation.h 以访问 CallbackAnimation
+#include "PixelUI/core/animation/animation.h"
+#include "PixelUI/core/ui/Popup/Popup.h"
 
 PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
     m_viewManagerPtr = std::make_shared<ViewManager>(*this);
     m_animationManagerPtr = std::make_shared<AnimationManager>();
+    m_popupManagerPtr = std::make_shared<PopupManager>(*this);
 }
-
+/**
+ * @brief Initialize the PixelUI system, including sorting registered applications.
+ */
 void PixelUI::begin() {
     AppManager::getInstance().sortByOrder();
 }
 
+/**
+ * @brief Update the UI state, including animations and popups.
+ * @param ms Time elapsed since the last call in milliseconds.
+*/
 void PixelUI::Heartbeat(uint32_t ms) 
 {
     _currentTime += ms;
-    
     m_animationManagerPtr->update(_currentTime);
+    m_popupManagerPtr->updatePopups(_currentTime);
 }
 
+/** 
+* @brief Add an animation to the manager and start it.
+* @param animation Shared pointer to the animation to add.
+*/
 void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
     animation->start(_currentTime);
     m_animationManagerPtr->addAnimation(animation);
 }
 
 /**
- * @brief 创建并启动一个单值动画。
- * @param value 引用要进行动画的整数值（定点数）。
- * @param targetValue 目标整数值（定点数）。
- * @param duration 动画持续时间（毫秒）。
- * @param easing 缓动类型。
- * @param prot 动画保护状态。
+ * @brief create and start a single-value animation.
+ * @param value reference to the value to animate (fixed-point).
+ * @param targetValue target value (fixed-point).
+ * @param duration animation duration (milliseconds).
+ * @param easing easing type.
+ * @param prot animation protection status.
  */
 void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration, EasingType easing, PROTECTION prot) {
     auto animation = std::make_shared<CallbackAnimation>(
@@ -64,14 +74,14 @@ void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration, Ea
 }
 
 /**
- * @brief 创建并启动一个二维坐标动画。
- * @param x 引用要进行动画的 x 坐标（定点数）。
- * @param y 引用要进行动画的 y 坐标（定点数）。
- * @param targetX 目标 x 坐标（定点数）。
- * @param targetY 目标 y 坐标（定点数）。
- * @param duration 动画持续时间（毫秒）。
- * @param easing 缓动类型。
- * @param prot 动画保护状态。
+ * @brief create and start a two-value animation for x and y coordinates.
+ * @param x reference to the x coordinate (fixed-point).
+ * @param y reference to the y coordinate (fixed-point).
+ * @param targetX target x coordinate (fixed-point).
+ * @param targetY target y coordinate (fixed-point).
+ * @param duration animation duration (milliseconds).
+ * @param easing easing type.
+ * @param prot animation protection status.
  */
 void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing, PROTECTION prot) {
     // 为 X 坐标创建动画
@@ -98,31 +108,61 @@ void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, 
     }
 }
 
+
 void PixelUI::renderer() {
-    if (!isFading_){
-        this->getU8G2().clearBuffer();
-        
-        if (currentDrawable_ && isDirty()) {
-            currentDrawable_->draw();
-            isDirty_ = false;
-        }
-        
-        this->getU8G2().sendBuffer();
-    } else {
-        uint8_t * buf_ptr = this->getU8G2().getBufferPtr();
-        uint16_t buf_len = 1024;
-        for (int fade = 1; fade <= 4; fade++){
-            switch (fade)
-            {
-                case 1: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0xAA; break;
-                case 2: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;
-                case 3: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x55; break;
-                case 4: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;
+    if (getActiveAnimationCount() || isContinousRefreshEnabled()) {
+        markDirty();
+    }
+    if (isDirty()) {
+        if (!isFading_){
+            this->getU8G2().clearBuffer();
+            
+            // current drawable content controlled by applications
+            if (currentDrawable_ && isDirty()) {
+                currentDrawable_->draw();
+                isDirty_ = false;
             }
+            
+            // render popups on top of everything else
+            m_popupManagerPtr->drawPopups();
+
             this->getU8G2().sendBuffer();
             if (m_refresh_callback) m_refresh_callback();
-            m_func_delay(40);
+        } else {
+            uint8_t * buf_ptr = this->getU8G2().getBufferPtr();
+            uint16_t buf_len = 1024;
+            for (int fade = 1; fade <= 4; fade++){
+                switch (fade)
+                {
+                    case 1: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0xAA; break;
+                    case 2: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 != 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;
+                    case 3: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x55; break;
+                    case 4: for (uint16_t i = 0; i < buf_len; ++i)  if (i % 2 == 0) buf_ptr[i] = buf_ptr[i] & 0x00; break;
+                }
+                this->getU8G2().sendBuffer();
+                if (m_refresh_callback) m_refresh_callback();
+                m_func_delay(40);
+            }
+            isFading_ = false;
         }
-        isFading_ = false;
     }
+}
+
+/**
+ * @brief Show an informational popup with animated border expansion.
+ * @param text The text content to display in the popup.
+ * @param title Optional title for the popup (currently unused).
+ * @param width Width of the popup in pixels.
+ * @param height Height of the popup in pixels.
+ * @param position Position of the popup on the screen (CENTER or BOTTOM).
+ * @param duration Duration to display the popup in milliseconds.
+ * @param priority Priority level of the popup (higher number = higher priority).
+ */
+void PixelUI::showPopupInfo(const char* text, const char* title, uint16_t width, uint16_t height, 
+                           PopupPosition position, uint16_t duration, uint8_t priority) {
+    if (!text) return;
+    
+    auto popup = std::make_shared<PopupInfo>(*this, width, height, position, text, title, duration, priority);
+    m_popupManagerPtr->addPopup(popup);
+    markDirty();
 }

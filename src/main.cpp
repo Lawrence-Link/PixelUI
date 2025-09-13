@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,16 +55,8 @@ public:
             if (eventOpt.has_value()) {
                 ui.handleInput(eventOpt.value());
             }
-            // 只在内容改变时重绘
-            if (isDirty) {
-                ui.renderer();  // 调用 AppView::draw()
-                emit updateRequested(); // 通知Qt更新
-            }
-        
-        // 检查动画是否在运行，如果有动画则持续标记为dirty
-            if (ui.getActiveAnimationCount() > 0 || ui.isContinousRefreshEnabled()) {
-                ui.markDirty();
-            }
+
+            ui.renderer();
         
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }

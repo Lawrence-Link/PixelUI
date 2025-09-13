@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,40 +25,36 @@
 #include "PixelUI/core/CommonTypes.h"
 #include "PixelUI/core/animation/animation.h"
 
-// 定义定点数位移值，用于将浮点数映射到整数。
-// 例如，SHIFT_BITS = 12 时，0.5f 会被表示为 0.5 * (1 << 12) = 2048。
+// fixed-point shift bits to support fractional values in integer arithmetic
+// eg. SHIFT_BITS = 12 means 0.5f is represented as 0.5 * (1 << 12) = 2048
 #define SHIFT_BITS 12
 #define FIXED_POINT_ONE (1 << SHIFT_BITS)
 #define FLOAT_TO_FIXED(f) ((int32_t)((f) * FIXED_POINT_ONE))
 
 /**
  * @class EasingCalculator
- * @brief 负责计算动画的缓动曲线进度，所有计算均使用定点数（整型）。
+ * @brief Calculate easing progress based on easing type and normalized time.
  */
 class EasingCalculator {
 public:
     /**
-     * @brief 根据缓动类型计算动画进度。
-     * @param type 缓动类型，例如 EasingType::LINEAR。
-     * @param t 归一化的时间，表示为定点数，范围为 [0, FIXED_POINT_ONE]。
-     * @return 归一化的进度，表示为定点数，范围为 [0, FIXED_POINT_ONE]。
+     * @brief calculate progress based on easing type and normalized time.
+     * @param type easing type.
+     * @param t normalized time, fixed-point.
      */
     static int32_t calculate(EasingType type, int32_t t);
 
 private:
     /**
-     * @brief 实现 EaseOutBounce 缓动函数，使用定点数计算。
-     * @param t 归一化的时间，定点数。
-     * @return 归一化的进度，定点数。
+     * @brief ease out bounce function.
+     * @param t normalized time, fixed-point.
      */
     static int32_t easeOutBounce(int32_t t);
 };
 
 /**
  * @class Animation
- * @brief 动画基类，管理动画的生命周期和进度。
- *
- * 将 _progress 从浮点数 float 修改为 int32_t，以支持定点数。
+ * @brief Base class for animations, managing timing and easing.
  */
 class Animation {
 public:
@@ -78,7 +74,7 @@ public:
 
     int32_t getProgress() const { return _progress; }
 protected:
-    int32_t _progress = 0; // 修改为定点数，表示范围 [0, FIXED_POINT_ONE]
+    int32_t _progress = 0;
 private:
     bool _isActive;
     bool _isProtected = false;
@@ -89,7 +85,7 @@ private:
 
 /**
  * @class AnimationManager
- * @brief 管理所有活动动画的生命周期。
+ * @brief Manages multiple animations, updating and cleaning them up.
  */
 class AnimationManager {
 public:
@@ -97,12 +93,12 @@ public:
     void addAnimation(std::shared_ptr<Animation> animation);
     void update(uint32_t currentTime);
     void clear();
-    
-    // 保护机制
+
+    // Protection mechanism
     void markProtected(std::shared_ptr<Animation> animation);
     void clearUnprotected();
     void clearAllProtectionMarks();
-    
+
     size_t activeCount() const;
 private:
     etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
@@ -110,10 +106,7 @@ private:
 
 /**
  * @class CallbackAnimation
- * @brief 实现了通过回调函数更新数值的动画。
- *
- * 将 startVal 和 endVal 从 float 修改为 int32_t，以支持定点数。
- * 回调函数也修改为接受 int32_t 参数。
+ * @brief Animation that calls a callback with the current value on each update.
  */
 class CallbackAnimation : public Animation {
 public:
@@ -126,8 +119,7 @@ public:
 
     bool update(uint32_t currentTime) override {
         bool isRunning = Animation::update(currentTime);
-        if (_updateCallback) {
-            // 使用整数运算计算当前值
+        if (_updateCallback) { 
             int32_t delta = _endVal - _startVal;
             int32_t currentValue = _startVal + ((int64_t)delta * _progress) / FIXED_POINT_ONE;
             _updateCallback(currentValue);

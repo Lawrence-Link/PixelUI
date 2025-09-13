@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -109,6 +109,7 @@ private:
     ListItem* oldItemList_ = nullptr;
     size_t oldItemLength_ = 0;
     int oldTopVisibleIndex_ = 0;
+    int32_t switchBoxX = 0;
 
     // progess bar related
     int32_t progress_bar_top = 0;
@@ -124,17 +125,13 @@ private:
     void updateScrollPosition();
     void startLoadAnimation();
     void startTransitionAnimation(int selectedItemIndex);
-    void startBackTransitionAnimation();
     int getVisibleItemIndex(int screenIndex);
     bool shouldScroll(int newCursor);
     int32_t calculateItemY(int itemIndex);
     
-    void updateExtra();
-
     void selectCurrent();
     void returnToPreviousContext();
 
-    // 选择性清除动画的方法
     void clearNonInitialAnimations();
     
     size_t currentCursor = 0;

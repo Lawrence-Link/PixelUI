@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,23 +17,12 @@
 
 #pragma once
 
+#include "U8g2lib.h"
 #include "PixelUI/core/animation/animation.h"
-#include <u8g2_wrapper.h>
-#include "PixelUI/core/ui/Popup/IPopupRenderer.h"
-#include "PixelUI/core/ui/Popup/PopupManager.h"
 #include "PixelUI/core/ui/IDrawable.h"
+#include "PixelUI/core/CommonTypes.h"
 
-// 引入定点数定义，确保 PixelUI 类中的动画函数能正确使用整数类型
-#include "PixelUI/core/animation/animation.h"
 
-enum class InputEvent {
-    UP, DOWN, LEFT, RIGHT, SELECT, BACK
-};
-
-enum class PROTECTION {
-    NOT_PROTECTED,
-    PROTECTED
-};
 
 class IInputHandler{
 public:
@@ -46,6 +35,7 @@ using InputCallback = std::function<bool(InputEvent)>;
 typedef void (*DelayFunction)(uint32_t);
 
 class ViewManager;
+class PopupManager;
 
 class PixelUI
 {
@@ -57,27 +47,33 @@ public:
 
     void Heartbeat(uint32_t ms);
     
+    // animation related functions.
     void animate(int32_t& value, int32_t targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
     void animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
-
     void addAnimation(std::shared_ptr<Animation> animation);
-
-    uint32_t getCurrentTime() const { return _currentTime; }
-
     void markAnimationProtected(std::shared_ptr<Animation> animation) { m_animationManagerPtr->markProtected(animation); }
     void clearUnprotectedAnimations() { m_animationManagerPtr->clearUnprotected(); }
     void clearAllProtectionMarks() { m_animationManagerPtr->clearAllProtectionMarks(); }
     void clearAllAnimations() { m_animationManagerPtr->clear(); }
 
+    uint32_t getCurrentTime() const { return _currentTime; }
+
+    // setters
     void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
     void setRefreshCallback(std::function <void()> function) { if (function) m_refresh_callback = function; }
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
     void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
     void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
+    void setDebugPrintFunction(void (*func)(const char*)) { if (func) m_func_debug_print = func; }
 
+    #ifdef USE_DEBUG_OUPUT
+        void debugPrint(const char* msg);
+    #endif
+    
     // getters
     U8G2& getU8G2() const { return u8g2_; }
     std::shared_ptr<AnimationManager> getAnimationManPtr() { return m_animationManagerPtr; }
+    std::shared_ptr<PopupManager> getPopupManagerPtr() { return m_popupManagerPtr; }
 
     bool isDirty() const { return isDirty_; }
     bool isFading() const { return isFading_; }
@@ -89,6 +85,10 @@ public:
     std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
 
     std::shared_ptr<ViewManager> getViewManagerPtr() const { return m_viewManagerPtr; }
+
+    // popup related functions
+
+    void showPopupInfo(const char* text, const char* title = "", uint16_t width = 80, uint16_t height = 30, PopupPosition position = PopupPosition::CENTER, uint16_t duration = 3000, uint8_t priority = 0);
 
     void markDirty() { isDirty_ = true; }
     void markFading() { isFading_ = true; }
@@ -105,6 +105,7 @@ private:
 
     std::shared_ptr<AnimationManager> m_animationManagerPtr;
     std::shared_ptr<ViewManager> m_viewManagerPtr;
+    std::shared_ptr<PopupManager> m_popupManagerPtr;
 
     uint32_t _currentTime = 0;
     std::shared_ptr<IDrawable> currentDrawable_;
@@ -113,9 +114,11 @@ private:
     bool isFading_ = false;
     bool continousMode_ = false;
 
-    std::function<void()> m_refresh_callback;
-
-    DelayFunction m_func_delay;
-
-    InputCallback inputCallback_;
+    std::function<void()> m_refresh_callback = nullptr;
+    DelayFunction m_func_delay = nullptr;
+    InputCallback inputCallback_ = nullptr;
+    
+    #ifdef USE_DEBUG_OUPUT
+        void (*m_func_debug_print)(const char*) = nullptr;
+    #endif
 };

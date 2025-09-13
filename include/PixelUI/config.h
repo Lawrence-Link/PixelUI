@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,3 +31,4 @@ constexpr int LISTVIEW_ITEMS_PER_PAGE = 6;
 constexpr int MAX_LISTVIEW_DEPTH = 6;
 
 constexpr int CALLBACK_ANIMATION_STACK_SIZE = 2;
+constexpr int MAX_POPUP_NUM = 3;

@@ -21,6 +21,10 @@ add_subdirectory(third_party/etl)
 set(U8G2_C_SRC_DIR "third_party/u8g2/csrc")
 set(U8G2_CPP_SRC_DIR "third_party/u8g2/cppsrc")
 
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/u8g2/csrc)
+    message(FATAL_ERROR "U8g2 not found! Please place u8g2 under third_party/u8g2")
+endif()
+
 # --- u8g2 core C library ---
 file(GLOB U8G2_C_SOURCES "${U8G2_C_SRC_DIR}/*.c")
 add_library(u8g2_c STATIC ${U8G2_C_SOURCES})
@@ -29,6 +33,9 @@ target_include_directories(u8g2_c PUBLIC ${U8G2_C_SRC_DIR})
 # --- u8g2 C++ wrapper sources ---
 file(GLOB U8G2_CPP_SOURCES "${U8G2_CPP_SRC_DIR}/*.cpp")
 file(GLOB U8G2_HEADERS "${U8G2_C_SRC_DIR}/*.h" "${U8G2_CPP_SRC_DIR}/*.h")
+
+add_compile_definitions(USE_DEBUG_OUPUT)
+add_compile_definitions(USE_EMULATOR)
 
 set(SOURCES
     ${U8G2_CPP_SOURCES}
@@ -49,7 +56,6 @@ set(SOURCES
     src/PixelUI/core/animation/animation.cpp
     src/PixelUI/core/ui/AppView/AppView.cpp
     src/PixelUI/core/ui/Popup/Popup.cpp
-    src/PixelUI/core/ui/Popup/PopupManager.cpp
     src/PixelUI/core/ViewManager/ViewManager.cpp
     src/PixelUI/core/ui/ListView/ListView.cpp
     src/ListViewDemo/ListViewDemo1.cpp
@@ -71,9 +77,7 @@ set(HEADERS
     include/PixelUI/core/app/IApplication.h
     include/PixelUI/core/ui/AppView/AppView.h
     include/PixelUI/core/ui/IDrawable.h
-    include/PixelUI/core/ui/Popup/IPopupRenderer.h
     include/PixelUI/core/ui/Popup/Popup.h
-    include/PixelUI/core/ui/Popup/PopupManager.h
     include/PixelUI/core/ViewManager/ViewManager.h
     include/PixelUI/config.h
     include/PixelUI/core/ui/ListView/ListView.h

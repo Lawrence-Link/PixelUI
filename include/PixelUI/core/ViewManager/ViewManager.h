@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,24 +22,29 @@
 #include <memory>
 #include <mutex>
 #include <atomic>
+#include "PixelUI/core/ui/Popup/Popup.h"
 
 class ViewManager {
 public:
     ViewManager(PixelUI &ui) : m_ui(ui) {
         m_ui.setInputCallback ([&](InputEvent event) -> bool {
+            // 优先处理弹窗输入 - 检查是否有活动的popup
+            auto popupManager = m_ui.getPopupManagerPtr();
+            if (popupManager && popupManager->getPopupCounts() > 0) {
+                // 获取最高优先级的popup处理输入
+                return popupManager->handleTopPopupInput(event);
+            }
+            
+            // 弹窗没有处理或没有弹窗时,将输入传递给栈顶应用
             if (!m_viewStack.empty()) {
-                return m_viewStack.top()->handleInput(event); // app on the top of stack handles input
+                return m_viewStack.top()->handleInput(event);
             }
             return false;
         });
     }
-
     void push(std::shared_ptr<IApplication> app);
     void pop();
-
-    bool isTransitioning() const noexcept { 
-        return m_isTransitioning.load(std::memory_order_relaxed);
-    }
+    bool isTransitioning() const noexcept { return m_isTransitioning.load(std::memory_order_relaxed); }
 
     std::shared_ptr<IApplication> getCurrentApp() const;
 private:

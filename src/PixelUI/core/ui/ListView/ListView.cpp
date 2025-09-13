@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  */
 
 #include "PixelUI/core/ui/ListView/ListView.h"
-#include "PixelUI/core/animation/animation.h" // 包含定点数宏
+#include "PixelUI/core/animation/animation.h"
 
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
@@ -27,12 +27,12 @@ void ListView::onEnter(ExitCallback exitCallback){
     FontHeight = u8g2.getFontAscent() - u8g2.getFontDescent();
     
     topVisibleIndex_ = 0;
-    scrollOffset_ = 0; // 修改为整数
+    scrollOffset_ = 0;
     currentCursor = 0;
     isInitialLoad_ = true;
     
     for (int i = 0; i < visibleItemCount_; i++) {
-        itemLoadAnimations_[i] = 0; // 修改为整数
+        itemLoadAnimations_[i] = 0;
     }
     
     // animation: scrollbar
@@ -41,7 +41,9 @@ void ListView::onEnter(ExitCallback exitCallback){
     startLoadAnimation();
     scrollToTarget(0);
 }
-
+/*
+@brief Called when the ListView is resumed from a paused state.
+*/
 void ListView::startLoadAnimation() {
     isInitialLoad_ = true;
     
@@ -55,16 +57,14 @@ void ListView::startLoadAnimation() {
         auto callback = [this, i, isLastAnimation](int32_t value) {
             this->itemLoadAnimations_[i] = value;
             
-            if (isLastAnimation && value >= FIXED_POINT_ONE) { // 使用 FIXED_POINT_ONE 进行比较
+            if (isLastAnimation && value >= FIXED_POINT_ONE) { 
                 this->isInitialLoad_ = false;
                 this->m_ui.getAnimationManPtr()->clearAllProtectionMarks();
             }
         };
 
-        // 修改 CallbackAnimation 的参数为定点数
         auto animation = std::make_shared<CallbackAnimation>(0, FIXED_POINT_ONE, duration, EasingType::EASE_IN_OUT_CUBIC, callback);
         
-        // 确保只通过 addAnimation 接口添加动画
         m_ui.getAnimationManPtr()->markProtected(animation);
         m_ui.addAnimation(animation);
     }
@@ -74,10 +74,18 @@ void ListView::clearNonInitialAnimations() {
     m_ui.getAnimationManPtr()->clearUnprotected();
 }
 
+/*
+@brief determine if scrolling is needed based on the new cursor position.
+@param newCursor the new cursor position.
+@return true if scrolling is needed, false otherwise.
+*/
 bool ListView::shouldScroll(int newCursor) {
     return (newCursor < topVisibleIndex_ || newCursor >= topVisibleIndex_ + visibleItemCount_);
 }
-
+/*
+@brief update the scroll position based on the current cursor.
+@param target the target item index to scroll to.
+*/
 void ListView::updateScrollPosition() {
     if (!shouldScroll(currentCursor)) {
         return;
@@ -114,13 +122,13 @@ void ListView::scrollToTarget(size_t target){
     int screenCursorIndex = currentCursor - topVisibleIndex_;
     int32_t targetCursorY = topMargin_ + screenCursorIndex * (FontHeight + spacing_) - 1;
     
-    // 光标的Y轴
-    m_ui.animate(CursorY, targetCursorY, 240, EasingType::EASE_IN_OUT_CUBIC);
-    // 反色光标的宽度
+    //  Y coordinate of the cursor 
+    m_ui.animate(CursorY, targetCursorY, 150, EasingType::EASE_IN_OUT_CUBIC);
+    // Width of the cursor
     m_ui.animate(CursorWidth, u8g2.getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
-    // 进度条顶端
+    // Top of the progress bar
     m_ui.animate(progress_bar_top, ((int64_t)currentCursor * 64) / (m_itemLength + 1) + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED); // 修正为定点数运算
-    // 进度条底部
+    // Bottom of the progress bar
     m_ui.animate(progress_bar_bottom, ((int64_t)1 * 64) / (m_itemLength + 1), 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED); // 修正为定点数运算
 }
 
@@ -149,17 +157,27 @@ void ListView::selectCurrent(){
         returnToPreviousContext();
         return ;
     }
-    // 无nextlist 有function 无int/switch value
-    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc && !m_itemList[currentCursor].extra.intValue && !m_itemList[currentCursor].extra.switchValue){ m_itemList[currentCursor].pFunc(); } // 进入 pFunc
-    else if (m_itemList[currentCursor].extra.intValue) { // 有int value
-        *m_itemList[currentCursor].extra.intValue = !(*m_itemList[currentCursor].extra.intValue);
-        // switch (*m_itemList[currentCursor].extra.intValue) {
-        //     case false: m_itemList[currentCursor];
-        //     case true: break;
-        // }
+    // 无nextlist 有function
+    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc ){ m_itemList[currentCursor].pFunc(); } // 进入 pFunc
+    
+    else if (m_itemList[currentCursor].extra.switchValue) {
+        bool* switchValPtr = m_itemList[currentCursor].extra.switchValue;
+
+        // current state of the switch
+        bool currentState = *switchValPtr;
+
+        // calculate the start and end positions for the switch box
+        int32_t startX = currentState ? 7 : 0;
+        int32_t endX = currentState ? 0 : 7;
+        
+        // animate switchBoxX ( the dense box inside the switch frame act as the switch button )
+        m_ui.animate(switchBoxX, endX, 200, EasingType::EASE_IN_OUT_CUBIC);
+
+        // switch the value after the animation duration
+        *switchValPtr = !currentState;
+        return;
     }
     else { 
-        // clearNonInitialAnimations();
         m_ui.getAnimationManPtr()->clear();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
         m_itemLength = m_itemList[currentCursor].nextListLength - 1;
@@ -173,21 +191,26 @@ void ListView::selectCurrent(){
     }
 }
 
+/*
+@brief Return to the previous context in the history stack or exit if none exists.
+*/
 void ListView::returnToPreviousContext() {
     if (!m_history_stack.empty()){
-        // clearNonInitialAnimations();
-        m_ui.getAnimationManPtr()->clear();
-        etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back();
-        m_history_stack.pop_back();
+        m_ui.getAnimationManPtr()->clear(); // stop all animations
+        etl::pair<etl::pair<ListItem*, size_t>, size_t> parent_state = m_history_stack.back(); // get the last state
+        m_history_stack.pop_back(); // remove it from the stack
+        // extract the ListItem* and length
         m_itemList = parent_state.first.first;
         m_itemLength = parent_state.first.second;
         currentCursor = parent_state.second;
+        
+        // markFading and start load animation
         m_ui.markFading();
         startLoadAnimation();
         scrollToTarget(currentCursor);
         return;
     }
-    else { requestExit(); }
+    else { requestExit(); } // exit if no history
 }
 
 void ListView::navigateLeft() {
@@ -237,7 +260,8 @@ void ListView::onExit() {
 
 void ListView::draw(){
     U8G2& u8g2 = m_ui.getU8G2();
-    
+    u8g2.setFont(u8g2_font_squeezed_b6_tr); 
+
     int startIndex = std::max(0, topVisibleIndex_ - 2);
     int endIndex = std::min((int)m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
     
@@ -251,48 +275,30 @@ void ListView::draw(){
                 int animIndex = itemIndex - topVisibleIndex_;
                 if (animIndex >= 0 && animIndex < visibleItemCount_ + 1) {
                     int32_t loadProgress = itemLoadAnimations_[animIndex];
-                    // 修正浮点数运算为定点数运算
                     drawX = 4 + (FIXED_POINT_ONE - loadProgress) * 30 / FIXED_POINT_ONE;
                 }
             }
             u8g2.drawStr(drawX, itemY, m_itemList[itemIndex].Title);
             
             if (m_itemList[itemIndex].extra.switchValue) {
-                u8g2.drawFrame(u8g2.getDisplayWidth() - 30, itemY - 6, 14, 7);
-                // u8g2.drawBox(u8g2.getDisplayWidth() - 30 + m_itemList[itemIndex].getVal1()/* +7 or 0 */, itemY - 6, 7, 7);
+                u8g2.drawRFrame(u8g2.getDisplayWidth() - 35, itemY - 6, 14, 7, 1);
+                u8g2.drawRBox(u8g2.getDisplayWidth() - 35 + switchBoxX, itemY - 6, 7, 7, 2);
+                if (*m_itemList[itemIndex].extra.switchValue)
+                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "ON");
+                else 
+                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "OFF");
             }
 
             if (m_itemList[itemIndex].extra.intValue) {
-                
+                // To be implemented later, for displaying int values.
             }
         }
     }
 
-    /* Draw the side progress bar */
-
-    // for (int i = 0; i <= static_cast<int> (animation_pixel_dots); i++)
-    //  u8g2.drawPixel(126, 2 * i);
-
-    // display.drawBox(0, 49, animation_scroll_bar, 3);
-    // u8g2.drawVLine(u8g2.getDisplayWidth() - 2, 50, animation_scroll_bar);
-
     u8g2.drawVLine(126, progress_bar_top, progress_bar_bottom);
-
     drawCursor();
-}
-
-void ListView::startTransitionAnimation(int selectedItemIndex) {
-    // 尚未实现，可以根据需要使用整数动画进行实现
-}
-
-void ListView::startBackTransitionAnimation() {
-    // 尚未实现，可以根据需要使用整数动画进行实现
 }
 
 int ListView::getVisibleItemIndex(int screenIndex) {
     return topVisibleIndex_ + screenIndex;
-}
-
-void ListView::updateExtra() {
-    // 尚未实现，根据需要更新
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ ListItem sub_CathyFlower[3] = {
 
 ListItem ItemList[10] = {
     ListItem(">>> ListDemo <<<"),
-    ListItem("- Show pop", nullptr, 0, [](){ /*ui.showInfoPopup("Seven human souls.", 1000);*/ }),
+    ListItem("- Show pop", nullptr, 0, [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, PopupPosition::CENTER, 2000); }),
     ListItem("- Sub Menu", sub_CathyFlower, 3),
     ListItem("- Bool State", nullptr, 0, nullptr, {.switchValue = &bool_state}),
     ListItem("- Switch", nullptr, 0, [](){  }),

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,19 +40,19 @@ private:
     Histogram histogram;
     Brace brace;
 
-    // 状态机相关
+    // State machine for loading animation sequence
     enum class LoadState {
-        INIT,           // 初始
-        BRACE_LOADING,  // 执行brace.onLoad()
-        WAIT_HISTO,     // 等待300ms
-        HISTO_LOADING,  // 执行histogram.onLoad()
-        DONE            // 全部完成
+        INIT,           // start
+        BRACE_LOADING,  // execute brace.onLoad()
+        WAIT_HISTO,     // wait 300ms
+        HISTO_LOADING,  // execute histogram.onLoad()
+        DONE            // all done
     } loadState = LoadState::INIT;
 
-    uint32_t state_timestamp = 0;  // 记录状态切换时间戳
+    uint32_t state_timestamp = 0;  // record time when entering a state
     bool first_time = false;
 
-    // 动画变量
+    // animation related variables
     int32_t anim_mark_m = 0;
     int32_t anim_bg = 0;
     int32_t anim_status_x = -27;
@@ -92,18 +92,18 @@ public:
             m_ui.animate(anim_mark_m, 23, 300, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
             m_ui.animate(anim_bg, 128, 500, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
             
-            // 状态机从BRACE开始
+            // the state machine start from its initial state
             loadState = LoadState::BRACE_LOADING;
             state_timestamp = m_ui.getCurrentTime();
             first_time = true;
         }
 
-        // 状态机驱动
+        // state machine
         switch (loadState) {
             case LoadState::BRACE_LOADING:
                 brace.onLoad();
                 loadState = LoadState::WAIT_HISTO;
-                state_timestamp = m_ui.getCurrentTime(); // 记录brace完成的时间
+                state_timestamp = m_ui.getCurrentTime(); // record when was the state entered
                 break;
 
             case LoadState::WAIT_HISTO:
@@ -119,14 +119,14 @@ public:
                 break;
 
             case LoadState::DONE:
-                // 什么都不做
+                // Do nothing, wait for exit
                 break;
 
             default:
                 break;
         }
 
-        // --- UI绘制 ---
+        // UI drawing
         U8G2& u8g2 = m_ui.getU8G2();
         u8g2.setClipWindow(0,7,anim_bg,18);
         u8g2.drawXBM(0, 7, 128, 10, image_Background_bits);

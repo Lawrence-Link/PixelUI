@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,11 @@
 
 #pragma once
 
+enum class PopupPosition {
+    CENTER,
+    BOTTOM
+};
+
 enum class PopupType {
     INFO,
     WARNING,
@@ -33,4 +38,13 @@ enum class EasingType {
     EASE_OUT_CUBIC,
     EASE_IN_OUT_CUBIC,
     EASE_OUT_BOUNCE
+};
+
+enum class InputEvent {
+    UP, DOWN, LEFT, RIGHT, SELECT, BACK
+};
+
+enum class PROTECTION {
+    NOT_PROTECTED,
+    PROTECTED
 };

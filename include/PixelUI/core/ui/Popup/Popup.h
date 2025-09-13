@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,58 +16,90 @@
  */
 
 #pragma once
-#include "IPopupRenderer.h"
-#include <string>
-#include <memory>
+
 #include <functional>
 #include <cstdint>
 #include "PixelUI/core/CommonTypes.h"
-// 前向声明
-class AnimationManager;
+#include "etl/vector.h"
+#include "PixelUI/config.h"
 
-class Popup {
+// 前向声明,避免循环包含
+class PixelUI;
+
+class IPopup{
 public:
-    Popup(IPopupRenderer& renderer, AnimationManager& animManager, 
-          const std::string& message, PopupType type = PopupType::INFO);
-    ~Popup() = default;
+    IPopup() = default;
+    virtual ~IPopup() {}
 
-    void show(uint32_t duration = 0);
-    void hide();
-    void draw();
-    void update(uint32_t currentTime);
+    virtual bool update(uint32_t currentTime) = 0;
+    virtual void draw() = 0;
+    virtual bool handleInput(InputEvent event) = 0;
+    virtual uint8_t getPriority() const = 0;
+    virtual uint16_t getDuration() const = 0;
+};
 
-    // 回调设置
-    void setOnCloseCallback(std::function<void()> callback) { onCloseCallback_ = callback; }
-    void setOnConfirmCallback(std::function<void(bool)> callback) { onConfirmCallback_ = callback; }
-
-    // 状态查询
-    bool isVisible() const { return isVisible_; }
-    PopupType getType() const { return type_; }
-    uint32_t getShowTime() const { return showTime_; }
-
-    // 输入处理 - 之前遗漏的方法
-    void handleConfirm(bool confirmed);
-    void setSelfWeakPtr(std::weak_ptr<Popup> weakPtr) { selfWeakPtr_ = weakPtr; }
-    
+class PopupInfo : public IPopup {
 private:
-    IPopupRenderer& renderer_;
-    AnimationManager& animManager_;
-    std::string message_;
-    PopupType type_;
-    bool isVisible_;
-    uint32_t showTime_;
-    uint32_t duration_;
-    std::weak_ptr<Popup> selfWeakPtr_;
+    uint16_t _width, _height;
+    uint16_t _actualHeight;  // calculate desired height by font and text
+    const char *_title;
+    const char *_text;
+    PopupPosition _position;
+    uint8_t _priority;
+    uint16_t _duration;
+    uint32_t _startTime;
+    int32_t _currentBoxSize;
+    int32_t _targetBoxSize;
+    PixelUI& m_ui;
+    
+    // state management
+    enum class State {
+        APPEARING, // popup
+        SHOWING,   // displaying in static
+        CLOSING    // shrink
+    };
+    State _state;
 
-    float boxY_;
-    float backgroundAlpha_;
+    // text
+    static const uint16_t MAX_LINES = 8;  // max number of lines
+    static const uint16_t LINE_HEIGHT = 9; // line height in pixel
+    static const uint16_t TEXT_MARGIN = 6; // margin of the text to the border
     
-    std::function<void()> onCloseCallback_;
-    std::function<void(bool)> onConfirmCallback_;
+    struct TextLine {
+        const char* start;
+        uint16_t length;
+    };
     
-    void animateIn();
-    void animateOut();
-    void drawBox();
-    void drawMessage();
-    void drawButtons();
+    TextLine _textLines[MAX_LINES];
+    uint16_t _lineCount;
+    
+    uint16_t splitTextIntoLines(const char* text, uint16_t maxWidth);
+    
+public:
+    PopupInfo(PixelUI& ui, uint16_t width, uint16_t height, PopupPosition position, 
+              const char* text, const char* title = "", uint16_t duration = 3000, uint8_t priority = 0);
+    ~PopupInfo() = default;
+    
+    uint8_t getPriority() const override { return _priority; }
+    uint16_t getDuration() const override { return _duration; }
+    bool update(uint32_t currentTime) override;
+    void draw() override;
+    bool handleInput(InputEvent event) override;
+};
+
+class PopupManager {
+private:
+    etl::vector<std::shared_ptr<IPopup>, MAX_POPUP_NUM> _popups;
+    PixelUI& m_ui;
+public:
+    PopupManager(PixelUI& ui) : m_ui(ui) {}
+    ~PopupManager() = default;
+
+    void addPopup(std::shared_ptr<IPopup> popup);
+    void removePopup(std::shared_ptr<IPopup> popup);
+    void clearPopups();
+    void drawPopups();
+    void updatePopups(uint32_t currentTime);
+    bool handleTopPopupInput(InputEvent event);
+    size_t getPopupCounts() const { return _popups.size(); }
 };

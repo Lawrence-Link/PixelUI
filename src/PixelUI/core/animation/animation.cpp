@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Lawrence Li
+ * Copyright (C) 2025 Lawrence Link
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -151,6 +151,7 @@ void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
     }
     _animations.push_back(animation);
 }
+
 /*
 @brief 根据当前时间更新所有活动动画。
 @param currentTime 当前时间（毫秒）。
@@ -179,15 +180,15 @@ void AnimationManager::update(uint32_t currentTime) {
 }
 
 /*
-@brief 清除管理器中的所有动画。
+@brief clear all animations in the manager.
 */
 void AnimationManager::clear(){
     _animations.clear();
 }
 
 /*
-@brief 标记一个动画为受保护，使其在清理时不会被移除。
-@param animation 指向要标记为受保护的 Animation 对象的智能指针。
+@brief mark a animation as protected, preventing it from being cleared.
+@param animation the animation to be marked as protected.
 */
 void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
     if (animation) {
@@ -195,7 +196,7 @@ void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
     }
 }
 /*
-@brief 清除管理器中所有未受保护的动画。
+@brief clean all unprotected animations in the manager.
 */
 void AnimationManager::clearUnprotected() {
     if (_animations.empty()) {
@@ -215,14 +216,17 @@ void AnimationManager::clearUnprotected() {
 }
 
 /*
-@brief 清除所有动画的保护标记。
+@brief clean all protection marks from all animations.
 */
 void AnimationManager::clearAllProtectionMarks() {
     for (const auto& anim_ : _animations) {
         anim_->setProtected(false);
     }
 }
-
+/*
+@brief acquire number of current active count
+@return (size_t) number of current active count
+*/
 size_t AnimationManager::activeCount() const {
     return _animations.size();
 }
