@@ -1,49 +1,112 @@
-# U8G2 Emulator: Companion for U8g2lib Embedded Display Development 💻
+# PixelUI
 
-**U8G2 Emulator** is a personal practice project designed to simulate the powerful [u8g2 graphics library](https://github.com/olikraus/u8g2). Built on Qt6, it was designed to be a wrapper layer for the u8g2lib, enabling you to preview the UI you wanted to construct on without having to repeatedly upload heavy non-UI related code on your embedded devices. It also allows you to debug embedded display code without the need for physical hardware. Additionally, it includes a cursor function to help you quickly determine the coordinates you want to use.
+A lightweight **C++ UI framework** for resource-constrained embedded devices (e.g. ESP32).  
+PixelUI provides a **modular, event-driven, and component-based** UI system with smooth rendering and animations powered by [U8G2](https://github.com/olikraus/u8g2).  
+Its design focuses on **performance, low memory footprint, and easy extensibility**, enabling developers to build complex UIs with minimal effort.
 
-## ✨ Key Features
-.
--   **Comprehensive API Coverage**: The wrapper layer was publicly derived from the U8G2 class, you can indeed use most of its API functions.
--   **Efficient Debugging & Visualization**: Offers convenient debugging and display output visualization, allowing you to quickly grasp every detail of your graphics rendering.
--   **Easy Integration**: Can be integrated into your projects as a u8g2 display driver, smoothly fitting into your existing development pipeline and reducing the learning curve.
--   **Pixel-Perfect Display**: Renders pixels from the U8G2 framebuffer using QPainter
--   **Interactive Mouse Support**: The emulator displays U8G2 coordinates when the mouse moves, aiding in debugging and precise positioning.
+---
 
-## 🚀 Quick Start
+![AppView Interface](doc/img/Animation.gif)
 
-Get the `u8g2_emulator` example up and running on your system in just a few steps!
+## ✨ Features
 
-1.  **Clone the repository and initialize submodules:**
-    ```bash
-    git clone https://github.com/Lawrence-Link/u8g2-emulator.git
-    cd u8g2_emulator
-    git submodule update --init --recursive
-    ```
+- 🎛 **Core Scheduler**: Event-driven architecture with `Heartbeat()` for logic & animation updates and `renderer()` for drawing.
+- 🎞 **Animation Engine**: Fixed-point easing curves, protected animations, and centralized management via `AnimationManager`.
+- 📚 **View & Input Management**: Stack-based navigation, popup routing, and strict input priority handling.
+- 🧩 **Component-Based Widgets**: Unified `Widget` base class for reusable UI elements (`Brace`, `Histogram`, etc.).
+- 📜 **ListView**: Smooth scrolling menus with sub-items, actions, and configurable options.
+- 🚀 **Resource Optimized**: Minimal heap usage, separate rendering & logic loops, and stable long-term operation.
 
-2.  **Build the project (Install Qt6 support first):**
-    ```bash
-    mkdir build && cd build
-    cmake .. -DUSE_QT6=ON
-    make
-    ```
+---
 
-3.  **Run this or..**
-    ```bash
-    ./u8g2_emulator.exe
-    ```
-    Upon running, you will see a simulated U8G2 display window showcasing various graphics drawing effects (the GraphicTest demo running).
+## 🏗 Architecture
 
-## 💡 Usage Guide
+### Core
+- **PixelUI**: Entry point and central dispatcher.
+- **Heartbeat**: Advances animations, timers, and state updates.
+- **Renderer**: Draws the current UI to display buffer.
 
-Integrate U8G2 Emulator into your project as a pseudo display driver. You can use all the familiar u8g2 API functions by creating instance of the `U8G2Wrapper`, and the emulator will display your graphics output in a desktop window in real-time.
+### Animation
+- **AnimationManager** manages animations with shared pointers.
+- **Fixed-point arithmetic** ensures predictable performance on MCUs without FPU.
+- **Protected animations** survive bulk cleanup operations.
 
-The `u8g2_emulator` encapsulates the u8g2 library through the `U8G2Wrapper` class, providing a `getFramebufferPixels()` method to retrieve pixel data, which is then rendered by the Qt window. An `EmulatorThread` class, inheriting from `EmuWorker`, runs the u8g2 drawing loop in a background thread and triggers Qt window updates via signals. This is crucial since you can only run Qt on the main thread, which app.exec() with block the function. You have to use the pseudo main loop (run on a different thread), and later on call `u8g2.sendBuffer();` along with `emit updateRequested();` to refresh the window.
+### Views & Input
+- **ViewManager**: Stack-based view management (`push`, `pop`).
+- **PopupManager**: Modal dialogs get highest input priority.
+- **Input routing**: Only unhandled events reach active view.
 
-## ❤️ Contributing
+### Components
+- **Widget** base class: Defines `onLoad`, `onOffload`, and `draw`.
+- **ListView**: Scrollable menu supporting:
+  - Submenus
+  - Executable items
+  - Configurable boolean/integer options
+- **AppManager**: Registers apps, sorts by priority, and generates app launcher views.
 
-This project is a result of personal learning and practice. Issues and Pull Requests are warmly welcomed to help improve the project or discuss new ideas.
+### Resource Strategy
+- Minimized dynamic memory allocation to avoid fragmentation.
+- Logic (`Heartbeat`) and rendering (`renderer`) fully separated.
 
-## 📄 License
+---
 
-This project is licensed under the GPL-3.0 License.
+## 📦 Getting Started
+
+#Third-Party Dependencies (Git Submodules)
+- This project uses the following Git submodules, placed under third_party/:
+    - ETL (Embedded Template Library)
+    - U8G2
+Initialize/update submodules after clone:
+
+```bash
+git submodule update --init --recursive
+```
+# Build simulator
+- To build the PC Qt6 simulator, ensure the following option exists in the root CMakeLists.txt (default ON):
+```bash
+option(BUILD_SIMULATOR "Build PC Qt simulator" ON)
+```
+
+- You can also set it via CMake command line:
+```bash
+cmake -B build -S . -DBUILD_SIMULATOR=ON
+cmake --build build
+```
+
+```cpp
+#include <U8g2lib.h>
+#include "PixelUI.h"
+
+U8G2 u8g2(...);
+PixelUI ui(u8g2);
+
+// Update logic (called every ~16ms, e.g. from a timer/RTOS task)
+
+void TimerElapsedISR() { // assuming trigger every 16ms, provide ~ 60FPS frame rate at most.
+    ui.Heartbeat(16);
+}
+
+int main() {
+    // Create your main app
+    auto mainApp = std::make_shared<MainApp>(ui);
+    ui.getViewManager().push(mainApp);
+
+    while(true) {
+        // Render UI (can be lower priority task)
+        ui.renderer();
+
+        // Handle input
+        if (auto event = readInput()) {
+            ui.handleInput(event.value());
+        }
+    }
+}
+
+
+## 📜 License
+
+PixelUI is released under the **GNU General Public License v3.0 (GPL-3.0)**.  
+This means you are free to use, modify, and redistribute PixelUI, but **any derivative work must also be licensed under GPLv3**.
+
+👉 See the [LICENSE](./LICENSE) file for the full license text, or visit:  
+[https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html)
