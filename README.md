@@ -56,11 +56,13 @@ Its design focuses on **performance, low memory footprint, and easy extensibilit
 - This project uses the following Git submodules, placed under third_party/:
     - ETL (Embedded Template Library)
     - U8G2
+
 Initialize/update submodules after clone:
 
 ```bash
 git submodule update --init --recursive
 ```
+
 # Build simulator
 - To build the PC Qt6 simulator, ensure the following option exists in the root CMakeLists.txt (default ON):
 ```bash
