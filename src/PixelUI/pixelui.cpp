@@ -22,11 +22,19 @@
 #include "PixelUI/core/animation/animation.h"
 #include "PixelUI/core/ui/Popup/Popup.h"
 
+/**
+ * @class PixelUI
+ * @brief Main class for the PixelUI framework.
+ *
+ * Handles the central logic for UI rendering, animation management,
+ * and event handling.
+ */
 PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
     m_viewManagerPtr = std::make_shared<ViewManager>(*this);
     m_animationManagerPtr = std::make_shared<AnimationManager>();
     m_popupManagerPtr = std::make_shared<PopupManager>(*this);
 }
+
 /**
  * @brief Initialize the PixelUI system, including sorting registered applications.
  */
@@ -37,7 +45,7 @@ void PixelUI::begin() {
 /**
  * @brief Update the UI state, including animations and popups.
  * @param ms Time elapsed since the last call in milliseconds.
-*/
+ */
 void PixelUI::Heartbeat(uint32_t ms) 
 {
     _currentTime += ms;
@@ -45,10 +53,9 @@ void PixelUI::Heartbeat(uint32_t ms)
     m_popupManagerPtr->updatePopups(_currentTime);
 }
 
-/** 
-* @brief Add an animation to the manager and start it.
-* @param animation Shared pointer to the animation to add.
-*/
+/** * @brief Add an animation to the manager and start it.
+ * @param animation Shared pointer to the animation to add.
+ */
 void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
     animation->start(_currentTime);
     m_animationManagerPtr->addAnimation(animation);
@@ -84,7 +91,7 @@ void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration, Ea
  * @param prot animation protection status.
  */
 void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing, PROTECTION prot) {
-    // 为 X 坐标创建动画
+    // animate X
     auto animX = std::make_shared<CallbackAnimation>(
         x, targetX, duration, easing,
         [&x](int32_t currentValue) {
@@ -93,7 +100,7 @@ void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, 
     );
     addAnimation(animX);
 
-    // 为 Y 坐标创建动画
+    // animate Y
     auto animY = std::make_shared<CallbackAnimation>(
         y, targetY, duration, easing,
         [&y](int32_t currentValue) {
@@ -109,6 +116,12 @@ void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, 
 }
 
 
+/**
+ * @brief The main rendering loop for the UI.
+ *
+ * This function is responsible for drawing all UI elements to the display buffer,
+ * including the current drawable content and any active popups.
+ */
 void PixelUI::renderer() {
     if (getActiveAnimationCount() || isContinousRefreshEnabled()) {
         markDirty();
@@ -149,20 +162,57 @@ void PixelUI::renderer() {
 }
 
 /**
+ * @brief Show a progress popup with animated border expansion.
+ * @param value Reference to the progress value that will be monitored.
+ * @param minValue Minimum value of the progress range.
+ * @param maxValue Maximum value of the progress range.
+ * @param title Optional title for the popup.
+ * @param width Width of the popup in pixels.
+ * @param height Height of the popup in pixels.
+ * @param duration Duration to display the popup in milliseconds.
+ * @param priority Priority level of the popup (higher number = higher priority).
+ */
+void PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue, 
+                               const char* title, uint16_t width, uint16_t height, 
+                               uint16_t duration, uint8_t priority) {
+    if (minValue >= maxValue) {
+        #ifdef USE_DEBUG_OUPUT
+        if (m_func_debug_print) {
+            m_func_debug_print("PopupProgress: Invalid range, minValue >= maxValue");
+        }
+        #endif
+        return;
+    }
+    
+    // Limits on size to save memory
+    if (width < 50) width = 50;
+    if (width > 120) width = 120;
+    if (height < 30) height = 30;
+    if (height > 60) height = 60;
+    
+    // Limits on duration
+    if (duration > 30000) duration = 30000; // Max 30 seconds
+    if (duration < 1000) duration = 1000;   // Min 1 second
+    
+    auto popup = std::make_shared<PopupProgress>(*this, width, height, value, minValue, maxValue, title, duration, priority);
+    m_popupManagerPtr->addPopup(popup);
+    markDirty();
+}
+
+/**
  * @brief Show an informational popup with animated border expansion.
  * @param text The text content to display in the popup.
  * @param title Optional title for the popup (currently unused).
  * @param width Width of the popup in pixels.
  * @param height Height of the popup in pixels.
- * @param position Position of the popup on the screen (CENTER or BOTTOM).
  * @param duration Duration to display the popup in milliseconds.
  * @param priority Priority level of the popup (higher number = higher priority).
  */
 void PixelUI::showPopupInfo(const char* text, const char* title, uint16_t width, uint16_t height, 
-                           PopupPosition position, uint16_t duration, uint8_t priority) {
+                            uint16_t duration, uint8_t priority) {
     if (!text) return;
     
-    auto popup = std::make_shared<PopupInfo>(*this, width, height, position, text, title, duration, priority);
+    auto popup = std::make_shared<PopupInfo>(*this, width, height, text, title, duration, priority);
     m_popupManagerPtr->addPopup(popup);
     markDirty();
 }

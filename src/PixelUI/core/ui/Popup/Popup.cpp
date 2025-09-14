@@ -17,151 +17,102 @@
 
 #include "PixelUI/core/ui/Popup/Popup.h"
 #include "PixelUI/pixelui.h"
-#include "PixelUI/core/animation/animation.h"
+#include <cstring>
+#include <algorithm>
 
-// --- PopupInfo Class Implementation ---
+// --- PopupBase Class Implementation ---
 
 /**
- * @brief Constructs a PopupInfo object, handling text wrapping and initial state setup.
- * @param ui The PixelUI instance to use for drawing and animations.
- * @param width The desired width of the popup box.
- * @param height The desired height of the popup box.
- * @param position The position of the popup on the screen (e.g., CENTER, TOP_LEFT).
- * @param text The message text to display inside the popup.
- * @param title The title text for the popup (optional).
- * @param duration The time in milliseconds the popup should be visible.
- * @param priority The priority level of the popup. Higher priority popups are drawn on top.
+ * @brief Constructs a base popup object.
+ *
+ * @param ui The main PixelUI instance.
+ * @param width The width of the popup.
+ * @param height The height of the popup.
+ * @param priority The drawing priority, higher values are drawn on top.
+ * @param duration The display duration in milliseconds before auto-closing.
  */
-PopupInfo::PopupInfo(PixelUI& ui, uint16_t width, uint16_t height, PopupPosition position, 
-                     const char* text, const char* title, uint16_t duration, uint8_t priority)
-    : m_ui(ui), _width(width), _height(height), _position(position), 
-      _title(title), _text(text), _priority(priority), _duration(duration),
-      _startTime(0), _currentBoxSize(0), 
-      _lineCount(0), _actualHeight(height), _state(State::APPEARING)
+PopupBase::PopupBase(PixelUI& ui, uint16_t width, uint16_t height, uint8_t priority, uint16_t duration)
+    : m_ui(ui), _width(width), _height(height), _priority(priority), _duration(duration),
+      _startTime(0), _currentBoxSize(0), _state(PopupState::APPEARING)
 {
-    // If text is provided, calculate how many lines it will take and adjust the popup's actual height.
-    if (_text && _text[0] != '\0') {
-        U8G2& u8g2 = m_ui.getU8G2();
-        u8g2.setFont(u8g2_font_5x7_tr);  // Set a font for text measurement.
-        
-        uint16_t textAreaWidth = _width - (TEXT_MARGIN * 2);
-        _lineCount = splitTextIntoLines(_text, textAreaWidth);
-        
-        // Calculate the total height required for the wrapped text.
-        uint16_t textHeight = _lineCount * LINE_HEIGHT;
-        _actualHeight = textHeight + (TEXT_MARGIN * 2);
-        
-        // Clamp the actual height to prevent the popup from becoming excessively large or small.
-        if (_actualHeight > _height * 2) {
-            _actualHeight = _height * 2;
-        }
-        if (_actualHeight < _height) {
-            _actualHeight = _height;
-        }
-    }
-    
-    // Use a fixed-point number for smoother animation of the box size.
-    _targetBoxSize = _width << 12; 
+    // The target box size is a fixed-point representation for smoother animation.
+    // This value is 12 bits left-shifted.
+    _targetBoxSize = _width << 12;
 }
 
 /**
- * @brief Splits a string into multiple lines based on a maximum width.
- * @param text The input string to split.
- * @param maxWidth The maximum allowed width for a single line in pixels.
- * @return The number of lines the text was split into.
+ * @brief Draws the popup box frame with a double border.
+ *
+ * @param rectX The x-coordinate of the top-left corner.
+ * @param rectY The y-coordinate of the top-left corner.
+ * @param currentWidth The current width of the box.
+ * @param currentHeight The current height of the box.
  */
-uint16_t PopupInfo::splitTextIntoLines(const char* text, uint16_t maxWidth) {
-    if (!text || maxWidth == 0) return 0;
-    
+void PopupBase::drawPopupBox(int16_t rectX, int16_t rectY, int16_t currentWidth, int16_t currentHeight) {
     U8G2& u8g2 = m_ui.getU8G2();
-    uint16_t lineCount = 0;
-    const char* currentPos = text;
     
-    // Loop through the text until the end or the maximum number of lines is reached.
-    while (*currentPos && lineCount < MAX_LINES) {
-        const char* lineStart = currentPos;
-        const char* lastSpace = nullptr;
-        const char* testEnd = currentPos;
-        
-        // Find the end of the current line by checking width.
-        while (*testEnd) {
-            if (*testEnd == ' ') {
-                lastSpace = testEnd;
-            }
-            
-            // Create a temporary substring to measure its width.
-            uint16_t testLength = testEnd - lineStart + 1;
-            char tempStr[testLength + 1];
-            strncpy(tempStr, lineStart, testLength);
-            tempStr[testLength] = '\0';
-            
-            uint16_t currentWidth = u8g2.getStrWidth(tempStr);
-            
-            // If the line is too long, backtrack to the last space to avoid cutting a word.
-            if (currentWidth > maxWidth) {
-                if (lastSpace && lastSpace > lineStart) {
-                    testEnd = lastSpace;
-                } else if (testEnd > lineStart) {
-                    testEnd--;
-                }
-                break;
-            }
-            
-            testEnd++;
-        }
-        
-        // Store the start pointer and length of the newly found line.
-        _textLines[lineCount].start = lineStart;
-        _textLines[lineCount].length = testEnd - lineStart;
-        lineCount++;
-        
-        // Move to the beginning of the next line.
-        currentPos = testEnd;
-        if (*currentPos == ' ') {
-            currentPos++; // Skip leading spaces.
-        }
-    }
+    // Draw the popup box with a double-border effect.
+    u8g2.setDrawColor(1); // Set draw color to white.
+    u8g2.drawFrame(rectX + BORDER_OFFSET, rectY + BORDER_OFFSET, currentWidth - 2 * BORDER_OFFSET, currentHeight - 2 * BORDER_OFFSET);
+    u8g2.drawFrame(rectX, rectY, currentWidth, currentHeight);
     
-    return lineCount;
+    // Fill the inside of the box with black.
+    u8g2.setDrawColor(0); // Set draw color to black.
+    u8g2.drawBox(rectX + BORDER_WIDTH, rectY + BORDER_WIDTH, 
+                 currentWidth - 2 * BORDER_WIDTH, currentHeight - 2 * BORDER_WIDTH);
+    
+    // Reset draw color to white for content drawing
+    u8g2.setDrawColor(1);
 }
 
 /**
- * @brief Updates the popup's state and animation.
- * @param currentTime The current system time in milliseconds.
- * @return true if the popup should remain on screen, false if it should be removed.
+ * @brief Sets up a clipping window to restrict drawing to the popup's bounds.
  */
-bool PopupInfo::update(uint32_t currentTime) {
+void PopupBase::setupClipWindow(int16_t rectX, int16_t rectY, int16_t currentWidth, int16_t currentHeight) {
+    U8G2& u8g2 = m_ui.getU8G2();
+    u8g2.setClipWindow(rectX, rectY, rectX + currentWidth, rectY + currentHeight);
+}
+
+/**
+ * @brief Resets the clipping window to the full display area.
+ */
+void PopupBase::resetClipWindow() {
+    U8G2& u8g2 = m_ui.getU8G2();
+    u8g2.setMaxClipWindow();
+    u8g2.setDrawColor(1); // Reset draw color to default.
+}
+
+/**
+ * @brief Updates the popup's state based on time.
+ * @return True if the popup is still active, false if it should be removed.
+ */
+bool PopupBase::updateState(uint32_t currentTime) {
     if (_startTime == 0) {
         _startTime = currentTime;
-        // Start the "appearing" animation by animating the box size.
+        // Start the appearing animation.
         m_ui.animate(_currentBoxSize, _targetBoxSize, 300, EasingType::EASE_OUT_CUBIC);
     }
     
-    // State machine to control the popup's lifecycle (appearing, showing, closing).
     switch (_state) {
-        case State::APPEARING: {
-            // Check if the appearance animation is complete.
+        case PopupState::APPEARING: {
             if (_currentBoxSize >= _targetBoxSize) {
                 _currentBoxSize = _targetBoxSize;
-                _state = State::SHOWING;
-                _startTime = currentTime; // Reset start time for the showing duration.
+                _state = PopupState::SHOWING;
+                _startTime = currentTime; // Reset timer for showing phase
             }
             break;
         }
-        case State::SHOWING: {
-            // Check if the display duration has passed.
-            if (currentTime - _startTime >= _duration) {
-                _state = State::CLOSING;
-                // Start the "closing" animation.
-                m_ui.animate(_currentBoxSize, 0, 300, EasingType::EASE_IN_CUBIC);
+        case PopupState::SHOWING: {
+            // Check if display time exceeded (auto close)
+            if (_duration > 0 && currentTime - _startTime >= _duration) {
+                startClosingAnimation();
             }
             break;
         }
-        case State::CLOSING: {
-            // Check if the closing animation is complete.
+        case PopupState::CLOSING: {
             if (_currentBoxSize <= 0) {
                 _currentBoxSize = 0;
-                return false; // The popup has finished closing and should be removed.
+                return false; // Popup finished, remove from manager
             }
             break;
         }
@@ -171,9 +122,43 @@ bool PopupInfo::update(uint32_t currentTime) {
 }
 
 /**
- * @brief Draws the popup box and its contents (title, text) to the display.
+ * @brief Initiates the animation to close the popup.
  */
-void PopupInfo::draw() {
+void PopupBase::startClosingAnimation() {
+    if (_state != PopupState::CLOSING) {
+        _state = PopupState::CLOSING;
+        // Start the disappearing animation.
+        m_ui.animate(_currentBoxSize, 0, 300, EasingType::EASE_IN_CUBIC);
+    }
+}
+
+/**
+ * @brief Main update method called by the PopupManager.
+ * @return True if the popup is still active, false if it should be removed.
+ */
+bool PopupBase::update(uint32_t currentTime) {
+    return updateState(currentTime);
+}
+
+/**
+ * @brief Handles input events.
+ *
+ * The base class implementation starts the closing animation on any input.
+ * Subclasses can override this for custom behavior.
+ * @return True if the event was handled, false otherwise.
+ */
+bool PopupBase::handleInput(InputEvent event) {
+    startClosingAnimation();
+    return true;
+}
+
+/**
+ * @brief The main draw method for the popup.
+ *
+ * It handles the animation and frame drawing, then calls the subclass's
+ * drawContent method.
+ */
+void PopupBase::draw() {
     U8G2& u8g2 = m_ui.getU8G2();
     
     int16_t screenWidth = u8g2.getDisplayWidth();
@@ -186,28 +171,125 @@ void PopupInfo::draw() {
     if (currentWidth <= 0) return;
     
     // Maintain the aspect ratio during animation.
-    int16_t currentHeight = (currentWidth * _actualHeight) / _width;
+    int16_t currentHeight = (_width > 0) ? (currentWidth * _height) / _width : 0;
     
     // Calculate the top-left corner of the popup box.
     int16_t rectX = centerX - currentWidth / 2;
     int16_t rectY = centerY - currentHeight / 2;
     
     // Use a clip window to prevent drawing outside the popup's bounds during animation.
-    u8g2.setClipWindow(rectX, rectY, rectX + currentWidth, rectY + currentHeight);
+    setupClipWindow(rectX, rectY, currentWidth, currentHeight);
     
-    // Draw the popup box with a double-border effect.
-    u8g2.setDrawColor(1); // Set draw color to white.
-    const int16_t offset = 2;
-    u8g2.drawFrame(rectX + offset, rectY + offset, currentWidth, currentHeight);
-    u8g2.drawFrame(rectX, rectY, currentWidth, currentHeight);
+    // Draw the popup box
+    drawPopupBox(rectX, rectY, currentWidth, currentHeight);
     
-    // Fill the inside of the box with black.
-    u8g2.setDrawColor(0); // Set draw color to black.
-    u8g2.drawBox(rectX + 1, rectY + 1, currentWidth - 2, currentHeight - 2);
+    // Let subclass draw its content
+    drawContent(centerX, centerY, currentWidth, currentHeight);
     
+    // Reset the clip window after drawing is complete.
+    resetClipWindow();
+}
+
+// --- PopupInfo Class Implementation ---
+
+/**
+ * @brief Constructs an information popup.
+ *
+ * @param ui The main PixelUI instance.
+ * @param width The desired width of the popup.
+ * @param height The desired height of the popup.
+ * @param text The text to display.
+ * @param title The optional title for the popup.
+ * @param duration The display duration.
+ * @param priority The drawing priority.
+ */
+PopupInfo::PopupInfo(PixelUI& ui, uint16_t width, uint16_t height, 
+                     const char* text, const char* title, uint16_t duration, uint8_t priority)
+    : PopupBase(ui, width, height, priority, duration), _title(title), _text(text), _lineCount(0)
+{
+    // Split text into lines and calculate actual height needed
+    if (_text) {
+        _lineCount = splitTextIntoLines(_text, _width - 2 * TEXT_MARGIN);
+        _actualHeight = _lineCount * LINE_HEIGHT + 2 * TEXT_MARGIN;
+        
+        // Update height if calculated height is different
+        if (_actualHeight > _height) {
+            _height = _actualHeight;
+            _targetBoxSize = _width << 12; // Recalculate target size with new height
+        }
+    } else {
+        _actualHeight = _height;
+    }
+}
+
+/**
+ * @brief Splits a string into multiple lines to fit within a maximum width.
+ * @return The number of lines.
+ */
+uint16_t PopupInfo::splitTextIntoLines(const char* text, uint16_t maxWidth) {
+    if (!text) return 0;
+    
+    U8G2& u8g2 = m_ui.getU8G2();
+    u8g2.setFont(u8g2_font_5x7_tr);
+    
+    const char* current = text;
+    uint16_t lineIndex = 0;
+    
+    // ESP32-C6 optimization: add max processing length limit to prevent infinite loops
+    const char* textEnd = text + strnlen(text, 512); // Process up to 512 characters
+    
+    while (*current && current < textEnd && lineIndex < MAX_LINES) {
+        const char* lineStart = current;
+        const char* lastSpace = nullptr;
+        const char* lineEnd = current;
+        uint16_t currentLineWidth = 0;
+
+        // Find the best break point for this line
+        while (*lineEnd && lineEnd < textEnd) {
+            // Simple width estimation for performance
+            currentLineWidth += 6; // Assume avg 6 pixels per char for 5x7 font
+
+            if (currentLineWidth > maxWidth) {
+                break; // Line is too long
+            }
+
+            if (*lineEnd == ' ') {
+                lastSpace = lineEnd;
+            }
+            if (*lineEnd == '\n') {
+                lineEnd++;
+                break;
+            }
+            lineEnd++;
+        }
+
+        if (currentLineWidth > maxWidth && lastSpace > lineStart) {
+            lineEnd = lastSpace + 1;
+        }
+        
+        // Store line information
+        _textLines[lineIndex].start = lineStart;
+        _textLines[lineIndex].length = lineEnd - lineStart;
+        
+        // Move to the start of the next line
+        current = lineEnd;
+        while (*current == ' ' || *current == '\n') {
+            current++;
+        }
+        
+        lineIndex++;
+    }
+    
+    return lineIndex;
+}
+
+/**
+ * @brief Draws the text content inside the popup box.
+ */
+void PopupInfo::drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) {
     // Draw the wrapped text inside the popup.
     if (_text && _lineCount > 0) {
-        u8g2.setDrawColor(1); // Set draw color back to white for text.
+        U8G2& u8g2 = m_ui.getU8G2();
         u8g2.setFont(u8g2_font_5x7_tr);
         
         int16_t textAreaHeight = _lineCount * LINE_HEIGHT;
@@ -215,66 +297,180 @@ void PopupInfo::draw() {
         
         for (uint16_t i = 0; i < _lineCount; i++) {
             if (_textLines[i].length > 0) {
-                // Get the substring for the current line.
-                char lineStr[_textLines[i].length + 1];
-                strncpy(lineStr, _textLines[i].start, _textLines[i].length);
-                lineStr[_textLines[i].length] = '\0';
+                constexpr size_t MAX_LINE_BUFFER = 64; // Limit single line to 64 chars
+                char lineStr[MAX_LINE_BUFFER];
+                
+                size_t copyLength = std::min((size_t)_textLines[i].length, MAX_LINE_BUFFER - 1);
+                strncpy(lineStr, _textLines[i].start, copyLength);
+                lineStr[copyLength] = '\0';
                 
                 // Center the line horizontally.
                 int16_t lineWidth = u8g2.getStrWidth(lineStr);
                 int16_t lineX = centerX - lineWidth / 2;
                 int16_t lineY = textStartY + (i * LINE_HEIGHT);
                 
-                u8g2.drawStr(lineX, lineY, lineStr);
+                // Boundary check: ensure text is within the display area
+                if (lineY > 0 && lineY < u8g2.getDisplayHeight()) {
+                    u8g2.drawStr(lineX, lineY, lineStr);
+                }
             }
         }
     }
+}
+
+// --- PopupProgress Class Implementation ---
+
+/**
+ * @brief Constructs a progress bar popup.
+ *
+ * @param ui The main PixelUI instance.
+ * @param width The desired width.
+ * @param height The desired height.
+ * @param value Reference to the value to display.
+ * @param minValue The minimum value of the progress bar.
+ * @param maxValue The maximum value of the progress bar.
+ * @param title The optional title.
+ * @param duration The display duration.
+ * @param priority The drawing priority.
+ */
+PopupProgress::PopupProgress(PixelUI& ui, uint16_t width, uint16_t height,
+                             int32_t& value, int32_t minValue, int32_t maxValue,
+                             const char* title, uint16_t duration, uint8_t priority)
+    : PopupBase(ui, width, height, priority, duration), _value(value), _minValue(minValue),
+      _maxValue(maxValue), _title(title)
+{
+    // Only do necessary safety checks, don't force change user parameters
+    if (_minValue >= _maxValue) {
+        _maxValue = _minValue + 1; // This is a necessary safety check
+    }
     
-    // Reset the clip window after drawing is complete.
-    u8g2.setMaxClipWindow();
-    u8g2.setDrawColor(1); // Reset draw color to default.
+    // Keep value in valid range (this is safe)
+    _value = std::max(_minValue, std::min(_value, _maxValue));
 }
 
 /**
- * @brief Handles input events. Any input immediately triggers the popup to close.
- * @param event The input event received.
- * @return true to indicate the input was handled.
+ * @brief Handles input for the progress bar, allowing value changes.
+ * @return True if the event was handled, false otherwise.
  */
-bool PopupInfo::handleInput(InputEvent event) {
-    if (_state != State::CLOSING) {
-        _state = State::CLOSING;
-        m_ui.animate(_currentBoxSize, 0, 300, EasingType::EASE_IN_CUBIC);
+bool PopupProgress::handleInput(InputEvent event) {
+    if (_state == PopupState::CLOSING) {
+        return true; // If already closing, ignore any input.
     }
-    return true;
+
+    switch (event) {
+        case InputEvent::RIGHT:
+            if (_value < _maxValue) {
+                _value++;
+                // User interaction resets the auto-close timer.
+                _startTime = m_ui.getCurrentTime();
+                m_ui.markDirty(); // Mark UI for redraw to show the new value.
+            }
+            return true; // Consume this event, prevent it from passing to other components.
+
+        case InputEvent::LEFT:
+            if (_value > _minValue) {
+                _value--;
+                // User interaction resets the auto-close timer.
+                _startTime = m_ui.getCurrentTime();
+                m_ui.markDirty(); // Mark UI for redraw.
+            }
+            return true; // Consume this event.
+
+        case InputEvent::SELECT:
+            startClosingAnimation(); // Use the base class's close animation function.
+            return true; // Consume this event.
+
+        default:
+            return false; // For other keys, don't handle and allow them to pass.
+    }
+}
+
+/**
+ * @brief Draws the progress bar and associated text content.
+ */
+void PopupProgress::drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) {
+    U8G2& u8g2 = m_ui.getU8G2();
+    u8g2.setFont(u8g2_font_5x7_tr);
+    
+    // ESP32-C6 optimization: use a small buffer on the stack
+    constexpr size_t BUFFER_SIZE = 32;
+    
+    int16_t availableHeight = currentHeight - 8; // Inner space
+    int16_t currentY = centerY - availableHeight / 2;
+
+    // Draw title if there's space and title exists
+    if (_title && strlen(_title) > 0 && availableHeight >= 9) {
+        int16_t titleWidth = u8g2.getStrWidth(_title);
+        u8g2.drawStr(centerX - titleWidth / 2, currentY + 7, _title);
+        currentY += 11;
+        availableHeight -= 11;
+    }
+    
+    // Draw progress bar if there's space
+    if (availableHeight >= 10 && currentWidth > 12) {
+        int16_t barWidth = currentWidth - 12;
+        int16_t barX = centerX - barWidth / 2;
+        int16_t barY = currentY;
+        int16_t progressBarHeight = 8;
+        
+        u8g2.drawFrame(barX, barY, barWidth, progressBarHeight);
+        
+        if (_maxValue > _minValue) {
+            float progress = (float)(_value - _minValue) / (float)(_maxValue - _minValue);
+            progress = std::max(0.0f, std::min(1.0f, progress)); // Clamp progress
+            int16_t fillWidth = (int16_t)(progress * (barWidth - 2));
+            if (fillWidth > 0) {
+                u8g2.drawBox(barX + 1, barY + 1, fillWidth, progressBarHeight - 2);
+            }
+        }
+        currentY += 12;
+        availableHeight -= 12;
+    }
+    
+    // Draw value text if there's space
+    if (availableHeight >= 9) {
+        char valueStr[BUFFER_SIZE];
+        // Format the value as a percentage.
+        formatValueAsPercentage(valueStr, sizeof(valueStr)); 
+        int16_t valueWidth = u8g2.getStrWidth(valueStr);
+        u8g2.drawStr(centerX - valueWidth / 2, currentY + 7, valueStr);
+    }
 }
 
 // --- PopupManager Class Implementation ---
 
 /**
- * @brief Adds a new popup to the manager, inserting it based on its priority.
- * @param popup The shared pointer to the popup object to add.
+ * @brief Adds a new popup to the manager, handling priority-based sorting.
  */
 void PopupManager::addPopup(std::shared_ptr<IPopup> popup) {
     if (!popup) return;
     
-    // Find the correct insertion point to maintain a sorted list by priority (highest first).
-    auto insertPos = _popups.begin();
-    for (auto it = _popups.begin(); it != _popups.end(); ++it) {
-        if ((*it)->getPriority() < popup->getPriority()) {
-            insertPos = it;
-            break;
+    // Check if maximum popup limit reached
+    if (_popups.size() >= _popups.max_size()) {
+        // Remove lowest priority popup to make space for new popup
+        if (!_popups.empty()) {
+            auto minPriorityIt = _popups.begin();
+            for (auto it = _popups.begin(); it != _popups.end(); ++it) {
+                if ((*it)->getPriority() < (*minPriorityIt)->getPriority()) {
+                    minPriorityIt = it;
+                }
+            }
+            _popups.erase(minPriorityIt);
         }
-        insertPos = it + 1;
     }
     
-    if (_popups.size() < _popups.max_size()) {
-        _popups.insert(insertPos, popup);
+    // Find the correct insertion point to maintain a sorted list by priority (highest first).
+    auto insertPos = _popups.begin();
+    for (; insertPos != _popups.end(); ++insertPos) {
+        if ((*insertPos)->getPriority() < popup->getPriority()) {
+            break;
+        }
     }
+    _popups.insert(insertPos, popup);
 }
 
 /**
  * @brief Removes a specific popup from the manager.
- * @param popup The shared pointer to the popup object to remove.
  */
 void PopupManager::removePopup(std::shared_ptr<IPopup> popup) {
     if (!popup) return;
@@ -286,60 +482,50 @@ void PopupManager::removePopup(std::shared_ptr<IPopup> popup) {
 }
 
 /**
- * @brief Removes all popups from the manager.
+ * @brief Clears all popups from the manager.
  */
 void PopupManager::clearPopups() {
     _popups.clear();
 }
 
 /**
- * @brief Draws all active popups in the order of their priority (highest priority drawn last).
+ * @brief Draws all popups, from lowest to highest priority.
  */
 void PopupManager::drawPopups() {
-    for (const auto& popup : _popups) {
-        if (popup) {
-            popup->draw();
+    // Draw from lowest priority to highest, so highest is on top
+    for (auto it = _popups.rbegin(); it != _popups.rend(); ++it) {
+        if (*it) {
+            (*it)->draw();
         }
     }
 }
 
 /**
- * @brief Updates the state of all active popups and removes any that have finished.
- * @param currentTime The current system time in milliseconds.
+ * @brief Updates the state of all active popups.
  */
 void PopupManager::updatePopups(uint32_t currentTime) {
     if (_popups.empty()) {
         return;
     }
 
-    // Use the erase-remove idiom to efficiently remove finished popups.
-    auto writePos = _popups.begin();
-    for (auto readPos = _popups.begin(); readPos != _popups.end(); ++readPos) {
-        if (*readPos && (*readPos)->update(currentTime)) {
-            if (writePos != readPos) {
-                *writePos = std::move(*readPos);
-            }
-            ++writePos;
+    // Use a safer iteration method to allow for removal during iteration
+    auto it = _popups.begin();
+    while (it != _popups.end()) {
+        if (*it && (*it)->update(currentTime)) {
+            ++it;
+        } else {
+            it = _popups.erase(it);
         }
     }
-    _popups.erase(writePos, _popups.end());
 }
 
 /**
- * @brief Handles an input event for the highest priority popup.
- * @param event The input event received.
- * @return true if an input was handled, false otherwise.
+ * @brief Handles input for the highest priority popup.
+ * @return True if the input was handled, false otherwise.
  */
 bool PopupManager::handleTopPopupInput(InputEvent event) {
     if (_popups.empty()) return false;
     
-    // Find the popup with the maximum priority.
-    auto topPopup = _popups.front();
-    for (const auto& popup : _popups) {
-        if (popup && popup->getPriority() > topPopup->getPriority()) {
-            topPopup = popup;
-        }
-    }
-    
-    return topPopup ? topPopup->handleInput(event) : false;
+    // The highest priority popup is at the front of the sorted vector
+    return _popups.front()->handleInput(event);
 }

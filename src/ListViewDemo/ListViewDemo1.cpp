@@ -25,6 +25,8 @@ bool bool_state = false;
 
 extern PixelUI ui;
 
+int my_value = 0;
+
 ListItem sub_CathyFlower[3] = {
     ListItem(">>> Sub Menu <<<", nullptr, 0, [](){  }),
     ListItem("- Progress", nullptr, 0, [](){  }),
@@ -33,10 +35,10 @@ ListItem sub_CathyFlower[3] = {
 
 ListItem ItemList[10] = {
     ListItem(">>> ListDemo <<<"),
-    ListItem("- Show pop", nullptr, 0, [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, PopupPosition::CENTER, 2000); }),
+    ListItem("- Show pop", nullptr, 0, [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }),
     ListItem("- Sub Menu", sub_CathyFlower, 3),
     ListItem("- Bool State", nullptr, 0, nullptr, {.switchValue = &bool_state}),
-    ListItem("- Switch", nullptr, 0, [](){  }),
+    ListItem("- Value", nullptr, 0, [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, 1); }, {.intValue = &my_value}),
     ListItem("- Alert", nullptr, 0, [](){  }),
     ListItem("- Progress", nullptr, 0, [](){  }),
     ListItem("- Anytone", nullptr, 0, [](){  }),

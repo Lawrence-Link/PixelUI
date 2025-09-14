@@ -286,11 +286,13 @@ void ListView::draw(){
                 if (*m_itemList[itemIndex].extra.switchValue)
                     u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "ON");
                 else 
-                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "OFF");
+                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY+1, "OFF");
             }
 
             if (m_itemList[itemIndex].extra.intValue) {
-                // To be implemented later, for displaying int values.
+                char buf[5] = {0};
+                snprintf(buf, 5, "%d", *m_itemList[itemIndex].extra.intValue);
+                u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, buf);
             }
         }
     }
