@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "../widgets.h"
+#include "../IWidget.h"
 
-class Brace : public Widget {
+class Brace : public IWidget {
 public:
     Brace(PixelUI& ui);
     ~Brace() = default;

@@ -15,4 +15,4 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "widgets/widgets.h"
+#include "widgets/IWidgets.h"

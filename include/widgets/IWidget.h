@@ -19,16 +19,24 @@
 
 #include "PixelUI.h"
 
-class Widget{
+#include "core/CommonTypes.h"
+
+class IWidget{
+private:
+    bool focusable = false;
+    FocusBox focus;
 public:
-    virtual ~Widget() = default;
+    virtual ~IWidget() = default;
     virtual void draw() = 0;
-    virtual void handleEvent(int event) {};
+    virtual void handleEvent(int event) {}
 
     virtual void onLoad() = 0;
     virtual void onOffload () = 0;
+    virtual void onSelect() {};
 
-    bool isSelectable() const { return selectable; }
-private:
-    bool selectable = false;
+    bool isFocusable() { return focusable; }
+    void setFocusable(bool state) { focusable = state; }
+
+    void setFocusBox(const FocusBox& pos) {focus = pos;}
+    FocusBox getFocusBox() { return focus; }
 };

@@ -21,6 +21,7 @@
 #include <etl/stack.h>
 #include "widgets/histogram/histogram.h"
 #include "widgets/brace/brace.h"
+#include "focus/focus.h"
 
 static const unsigned char image_info_bits[] = {
     0xf0,0xff,0x0f,0xfc,0xff,0x3f,0xfe,0xff,0x7f,0xfe,0xff,0x7f,0xff,0x81,0xff,0xff,0x00,0xff,0x7f,0x3e,0xff,0x7f,0x3f,0xff,0xff,0x3f,0xff,0xff,0x1f,0xff,0xff,0x8f,0xff,0xff,0xc7,0xff,0xff,0xe3,0xff,0xff,0xe3,0xff,0xff,0xe3,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xe3,0xff,0xff,0xe3,0xff,0xff,0xff,0xff,0xfe,0xff,0x7f,0xfe,0xff,0x7f,0xfc,0xff,0x3f,0xf0,0xff,0x0f
@@ -41,7 +42,7 @@ private:
     PixelUI& m_ui;
     Histogram histogram;
     Brace brace;
-
+    FocusManager m_focusMan;
     // State machine for loading animation sequence
     enum class LoadState {
         INIT,           // start
@@ -59,19 +60,27 @@ private:
     int32_t anim_bg = 0;
     int32_t anim_status_x = -27;
 public:
-    APP_COUNTER(PixelUI& ui) : m_ui(ui), histogram(ui), brace(ui) {}
+    APP_COUNTER(PixelUI& ui) : m_ui(ui), histogram(ui), brace(ui), m_focusMan(ui) {}
 
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
 
+        m_ui.setContinousDraw(true);
+
         // HISTOGRAM
         histogram.setCoordinate(97,54);
         histogram.setMargin(56,18);
-        
+        histogram.setFocusBox(FocusBox(70,46,55,17));
+
         // BRACE 
         brace.setCoordinate(31,54);
+        brace.setFocusBox(FocusBox(4, 46, 55, 17));
         brace.setMargin(56,18);
         brace.setDrawContentFunction([this]() { braceContent(); });
+
+        // Adding widgets to focus manager, enabling cursor navigation
+        m_focusMan.addWidget(&histogram);  
+        m_focusMan.addWidget(&brace);
 
         loadState = LoadState::INIT;
         first_time = false;
@@ -90,7 +99,6 @@ public:
 
     void draw() override {
         if (!first_time) {
-            // 启动进度动画
             m_ui.animate(anim_mark_m, 23, 300, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
             m_ui.animate(anim_bg, 128, 500, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
             
@@ -154,6 +162,8 @@ public:
         u8g2.setFont(u8g2_font_4x6_tr);
         u8g2.drawStr(100, 32, "CNT");
         u8g2.drawStr(100, 39, "1234");
+
+        m_focusMan.draw();
     }
 
     bool handleInput(InputEvent event) override {
@@ -161,10 +171,17 @@ public:
             requestExit();
             return true;
         }
+        if (event == InputEvent::RIGHT) {
+            m_focusMan.moveNext();
+        }
+        if (event == InputEvent::LEFT) {
+            m_focusMan.movePrev();
+        }
         return false;
     }
 
     void onExit() {
+        m_ui.setContinousDraw(false);
         m_ui.markFading();
     }
 };

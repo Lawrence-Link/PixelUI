@@ -1,10 +1,10 @@
-#include "../widgets.h"
+#include "../IWidget.h"
 #include "etl/string.h"
 #include <cstdio>
 #include "pixelui.h"
 #include "PixelUI/config.h"
 
-class Texts : public Widget {
+class Texts : public IWidget {
 public:
     template <typename... Args>
     Texts(PixelUI& ui, int x, int y, const uint8_t* font, bool isCentered, const std::string_view& fmt, Args&&... args) : text_(text), m_ui(ui), m_font(font), isCentered_(isCentered){};

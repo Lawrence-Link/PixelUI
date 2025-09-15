@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "../widgets.h"
+#include "../IWidget.h"
 
-class Histogram : public Widget {
+class Histogram : public IWidget {
 public:
     Histogram(PixelUI& ui);
     ~Histogram() = default;

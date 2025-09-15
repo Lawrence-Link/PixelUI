@@ -14,6 +14,7 @@ add_library(pixelui
     core/ViewManager/ViewManager.cpp
     widgets/histogram/histogram.cpp
     widgets/brace/brace.cpp
+    focus/focus.cpp
 )
 
 target_include_directories(pixelui
