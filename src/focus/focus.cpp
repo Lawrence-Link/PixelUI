@@ -160,12 +160,12 @@ void FocusManager::draw() {
  */
 void FocusManager::addWidget(IWidget* w) {
     m_Widgets.push_back(w);
-    if (m_Widgets.size() == 1) {
-        index = 0;
-        m_state = State::FOCUSED;
-        m_current_focus_box = m_Widgets[index]->getFocusBox();
-        last_focus_change_time = m_ui.getCurrentTime();
-    }
+    // if (m_Widgets.size() == 1) {
+    //     index = 0;
+    //     m_state = State::FOCUSED;
+    //     m_current_focus_box = m_Widgets[index]->getFocusBox();
+    //     last_focus_change_time = m_ui.getCurrentTime();
+    // }
 }
 
 /**

@@ -79,8 +79,8 @@ public:
         brace.setDrawContentFunction([this]() { braceContent(); });
 
         // Adding widgets to focus manager, enabling cursor navigation
-        m_focusMan.addWidget(&histogram);  
         m_focusMan.addWidget(&brace);
+        m_focusMan.addWidget(&histogram);  
 
         loadState = LoadState::INIT;
         first_time = false;

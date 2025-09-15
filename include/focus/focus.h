@@ -18,7 +18,7 @@ private:
 
     uint32_t last_focus_change_time = 0; /**< The timestamp of the last focus change or user input. */
     FocusBox m_target_focus_box;         /**< The target coordinates and dimensions for the animation. */
-    FocusBox m_current_focus_box;        /**< The current coordinates and dimensions being animated. */
+    FocusBox m_current_focus_box = {0,64,0,0};        /**< The current coordinates and dimensions being animated. */
 
     /**
      * @enum State
