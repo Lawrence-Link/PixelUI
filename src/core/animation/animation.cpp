@@ -17,14 +17,14 @@
 
 #include "core/animation/animation.h"
 
-// 浮点乘法转为整数乘法和位移
+// Convert float multiplication to integer multiplication and bit shift
 #define MUL_FIXED(a, b) ((int64_t)(a) * (b) >> SHIFT_BITS)
 
 /**
- * @brief 缓动函数实现，所有计算均使用定点数。
- * @param type 缓动类型。
- * @param t 归一化的时间，定点数。
- * @return 归一化的进度，定点数。
+ * @brief Easing function implementation, all calculations use fixed-point numbers.
+ * @param type Easing type.
+ * @param t Normalized time, fixed-point.
+ * @return Normalized progress, fixed-point.
  */
 int32_t EasingCalculator::calculate(EasingType type, int32_t t) 
 {
@@ -63,12 +63,12 @@ int32_t EasingCalculator::calculate(EasingType type, int32_t t)
 }
 
 /**
- * @brief EaseOutBounce 缓动函数，使用定点数实现。
- * @param t 归一化的时间，定点数。
- * @return 归一化的进度，定点数。
+ * @brief EaseOutBounce easing function, implemented with fixed-point numbers.
+ * @param t Normalized time, fixed-point.
+ * @return Normalized progress, fixed-point.
  */
 int32_t EasingCalculator::easeOutBounce(int32_t t) {
-    // 使用宏来简化定点数运算
+    // Use macros to simplify fixed-point operations
     #define FIXED_DIV(a, b) ((int64_t)(a) * FIXED_POINT_ONE / (b))
     #define FIXED_MUL(a, b) ((int64_t)(a) * (b) / FIXED_POINT_ONE)
 
@@ -97,8 +97,8 @@ int32_t EasingCalculator::easeOutBounce(int32_t t) {
 }
 
 /*
-@brief 启动动画，设置开始时间并标记为活动状态。
-@param currentTime 当前时间（毫秒）。
+@brief Start the animation, set the start time, and mark it as active.
+@param currentTime Current time (milliseconds).
 */
 void Animation::start(uint32_t currentTime) {
     _startTime = currentTime;
@@ -107,16 +107,16 @@ void Animation::start(uint32_t currentTime) {
 }
 
 /*
-@brief 停止动画，标记为非活动状态。
+@brief Stop the animation, mark it as inactive.
 */
 void Animation::stop() {
     _isActive = false;
 }
 
 /*
-@brief 根据当前时间更新动画进度。
-@param currentTime 当前时间（毫秒）。
-@return 如果动画仍在运行则返回 true，否则返回 false。
+@brief Update the animation progress based on the current time.
+@param currentTime Current time (milliseconds).
+@return True if the animation is still running, otherwise false.
 */
 bool Animation::update(uint32_t currentTime){
     if (!_isActive) {
@@ -125,13 +125,13 @@ bool Animation::update(uint32_t currentTime){
 
     uint32_t elapsed = currentTime - _startTime;
     
-    // 如果动画已完成，将进度强制设置为 1.0 的定点数表示
+    // If the animation is complete, force the progress to the fixed-point representation of 1.0
     bool completed = (elapsed >= _duration);
     
-    // 计算归一化的时间 't'，使用 64 位整型避免溢出
+    // Calculate the normalized time 't', using 64-bit integer to avoid overflow
     int32_t t = completed ? FIXED_POINT_ONE : ((int64_t)elapsed * FIXED_POINT_ONE) / _duration;
 
-    // 通过缓动函数计算最终进度
+    // Calculate the final progress using the easing function
     _progress = EasingCalculator::calculate(_easing, t);
 
     if (completed) {
@@ -142,8 +142,8 @@ bool Animation::update(uint32_t currentTime){
 }
 
 /*
-@brief 向管理器添加一个新动画。
-@param animation 指向要添加的 Animation 对象的智能指针。
+@brief Add a new animation to the manager.
+@param animation Shared pointer to the Animation object to be added.
 */
 void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
     if (!animation) {
@@ -153,8 +153,8 @@ void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
 }
 
 /*
-@brief 根据当前时间更新所有活动动画。
-@param currentTime 当前时间（毫秒）。
+@brief Update all active animations based on the current time.
+@param currentTime Current time (milliseconds).
 */
 void AnimationManager::update(uint32_t currentTime) {
     if (_animations.empty()) {
@@ -169,9 +169,9 @@ void AnimationManager::update(uint32_t currentTime) {
             }
             ++writePos;
         } else {
-            // 如果动画已完成且未受保护，则将其移除
+            // If the animation is complete and not protected, remove it
             if (!readPos->get()->isProtected()) {
-                // 确保动画完成后取消保护，以便下次可以被清除
+                // Ensure the animation is unprotected after completion so it can be cleared next time
                 readPos->get()->setProtected(false);
             }
         }
@@ -195,6 +195,7 @@ void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
         animation->setProtected(true);
     }
 }
+
 /*
 @brief clean all unprotected animations in the manager.
 */
@@ -223,6 +224,7 @@ void AnimationManager::clearAllProtectionMarks() {
         anim_->setProtected(false);
     }
 }
+
 /*
 @brief acquire number of current active count
 @return (size_t) number of current active count

@@ -24,7 +24,7 @@ file(GLOB U8G2_CPP_SOURCES "${U8G2_CPP_SRC_DIR}/*.cpp")
 file(GLOB U8G2_HEADERS "${U8G2_C_SRC_DIR}/*.h" "${U8G2_CPP_SRC_DIR}/*.h")
 
 # -------------------------------
-# 模拟器源文件
+# Simulator source code
 # -------------------------------
 set(SIM_SOURCES
     ${U8G2_CPP_SOURCES}
@@ -32,7 +32,6 @@ set(SIM_SOURCES
     u8g2_wrapper.cpp
     MainWindow.cpp
     EmuWorker.cpp
-    ../examples/app_penis.cpp
     ../examples/app_info.cpp
     ../examples/app_dynamic_info.cpp
     ../examples/app_cube_demo.cpp
@@ -40,7 +39,7 @@ set(SIM_SOURCES
     ../examples/app_counter.cpp
     ../examples/ListViewDemo1.cpp
 
-    # PixelUI 源码
+    # PixelUI Source code
     ../src/PixelUI.cpp
     ../src/core/app/app_system.cpp
     ../src/core/animation/animation.cpp

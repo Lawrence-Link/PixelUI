@@ -45,8 +45,9 @@ void Brace::draw() {
     u8g2.setClipWindow(
         clip_x, 
         clip_y, 
-        clip_x + clip_width,   // 右下角X
-        clip_y + clip_height   // 右下角Y
+        clip_x + clip_width,   // bottom right corner X
+
+        clip_y + clip_height   // bottom right corner Y
     );
 
     if (contentWithinBrace) {

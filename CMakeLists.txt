@@ -4,7 +4,7 @@ project(PixelUI_Project LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Build simulator?
+# Build simulator
 option(BUILD_SIMULATOR "Build PC Qt simulator" ON)
 
 add_subdirectory(src)
@@ -19,7 +19,7 @@ if(NOT BUILD_SIMULATOR)
 endif()
 
 # -------------------------------
-# 模拟器
+# Simulator build
 # -------------------------------
 if(BUILD_SIMULATOR)
     message(STATUS "Building PixelUI simulator (PC Qt)")

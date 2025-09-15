@@ -34,6 +34,8 @@ static float s_static_data_buffer[25] = {
     0.2f, 0.1f, 0.2f, 0.3f, 0.4f
 };
 
+// --- USER DEFINED APP: A Geiger counter UI demo ---
+
 class APP_COUNTER: public IApplication {
 private:
     PixelUI& m_ui;

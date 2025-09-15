@@ -15,6 +15,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// --- USER DEFINED APP: charging animation
+
 #include "core/app/IApplication.h"
 #include "core/app/app_system.h"
 #include <memory>

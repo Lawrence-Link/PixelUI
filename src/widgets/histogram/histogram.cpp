@@ -59,34 +59,34 @@ void Histogram::draw() {
     u8g2.drawLine(coord_x_ + half_width, coord_y_ + half_height, coord_x_ + half_width - 4, coord_y_ + half_height);
     u8g2.drawLine(coord_x_ + half_width, coord_y_ + half_height, coord_x_ + half_width, coord_y_ + half_height - 4);
     
-    // 绘制厚度为2的左侧竖线
+    // Draw left vertical line with a thickness of 2
     u8g2.drawLine(coord_x_ - half_width, coord_y_ - half_height, coord_x_ - half_width, coord_y_ + half_height);
     u8g2.drawLine(coord_x_ - half_width + 1, coord_y_ - half_height, coord_x_ - half_width + 1, coord_y_ + half_height);
 
-    // 绘制厚度为2的右侧竖线
+    // Draw right vertical line with a thickness of 2
     u8g2.drawLine(coord_x_ + half_width, coord_y_ - half_height, coord_x_ + half_width, coord_y_ + half_height);
     u8g2.drawLine(coord_x_ + half_width - 1, coord_y_ - half_height, coord_x_ + half_width - 1, coord_y_ + half_height);
 
     uint16_t points_to_draw = anim_w < m_data_size ? static_cast<uint16_t>(anim_w) : m_data_size;
 
-    // 计算数据起始索引，用于显示最新数据
+    // Calculate the starting index for data to display the latest data
     int start_index = (m_head_index + m_data_size - points_to_draw) % m_data_size;
 
-    // 假设数据范围是 0 到 1.0f
+    // Assume the data range is from 0 to 1.0f
     float max_value = 1.0f; 
 
     for (int i = 0; i < points_to_draw; ++i) {
-        // 从循环缓冲区中获取数据
+        // Get data from the circular buffer
         int data_index = (start_index + i) % m_data_size;
         float value = m_data_ptr[data_index];
 
-        // 将数据值映射到高度
+        // Map the data value to height
         int bar_height = static_cast<int>((value / max_value) * anim_h);
 
-        // 绘制直方图柱
-        // x_pos 从左边缘开始，逐个像素向右
+        // Draw the histogram bar
+        // x_pos starts from the left edge and moves to the right pixel by pixel
         int x_pos = coord_x_ - static_cast<int>(anim_w / 2.0f) + i;
-        // y_pos 从底部向上绘制
+        // y_pos draws from the bottom up
         int y_start = coord_y_ + static_cast<int>(anim_h / 2.0f);
         int y_end = y_start - bar_height;
 

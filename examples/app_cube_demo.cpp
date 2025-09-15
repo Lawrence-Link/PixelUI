@@ -15,6 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "core/app/IApplication.h"
 #include "core/app/app_system.h"
 #include <memory>
@@ -100,6 +101,7 @@ static float angleX = 0, angleY = 0;
 static float height = 28;
 static bool state = 0;
 
+// --- USER DEFINED APP: A Cube Demo ---
 class CubeDemo : public IApplication {
 private:
     PixelUI& m_ui;
