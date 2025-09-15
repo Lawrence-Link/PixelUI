@@ -55,13 +55,10 @@ public:
     }
 };
 
-// --- 自注册机制 ---
-// 使用一个静态的 AppRegistrar 对象来在 main() 之前自动注册本应用
 static AppRegistrar registrar_about_app({
     .title = "App Info",
-    .bitmap = image_info_bits, // TODO: Add an icon bitmap here
+    .bitmap = image_info_bits, 
     
-    // 关键点：提供一个创建 AboutApp 实例的工厂函数
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
         return std::make_unique<AboutApp>(ui); 
     },
