@@ -157,7 +157,7 @@ void ListView::selectCurrent(){
         returnToPreviousContext();
         return ;
     }
-    // 无nextlist 有function
+    // one without nextlist, but with function
     if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc ){ m_itemList[currentCursor].pFunc(); } // 进入 pFunc
     
     else if (m_itemList[currentCursor].extra.switchValue) {
@@ -286,7 +286,7 @@ void ListView::draw(){
                 if (*m_itemList[itemIndex].extra.switchValue)
                     u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "ON");
                 else 
-                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY+1, "OFF");
+                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "OFF");
             }
 
             if (m_itemList[itemIndex].extra.intValue) {

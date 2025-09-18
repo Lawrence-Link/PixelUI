@@ -6,6 +6,10 @@
 #include "focus/focus.h"
 #include <iostream>
 
+void FocusManager::clearActiveWidget() {
+    m_activeWidget = nullptr;
+}
+
 /**
  * @brief Moves the focus to the next widget in the list.
  *
@@ -29,7 +33,7 @@ void FocusManager::moveNext() {
 
     if (index != old_index) {
         m_state = State::ANIMATING;
-        last_focus_change_time = m_ui.getCurrentTime();
+        last_focus_change_time = m_ui.getCurrentTime(); // reset timer
 
         // Start the animation. The starting values for m_current_focus_box
         // will be automatically inherited from the last drawn state.
@@ -78,12 +82,21 @@ void FocusManager::movePrev() {
 
 /**
  * @brief Triggers the onSelect action of the currently focused widget.
+ * If the widget is focusable, it can take over the input stream.
  */
 void FocusManager::selectCurrent() {
+    last_focus_change_time = m_ui.getCurrentTime();
     if (index >= 0 && index < (int)m_Widgets.size()) {
-        m_Widgets[index]->onSelect();
+        IWidget* selectedWidget = m_Widgets[index];
+        // If the widget's onSelect returns true, it wants to take over input.
+        if (selectedWidget->onSelect()) {
+            m_activeWidget = selectedWidget;
+            // The focus manager is now idle, as the widget has control.
+            m_state = State::IDLE;
+        }
     }
 }
+
 
 /**
  * @brief Draws the focus box and handles all animation logic.
@@ -160,12 +173,6 @@ void FocusManager::draw() {
  */
 void FocusManager::addWidget(IWidget* w) {
     m_Widgets.push_back(w);
-    // if (m_Widgets.size() == 1) {
-    //     index = 0;
-    //     m_state = State::FOCUSED;
-    //     m_current_focus_box = m_Widgets[index]->getFocusBox();
-    //     last_focus_change_time = m_ui.getCurrentTime();
-    // }
 }
 
 /**

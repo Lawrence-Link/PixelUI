@@ -19,6 +19,9 @@ private:
     uint32_t last_focus_change_time = 0; /**< The timestamp of the last focus change or user input. */
     FocusBox m_target_focus_box;         /**< The target coordinates and dimensions for the animation. */
     FocusBox m_current_focus_box = {0,64,0,0};        /**< The current coordinates and dimensions being animated. */
+    
+    /** @brief A pointer to the widget that is currently handling all input events. nullptr if no widget has control. */
+    IWidget* m_activeWidget = nullptr;
 
     /**
      * @enum State
@@ -40,6 +43,12 @@ public:
     ~FocusManager() = default;
 
     etl::vector<IWidget*, MAX_ONSCREEN_WIDGET_NUM> m_Widgets; /**< The list of all widgets managed by the FocusManager. */
+    
+    /** @brief Returns a pointer to the widget currently handling input, or nullptr if none. */
+    IWidget* getActiveWidget() const { return m_activeWidget; }
+    
+    /** @brief Clears the active widget, returning input control to the FocusManager. */
+    void clearActiveWidget();
     
     /** @brief Moves the focus to the next widget. */
     void moveNext();

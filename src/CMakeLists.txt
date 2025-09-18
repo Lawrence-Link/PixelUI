@@ -14,6 +14,7 @@ add_library(pixelui
     core/ViewManager/ViewManager.cpp
     widgets/histogram/histogram.cpp
     widgets/brace/brace.cpp
+    widgets/iconButton/iconButton.cpp
     focus/focus.cpp
 )
 

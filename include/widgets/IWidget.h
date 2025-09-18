@@ -18,21 +18,36 @@
 #pragma once
 
 #include "PixelUI.h"
-
 #include "core/CommonTypes.h"
 
 class IWidget{
 private:
     bool focusable = false;
+    bool Selected = false;
     FocusBox focus;
+
+    void setSelected(bool state) { Selected = state; }
+    bool isSelected() const { return Selected; }
+
 public:
     virtual ~IWidget() = default;
     virtual void draw() = 0;
-    virtual void handleEvent(int event) {}
+
+    /**
+     * @brief Handles an input event.
+     * @param event The event code.
+     * @return true if the widget has completed its input handling and wants to return control to the FocusManager.
+     */
+    virtual bool handleEvent(InputEvent event) { return false; }
 
     virtual void onLoad() = 0;
     virtual void onOffload () = 0;
-    virtual void onSelect() {};
+
+    /**
+     * @brief Triggers the onSelect action.
+     * @return true if the widget wants to take over input control, false otherwise.
+     */
+    virtual bool onSelect() { return false; }
 
     bool isFocusable() { return focusable; }
     void setFocusable(bool state) { focusable = state; }

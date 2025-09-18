@@ -19,6 +19,13 @@
 
 #include "../IWidget.h"
 
+enum class EXPAND_BASE {
+    TOP_LEFT,
+    TOP_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_RIGHT
+};
+
 class Histogram : public IWidget {
 public:
     Histogram(PixelUI& ui);
@@ -27,10 +34,13 @@ public:
     void onLoad() override;
     void onOffload() override;
     void draw() override;
+    bool onSelect() override;
+    bool handleEvent(InputEvent event) override;
 
     void setMargin(uint16_t mar_w, uint16_t mar_h) { margin_w_ = mar_w; margin_h_ = mar_h; }
     void setCoordinate(uint16_t coord_x, uint16_t coord_y) { coord_x_ = coord_x; coord_y_ = coord_y; }
-    
+    void setExpand(EXPAND_BASE base, uint16_t w, uint16_t h) {base_ = base; exp_w = w; exp_h = h;}
+
     /**
      * @brief Sets the data for the histogram from a circular buffer.
      * @param data_ptr Pointer to the float array (circular buffer).
@@ -42,6 +52,9 @@ public:
 private:
     uint16_t coord_x_ = 0, coord_y_ = 0;
     uint16_t margin_w_ = 0, margin_h_ = 0;
+    uint16_t exp_w = 0, exp_h = 0;
+    EXPAND_BASE base_;
+
     PixelUI& m_ui;
 
     float* m_data_ptr = nullptr;     // Pointer to the external circular buffer
@@ -53,4 +66,9 @@ private:
     int32_t anim_h = 0;
     int32_t anim_x = 0;
     int32_t anim_y = 0;
+    void expandWidget();
+    void contractWidget();
+    void calculateExpandPosition(int32_t& target_x, int32_t& target_y);
+    
+    bool is_expanded = false;
 };

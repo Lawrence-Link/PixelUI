@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -28,14 +28,15 @@ class ViewManager {
 public:
     ViewManager(PixelUI &ui) : m_ui(ui) {
         m_ui.setInputCallback ([&](InputEvent event) -> bool {
-            // 优先处理弹窗输入 - 检查是否有活动的popup
+            // Prioritize pop-up input - check for an active pop-up
+
             auto popupManager = m_ui.getPopupManagerPtr();
-            if (popupManager && popupManager->getPopupCounts() > 0) {
-                // 获取最高优先级的popup处理输入
+            if (popupManager->getPopupCounts() > 0) {
+                // Get the highest priority pop-up to handle input
                 return popupManager->handleTopPopupInput(event);
             }
             
-            // 弹窗没有处理或没有弹窗时,将输入传递给栈顶应用
+            // If the pop-up did not handle the input or there is no pop-up, pass the input to the application at the top of the stack
             if (!m_viewStack.empty()) {
                 return m_viewStack.top()->handleInput(event);
             }
