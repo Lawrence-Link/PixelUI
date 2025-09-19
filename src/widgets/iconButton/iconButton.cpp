@@ -32,7 +32,7 @@ void IconButton::draw() {
         return;
     }
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.drawXBM(anim_x, anim_y, m_h, m_w, src);
+    u8g2.drawXBM(anim_x, anim_y, m_w, m_h, src);
 }
 
 bool IconButton::onSelect() {
