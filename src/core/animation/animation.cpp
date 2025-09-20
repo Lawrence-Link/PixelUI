@@ -16,6 +16,7 @@
  */
 
 #include "core/animation/animation.h"
+#include <assert.h>
 
 // Convert float multiplication to integer multiplication and bit shift
 #define MUL_FIXED(a, b) ((int64_t)(a) * (b) >> SHIFT_BITS)
@@ -146,6 +147,7 @@ bool Animation::update(uint32_t currentTime){
 @param animation Shared pointer to the Animation object to be added.
 */
 void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
+    assert(_animations.size() < _animations.max_size());
     if (!animation) {
         return;
     }

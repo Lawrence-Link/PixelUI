@@ -43,7 +43,12 @@ static const unsigned char image_SOUND_OFF_bits[] = {0x04,0x06,0x57,0x27,0x57,0x
 static const unsigned char image_BELL_bits[] = {0x20,0x18,0x3c,0x3e,0x1f,0x1c,0x12};
 // 9 * 7
 static const unsigned char image_Alert_bits[] = {0x10,0x00,0x38,0x00,0x28,0x00,0x6c,0x00,0x6c,0x00,0xfe,0x00,0xef,0x01};
-
+// 10 * 6
+static const unsigned char image_BAT_FULL_bits[] = {0xff,0x01,0xff,0x03,0xff,0x03,0xff,0x03,0xff,0x03,0xff,0x01};
+static const unsigned char image_BAT_75_bits[] = {0xff,0x01,0x3f,0x03,0x3f,0x03,0x3f,0x03,0x3f,0x03,0xff,0x01};
+static const unsigned char image_BAT_50_bits[] = {0xff,0x01,0x1f,0x03,0x1f,0x03,0x1f,0x03,0x1f,0x03,0xff,0x01};
+static const unsigned char image_BAT_25_bits[] = {0xff,0x01,0x07,0x03,0x07,0x03,0x07,0x03,0x07,0x03,0xff,0x01};
+static const unsigned char image_BAT_empty_bits[] = {0xff,0x01,0x01,0x03,0x01,0x03,0x01,0x03,0x01,0x03,0xff,0x01};
 // --- USER DEFINED APP: A Geiger counter UI demo ---
 
 class APP_COUNTER: public IApplication {
@@ -52,7 +57,11 @@ private:
     Histogram histogram;
     Brace brace;
     FocusManager m_focusMan;
+
+    IconButton icon_battery;
+    IconButton icon_alert;
     IconButton icon_sounding;
+    IconButton icon_alarm;
 
     // State machine for loading animation sequence
     enum class LoadState {
@@ -76,7 +85,10 @@ public:
     histogram(ui), 
     brace(ui), 
     m_focusMan(ui), 
-    icon_sounding(ui)
+    icon_sounding(ui),
+    icon_battery(ui),
+    icon_alarm(ui),
+    icon_alert(ui)
     {}
 
     void onEnter(ExitCallback cb) override {
@@ -97,7 +109,24 @@ public:
         brace.setDrawContentFunction([this]() { braceContent(); });
 
         // icon battery
+        icon_battery.setSource(image_BAT_75_bits);
+        icon_battery.setMargin(10, 6);
+        icon_battery.setCoordinate(14, 2);
 
+        // icon sounding
+        icon_sounding.setSource(image_SOUND_OFF_bits);
+        icon_sounding.setMargin(7, 7);
+        icon_sounding.setCoordinate(40, 1);
+
+        // icon alert
+        icon_alert.setSource(image_Alert_bits);
+        icon_alert.setMargin(9, 7);
+        icon_alert.setCoordinate(28, 1);
+
+        // icon alarm
+        icon_alarm.setSource(image_BELL_bits);
+        icon_alarm.setMargin(6, 7);
+        icon_alarm.setCoordinate(51, 1);
 
         // Adding widgets to focus manager, enabling cursor navigation
         m_focusMan.addWidget(&brace);
@@ -133,6 +162,10 @@ public:
         switch (loadState) {
             case LoadState::BRACE_LOADING:
                 brace.onLoad();
+
+                icon_battery.onLoad();
+                icon_alert.onLoad();
+
                 loadState = LoadState::WAIT_HISTO;
                 state_timestamp = m_ui.getCurrentTime(); // record when was the state entered
                 break;
@@ -145,6 +178,8 @@ public:
 
             case LoadState::HISTO_LOADING:
                 histogram.onLoad();
+                icon_sounding.onLoad();
+                icon_alarm.onLoad();
                 loadState = LoadState::DONE;
                 m_ui.animate(anim_status_x, 29, 450, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
                 break;
@@ -182,6 +217,12 @@ public:
 
         histogram.setData(s_static_data_buffer, 25, 0);
         
+        // draw widgets
+        icon_sounding.draw();
+        icon_alarm.draw();
+        icon_alert.draw();
+        icon_battery.draw();
+
         brace.draw();
         histogram.draw();
 
@@ -215,6 +256,7 @@ public:
 
 
     void onExit() {
+        m_ui.clearAllAnimations();
         m_ui.setContinousDraw(false);
         m_ui.markFading();
     }

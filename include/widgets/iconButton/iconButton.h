@@ -21,9 +21,9 @@
 
 class IconButton : public IWidget {
 private:
-    uint8_t* src;
+    const unsigned char* src;
     std::function<void()> m_callback;
-    int32_t m_x, m_y, m_w, m_h;
+    int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
     PixelUI& m_ui;
 
     int32_t anim_x = 0, anim_y = 0;
@@ -38,5 +38,5 @@ public:
     void setCallback(std::function<void()> cb) {m_callback = cb;}
     void setCoordinate(uint16_t x, uint16_t y) {m_x = x; m_y = y;};
     void setMargin(uint16_t w, uint16_t h) {m_w = w; m_h = h;}
-    void setSource(uint8_t* source) {src = source;};
+    void setSource(const unsigned char* source) {src = source;};
 };

@@ -22,7 +22,9 @@ IconButton::IconButton(PixelUI& ui) : m_ui(ui) {
 }
 
 void IconButton::onLoad() {
-    m_ui.animate(anim_x, anim_y, m_x, m_y, 100, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    anim_x = m_x;
+    anim_y = m_y - 10;
+    m_ui.animate(anim_y, m_y, 100, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
 }
 
 void IconButton::onOffload() {}

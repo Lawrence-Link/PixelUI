@@ -18,7 +18,7 @@
 #pragma once
 
 // Maximum of concurrent animation going on.
-constexpr int MAX_ANIMATION_COUNT = 18; 
+constexpr int MAX_ANIMATION_COUNT = 25; 
 constexpr int MAX_TEXT_LENGTH = 30;
 
 // Maximum item that can be iterated during initialization.
