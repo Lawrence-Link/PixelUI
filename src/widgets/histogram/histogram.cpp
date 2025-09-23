@@ -23,16 +23,17 @@ Histogram::Histogram(PixelUI& ui) : m_ui(ui) {
 };
 
 void Histogram::onLoad() {
-    // 初始化动画坐标为0（相对于原始位置）
+    // Initialize animation coordinates to 0 (relative to original position)
     anim_x = 0;
     anim_y = 0;
     
-    // 初始化尺寸动画
+    // Initialize size animation
     m_ui.animate(anim_w, margin_w_, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
     m_ui.animate(anim_h, margin_h_, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
 }
 
 void Histogram::onOffload() {
+    // Example shrink animations when offloading (disabled for now)
     // m_ui.animate(anim_w, 0, 300, EasingType::EASE_IN_CUBIC, PROTECTION::PROTECTED);
     // m_ui.animate(anim_h, 0, 300, EasingType::EASE_IN_CUBIC, PROTECTION::PROTECTED);
 }
@@ -49,11 +50,11 @@ bool Histogram::handleEvent(InputEvent event) {
 bool Histogram::onSelect(){
     m_ui.clearUnprotectedAnimations();
     if (!is_expanded) {
-        // 展开动画
+        // Expand animation
         expandWidget();
         is_expanded = true;
     } else {
-        // 收缩动画
+        // Shrink animation
         contractWidget();
         is_expanded = false;
     }
@@ -64,7 +65,7 @@ void Histogram::expandWidget() {
     int32_t target_x, target_y;
     calculateExpandPosition(target_x, target_y);
     
-    // 动画到展开尺寸和位置
+    // Animate to expanded size and position
     m_ui.animate(anim_w, exp_w, 400, EasingType::EASE_OUT_QUAD);
     m_ui.animate(anim_h, exp_h, 350, EasingType::EASE_OUT_QUAD);
     m_ui.animate(anim_x, target_x, 400, EasingType::EASE_OUT_QUAD);
@@ -72,7 +73,7 @@ void Histogram::expandWidget() {
 }
 
 void Histogram::contractWidget() {
-    // 动画回原始尺寸和位置
+    // Animate back to original size and position
     m_ui.animate(anim_w, margin_w_, 350, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
     m_ui.animate(anim_h, margin_h_, 400, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
     m_ui.animate(anim_x, 0, 350, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
@@ -80,7 +81,7 @@ void Histogram::contractWidget() {
 }
 
 void Histogram::calculateExpandPosition(int32_t& target_x, int32_t& target_y) {
-    // 计算展开后的中心位置偏移
+    // Calculate the offset of the center position after expansion
     int32_t width_diff = exp_w - margin_w_;
     int32_t height_diff = exp_h - margin_h_;
     
@@ -116,26 +117,17 @@ void Histogram::setData(float* data_ptr, uint16_t data_size, uint16_t head_index
 void Histogram::draw() {
     U8G2& u8g2 = m_ui.getU8G2();
 
-    // 使用动画坐标和尺寸
     int current_x = coord_x_ + anim_x;
     int current_y = coord_y_ + anim_y;
     int half_width = anim_w / 2;
     int half_height = anim_h / 2;
     
-    u8g2.setDrawColor(1);
-    if (is_expanded) {
-        u8g2.clearDisplay();
-        u8g2.drawStr(3, 10, "<STATS>");
-        u8g2.drawStr(3, 20, "Max:");
-        u8g2.drawStr(3, 30, "1.45uSv/h");
-        u8g2.drawStr(3, 40, "Min:");
-        u8g2.drawStr(3, 50, "0.25uSv/h");
-    } 
+    // Clear drawing area (background box)
     u8g2.setDrawColor(0);
     u8g2.drawBox(current_x - half_width + 2, current_y - half_height, 2 * half_width - 4, 2 * half_height);
     u8g2.setDrawColor(1);
 
-    // 绘制边框角点
+    // Draw border corners
     // Top left corner
     u8g2.drawLine(current_x - half_width, current_y - half_height, 
                   current_x - half_width + 4, current_y - half_height);
@@ -160,7 +152,7 @@ void Histogram::draw() {
     u8g2.drawLine(current_x + half_width, current_y + half_height, 
                   current_x + half_width, current_y + half_height - 4);
     
-    // 绘制边框 - 使用动画坐标
+    // Draw border - using animated coordinates
     // Left vertical line with thickness of 2
     u8g2.drawLine(current_x - half_width, current_y - half_height, 
                   current_x - half_width, current_y + half_height);
@@ -173,7 +165,7 @@ void Histogram::draw() {
     u8g2.drawLine(current_x + half_width - 1, current_y - half_height, 
                   current_x + half_width - 1, current_y + half_height);
 
-    // 绘制直方图数据
+    // Draw histogram data
     if (m_data_ptr != nullptr && m_data_size > 0) {
         uint16_t points_to_draw = anim_w < m_data_size ? static_cast<uint16_t>(anim_w) : m_data_size;
         int start_index = (m_head_index + m_data_size - points_to_draw) % m_data_size;
@@ -192,7 +184,7 @@ void Histogram::draw() {
         }
     }
     
-    // 绘制标签
+    // Draw label
     u8g2.setFont(u8g2_font_4x6_tr);
     u8g2.drawStr(current_x + half_width - 19, current_y - half_height + 7, "Hist");
 }

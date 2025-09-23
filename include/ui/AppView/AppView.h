@@ -27,20 +27,20 @@ public:
     AppView(PixelUI& ui, ViewManager& viewManager);
     ~AppView() = default;
 
-    // 实现 IApplication 接口
+    // Implementation of IApplication interface
     void draw() override;
     bool handleInput(InputEvent event) override;
     void onEnter(ExitCallback exitCallback) override;
-    void onResume() override ;
+    void onResume() override;
     void onPause() override;
 
     // void update(uint32_t currentTime) override;
 
-    // setters
+    // Setters
     void setIconSize(int width, int height);
     void setIconSpacing(int spacing);
-    // getters
-    int getCurrentIndex(int index) const { return currentIndex_ ; }
+    // Getters
+    int getCurrentIndex(int index) const { return currentIndex_; }
     bool isAppSelected() const { return appSelected_; }
 
 private:
@@ -53,25 +53,25 @@ private:
     void selectCurrentApp();
     void scrollToIndex(int newIndex);
 
-    int currentIndex_ = 0; // 当前选中的应用索引
-    bool appSelected_ = false; // 是否选中了应用
+    int currentIndex_ = 0;      // Index of the currently selected app
+    bool appSelected_ = false;  // Whether an app is selected
 
-    int32_t scrollOffset_ = -128;        // 当前滚动偏移量
-    int32_t targetOffset_ = 0;        // 目标滚动偏移量
-    int32_t appTitle_Y = 70;
-    int32_t animation_selector_coord_x = 128;
-    int32_t animation_selector_length = 10;
+    int32_t scrollOffset_ = -128;        // Current scroll offset
+    int32_t targetOffset_ = 0;           // Target scroll offset
+    int32_t appTitle_Y = 70;             // Y-coordinate of the app title
+    int32_t animation_selector_coord_x = 128;  // Animation selector X-coordinate
+    int32_t animation_selector_length = 10;    // Animation selector length
 
-    int iconWidth_ = 24;               // 图标宽度
-    int iconHeight_ = 24;              // 图标高度
-    int iconSpacing_ = 14;             // 图标间距
-    int centerX_ = 64;                 // 屏幕中心X坐标 (128/2)
-    int iconY_ = 18;                   // 图标Y坐标
+    int iconWidth_ = 24;        // Icon width
+    int iconHeight_ = 24;       // Icon height
+    int iconSpacing_ = 14;      // Spacing between icons
+    int centerX_ = 64;          // Screen center X-coordinate (128/2)
+    int iconY_ = 18;            // Y-coordinate for icons
     
-    int32_t animation_pixel_dots = 0;
-    int32_t animation_scroll_bar= 0;
+    int32_t animation_pixel_dots = 0;    // Animation state for pixel dots
+    int32_t animation_scroll_bar = 0;    // Animation state for scroll bar
 
-    int32_t selector_length = 30;
+    int32_t selector_length = 30;        // Selector length
 
     void drawHorizontalAppList();
     void drawAppIcon(const AppItem& app, int x, int y, bool inCenter);
@@ -81,9 +81,8 @@ private:
     void updateProgressBar();
 
     int calculateIconX(int index);
-    // void scrollToIndex(int index);
     int getVisibleStartIndex();
     int getVisibleEndIndex();
 
-    std::vector<float> slotPositionsX_;
+    std::vector<float> slotPositionsX_;  // Precomputed icon slot positions
 };

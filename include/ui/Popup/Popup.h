@@ -82,13 +82,14 @@ enum class PopupState {
  */
 class PopupBase : public IPopup {
 protected:
+    PixelUI& m_ui;    
     uint16_t _width, _height;
     uint8_t _priority;
     uint16_t _duration;
     uint32_t _startTime;
     int32_t _currentBoxSize;
     int32_t _targetBoxSize;
-    PixelUI& m_ui;
+    
     PopupState _state;
 
     // Common drawing parameters

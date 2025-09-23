@@ -18,12 +18,14 @@ void FocusManager::clearActiveWidget() {
  * be set to the first widget. This also initiates a new animation and resets
  * the inactivity timer.
  */
+
 void FocusManager::moveNext() {
     if (m_Widgets.empty()) {
         index = -1;
         m_state = State::IDLE;
         return;
     }
+    m_ui.getAnimationManPtr()->clearUnprotected();
     int old_index = index;
     if (index == -1) {
         index = 0;
@@ -59,6 +61,7 @@ void FocusManager::movePrev() {
         m_state = State::IDLE;
         return;
     }
+    m_ui.getAnimationManPtr()->clearUnprotected();
     int old_index = index;
     if (index == -1) {
         index = m_Widgets.size() - 1;
@@ -96,7 +99,6 @@ void FocusManager::selectCurrent() {
         }
     }
 }
-
 
 /**
  * @brief Draws the focus box and handles all animation logic.

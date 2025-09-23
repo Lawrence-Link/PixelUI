@@ -22,7 +22,7 @@
 AppView::AppView(PixelUI& ui, ViewManager& viewManager) : ui_(ui), appManager_(AppManager::getInstance()), m_viewManager(viewManager) {
     iconSpacing_ = (ui.getU8G2().getWidth() - 3 * iconWidth_ )* 0.25;
 
-    float totalListWidth = 3 * iconWidth_ + 2 * iconSpacing_;
+    // float totalListWidth = 3 * iconWidth_ + 2 * iconSpacing_;
     float firstSlotX = centerX_ - 1.5f * iconWidth_ - iconSpacing_;
 
     slotPositionsX_.push_back(firstSlotX);
@@ -111,7 +111,7 @@ void AppView::draw() {
     // Draw status info
     const auto& apps = appManager_.getAppVector();
     if (!apps.empty()) {
-        char statusText[16];
+        char statusText[32];
         snprintf(statusText, sizeof(statusText), "%d/%d", currentIndex_ + 1, (int)apps.size());
         display.drawStr(2, 60, statusText);
     }

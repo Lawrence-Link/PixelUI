@@ -28,7 +28,7 @@
 // Struct to hold extra data for a list item, like values for switches or sliders.
 struct ListItemExtra{
     bool* switchValue = nullptr; // Pointer to a boolean value for a switch.
-    int* intValue = nullptr;     // Pointer to an integer value for a slider or counter.
+    int32_t* intValue = nullptr;     // Pointer to an integer value for a slider or counter.
 };
 
 // Represents a single item in a list view.
@@ -85,9 +85,11 @@ private:
     
     // --- Layout and Spacing Variables ---
     uint8_t spacing_ = 3;
-    uint8_t topMargin_ = 2;
+    uint8_t topMargin_ = 3;
     uint8_t FontHeight = 0;
     
+    // int8_t item_offset_y = 0;
+
     // History stack to support nested menus (for back navigation).
     etl::vector<etl::pair<etl::pair<ListItem*, size_t>, size_t>, MAX_LISTVIEW_DEPTH> m_history_stack;
 

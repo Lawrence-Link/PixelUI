@@ -41,6 +41,8 @@ public:
     void setCoordinate(uint16_t coord_x, uint16_t coord_y) { coord_x_ = coord_x; coord_y_ = coord_y; }
     void setExpand(EXPAND_BASE base, uint16_t w, uint16_t h) {base_ = base; exp_w = w; exp_h = h;}
 
+    bool isExpanded() const { return is_expanded; }
+
     /**
      * @brief Sets the data for the histogram from a circular buffer.
      * @param data_ptr Pointer to the float array (circular buffer).

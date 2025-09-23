@@ -18,23 +18,21 @@
 #pragma once
 
 #include "PixelUI.h"
-#include "functional"
+#include <functional>
 
 class IApplication : public IDrawable, public IInputHandler {
 public:
 
-    using ExitCallback = std::function<void()>; // 退出回调函数
+    using ExitCallback = std::function<void()>; // Exit callback function
     virtual ~IApplication() = default;
 
-    // 大循环
-    virtual void loop() {};
-    // 应用被推入视图栈顶
+    // Called when the app is pushed to the top of the stack
     virtual void onEnter(ExitCallback exitCallback) { m_exitCallback = exitCallback; }
-    // 本体被弹出时
+    // Called when the app is exited
     virtual void onExit() {}; 
-    // 新应用被压入栈顶时   
+    // Called when the app is paused by another app being pushed on top
     virtual void onPause() {};   
-    // 栈顶应用被弹出时
+    // Called when the top app is popped and this app resumes
     virtual void onResume() {};  
 
 protected:

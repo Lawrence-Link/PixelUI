@@ -23,7 +23,7 @@ void ListView::onEnter(ExitCallback exitCallback){
     m_ui.setContinousDraw(true);
     U8G2& u8g2 = m_ui.getU8G2();
 
-    u8g2.setFont(u8g2_font_squeezed_b6_tr);
+    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
     FontHeight = u8g2.getFontAscent() - u8g2.getFontDescent();
     
     topVisibleIndex_ = 0;
@@ -31,7 +31,7 @@ void ListView::onEnter(ExitCallback exitCallback){
     currentCursor = 0;
     isInitialLoad_ = true;
     
-    for (int i = 0; i < visibleItemCount_; i++) {
+    for (int i = 0; i < visibleItemCount_ + 1; i++) {
         itemLoadAnimations_[i] = 0;
     }
     
@@ -127,9 +127,9 @@ void ListView::scrollToTarget(size_t target){
     // Width of the cursor
     m_ui.animate(CursorWidth, u8g2.getUTF8Width(m_itemList[currentCursor].Title) + 6, 500, EasingType::EASE_OUT_CUBIC);
     // Top of the progress bar
-    m_ui.animate(progress_bar_top, ((int64_t)currentCursor * 64) / (m_itemLength + 1) + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED); // 修正为定点数运算
+    m_ui.animate(progress_bar_top, ((int64_t)currentCursor * 64) / (m_itemLength + 1) + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
     // Bottom of the progress bar
-    m_ui.animate(progress_bar_bottom, ((int64_t)1 * 64) / (m_itemLength + 1), 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED); // 修正为定点数运算
+    m_ui.animate(progress_bar_bottom, ((int64_t)1 * 64) / (m_itemLength + 1), 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
 }
 
 void ListView::navigateUp() {
@@ -158,7 +158,7 @@ void ListView::selectCurrent(){
         return ;
     }
     // one without nextlist, but with function
-    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc ){ m_itemList[currentCursor].pFunc(); } // 进入 pFunc
+    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc ){ m_itemList[currentCursor].pFunc(); } // Enter pFunc
     
     else if (m_itemList[currentCursor].extra.switchValue) {
         bool* switchValPtr = m_itemList[currentCursor].extra.switchValue;
@@ -167,11 +167,11 @@ void ListView::selectCurrent(){
         bool currentState = *switchValPtr;
 
         // calculate the start and end positions for the switch box
-        int32_t startX = currentState ? 7 : 0;
+        // int32_t startX = currentState ? 7 : 0;
         int32_t endX = currentState ? 0 : 7;
         
         // animate switchBoxX ( the dense box inside the switch frame act as the switch button )
-        m_ui.animate(switchBoxX, endX, 200, EasingType::EASE_IN_OUT_CUBIC);
+        m_ui.animate(switchBoxX, endX, 200, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
 
         // switch the value after the animation duration
         *switchValPtr = !currentState;
@@ -222,12 +222,14 @@ void ListView::navigateRight() {
 
 bool ListView::handleInput(InputEvent event) {
     switch (event) {
-        case InputEvent::UP: navigateUp(); return true;
-        case InputEvent::DOWN: navigateDown(); return true;
-        case InputEvent::LEFT:  navigateLeft(); return true;
-        case InputEvent::RIGHT: navigateRight(); return true;
-        case InputEvent::SELECT: return true;
+        // case InputEvent::UP: navigateUp(); return true;
+        // case InputEvent::DOWN: navigateDown(); return true;
+
+        case InputEvent::LEFT: navigateUp(); return true;
+        case InputEvent::RIGHT: navigateDown(); return true;
+        case InputEvent::SELECT: navigateRight(); return true;
         case InputEvent::BACK: requestExit(); return true;
+
         default: return false;
     }
     return false;
@@ -236,13 +238,13 @@ bool ListView::handleInput(InputEvent event) {
 void ListView::drawCursor() {
     U8G2& u8g2 = m_ui.getU8G2();
     u8g2.setDrawColor(2);
-    u8g2.drawRBox(CursorX, CursorY, CursorWidth, FontHeight + 2, 0);
+    u8g2.drawRBox(CursorX, CursorY - 2, CursorWidth, FontHeight + 3, 0);
     u8g2.setDrawColor(1);
 
     if (!currentCursor)
         u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width("BACK") - 5, u8g2.getDisplayHeight() - 5, "BACK");
     else
-        u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(">>") - 5, u8g2.getDisplayHeight() - 5, ">>");
+        u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(">") - 5, u8g2.getDisplayHeight(), ">");
 }
 
 void ListView::onResume() {
@@ -260,7 +262,7 @@ void ListView::onExit() {
 
 void ListView::draw(){
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(u8g2_font_squeezed_b6_tr); 
+    u8g2.setFont(u8g2_font_wqy12_t_gb2312b); 
 
     int startIndex = std::max(0, topVisibleIndex_ - 2);
     int endIndex = std::min((int)m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
@@ -278,21 +280,21 @@ void ListView::draw(){
                     drawX = 4 + (FIXED_POINT_ONE - loadProgress) * 30 / FIXED_POINT_ONE;
                 }
             }
-            u8g2.drawStr(drawX, itemY, m_itemList[itemIndex].Title);
+            u8g2.drawUTF8(drawX, itemY, m_itemList[itemIndex].Title);
             
             if (m_itemList[itemIndex].extra.switchValue) {
-                u8g2.drawRFrame(u8g2.getDisplayWidth() - 35, itemY - 6, 14, 7, 1);
-                u8g2.drawRBox(u8g2.getDisplayWidth() - 35 + switchBoxX, itemY - 6, 7, 7, 2);
+                u8g2.drawRFrame(u8g2.getDisplayWidth() - 39, itemY - 8, 14, 7, 1);
+                u8g2.drawRBox(u8g2.getDisplayWidth() - 39 + switchBoxX, itemY - 8, 7, 7, 2);
                 if (*m_itemList[itemIndex].extra.switchValue)
-                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "ON");
+                    u8g2.drawUTF8(u8g2.getDisplayWidth() - 22, itemY - 1 , "ON");
                 else 
-                    u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, "OFF");
+                    u8g2.drawUTF8(u8g2.getDisplayWidth() - 22, itemY - 1, "OFF");
             }
 
             if (m_itemList[itemIndex].extra.intValue) {
                 char buf[5] = {0};
-                snprintf(buf, 5, "%d", *m_itemList[itemIndex].extra.intValue);
-                u8g2.drawStr(u8g2.getDisplayWidth() - 18, itemY, buf);
+                snprintf(buf, 5, "%ld", *m_itemList[itemIndex].extra.intValue);
+                u8g2.drawStr(u8g2.getDisplayWidth() - 21, itemY, buf);
             }
         }
     }

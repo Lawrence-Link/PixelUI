@@ -40,6 +40,7 @@ PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
  */
 void PixelUI::begin() {
     AppManager::getInstance().sortByOrder();
+    printf("app counted: %d\n", AppManager::getInstance().getAppVector().size());
 }
 
 /**
@@ -122,7 +123,18 @@ void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, 
  * This function is responsible for drawing all UI elements to the display buffer,
  * including the current drawable content and any active popups.
  */
+/**
+ * @brief The main rendering loop for the UI.
+ *
+ * This function is responsible for drawing all UI elements to the display buffer,
+ * including the current drawable content and any active popups.
+ */
 void PixelUI::renderer() {
+    // 增加对视图切换状态的检查
+    if (m_viewManagerPtr->isTransitioning()) {
+        return; // 在视图切换期间，跳过本次渲染
+    }
+    
     if (getActiveAnimationCount() || isContinousRefreshEnabled()) {
         markDirty();
     }

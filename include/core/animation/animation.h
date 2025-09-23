@@ -14,9 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 #pragma once
-
 #include <cstdint>
 #include <memory>
 #include "etl/vector.h"
@@ -24,6 +22,7 @@
 #include "config.h"
 #include "core/CommonTypes.h"
 #include "core/animation/animation.h"
+#include <mutex>
 
 // fixed-point shift bits to support fractional values in integer arithmetic
 // eg. SHIFT_BITS = 12 means 0.5f is represented as 0.5 * (1 << 12) = 2048
@@ -43,7 +42,6 @@ public:
      * @param t normalized time, fixed-point.
      */
     static int32_t calculate(EasingType type, int32_t t);
-
 private:
     /**
      * @brief ease out bounce function.
@@ -59,28 +57,33 @@ private:
 class Animation {
 public:
     Animation(uint32_t duration, EasingType easing = EasingType::LINEAR) :
-        _duration(duration),
-        _easing(easing), _startTime(0), _isActive(false), _progress(0) {};
-
+        _progress(0),           
+        _isActive(false),       
+        _isProtected(false),    
+        _easing(easing),        
+        _startTime(0),          
+        _duration(duration)     
+    {}
+    
     virtual ~Animation() = default;
-
+    
     void start(uint32_t currentTime);
     void stop();
     virtual bool update(uint32_t currentTime);
-
     bool isActive() const { return _isActive; }
     bool isProtected() const { return _isProtected; }
     void setProtected(bool prot) { _isProtected = prot; }
-
     int32_t getProgress() const { return _progress; }
+
 protected:
-    int32_t _progress = 0;
+    int32_t _progress = 0;      // 第1个成员
+
 private:
-    bool _isActive;
-    bool _isProtected = false;
-    EasingType _easing;
-    uint32_t _startTime;
-    uint32_t _duration;
+    bool _isActive;             // 第2个成员
+    bool _isProtected = false;  // 第3个成员
+    EasingType _easing;         // 第4个成员
+    uint32_t _startTime;        // 第5个成员
+    uint32_t _duration;         // 第6个成员
 };
 
 /**
@@ -93,15 +96,16 @@ public:
     void addAnimation(std::shared_ptr<Animation> animation);
     void update(uint32_t currentTime);
     void clear();
-
+    
     // Protection mechanism
     void markProtected(std::shared_ptr<Animation> animation);
     void clearUnprotected();
     void clearAllProtectionMarks();
-
     size_t activeCount() const;
+
 private:
     etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
+    mutable  std::recursive_mutex _mutex; 
 };
 
 /**
@@ -116,7 +120,7 @@ public:
           _startVal(startVal),
           _endVal(endVal),
           _updateCallback(updateCallback) {}
-
+          
     bool update(uint32_t currentTime) override {
         bool isRunning = Animation::update(currentTime);
         if (_updateCallback) { 
