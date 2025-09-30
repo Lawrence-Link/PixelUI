@@ -4,6 +4,3 @@
 [submodule "third_party/etl"]
 	path = third_party/etl
 	url = https://github.com/ETLCPP/etl.git
-[submodule "third_party/third_party/etl"]
-	path = third_party/third_party/etl
-	url = https://github.com/ETLCPP/etl.git
