@@ -201,7 +201,8 @@ private:
 };
 
 // ---------------- Application registration ----------------
-static AppRegistrar registrar_about_app({
+#if USE_STATIC_APP_REGISTER_ENABLED
+static AppRegistrar registrar_charging_anim({
     .title = "CHARGING Demo",
     .bitmap = nullptr,
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
@@ -209,3 +210,12 @@ static AppRegistrar registrar_about_app({
     },
     .order = 5
 });
+#else
+AppItem charging_anim{
+    .title = "CHARGING Demo",
+    .bitmap = nullptr,
+    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
+        return std::make_unique<ChargeDemo>(ui);
+    },
+};
+#endif

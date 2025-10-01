@@ -55,6 +55,8 @@ public:
     }
 };
 
+// ---------------- Application registration ----------------
+#if USE_STATIC_APP_REGISTER_ENABLED
 static AppRegistrar registrar_about_app({
     .title = "App Info",
     .bitmap = image_info_bits, 
@@ -65,3 +67,13 @@ static AppRegistrar registrar_about_app({
     
     .order = 3
 });
+#else
+    AppItem about_app{
+        .title = "App Info",
+        .bitmap = image_info_bits, 
+        
+        .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
+            return std::make_unique<AboutApp>(ui); 
+        },
+    };
+#endif

@@ -233,6 +233,8 @@ public:
     }
 };
 
+// ---------------- Application registration ----------------
+#if USE_STATIC_APP_REGISTER_ENABLED
 static AppRegistrar counter_app(AppItem{
     .title = "COUNTER",
     .bitmap = image_info_bits,
@@ -242,3 +244,13 @@ static AppRegistrar counter_app(AppItem{
     },
     .order = 0
 });
+#else
+AppItem counter_app{
+    .title = "COUNTER",
+    .bitmap = image_info_bits,
+    
+    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<APP_COUNTER>(ui); 
+    },
+};
+#endif

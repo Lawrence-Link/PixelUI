@@ -139,6 +139,8 @@ public:
     }
 };
 
+// ---------------- Application registration ----------------
+#if USE_STATIC_APP_REGISTER_ENABLED
 static AppRegistrar registrar_about_app({
     .title = "Cube Demo",
     .bitmap = image_sans2_bits,
@@ -149,3 +151,13 @@ static AppRegistrar registrar_about_app({
     
     .order = 1
 });
+#else
+AppItem cube_demo_app{
+    .title = "Cube Demo",
+    .bitmap = image_sans2_bits,
+    
+    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<CubeDemo>(ui); 
+    },
+};
+#endif

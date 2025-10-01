@@ -59,6 +59,8 @@ public:
     }
 };
 
+// ---------------- Application registration ----------------
+#if USE_STATIC_APP_REGISTER_ENABLED
 static AppRegistrar registrar_about_app({
     .title = "About",
     .bitmap = image_sans3_bits, // TODO: Add an icon bitmap here
@@ -70,3 +72,16 @@ static AppRegistrar registrar_about_app({
 
     .order = 2
 });
+#else
+
+AppItem bouncy_about_app{
+    .title = "About",
+    .bitmap = image_sans3_bits, // TODO: Add an icon bitmap here
+    
+    // Provide a factory function to create application instance.
+    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> { 
+        return std::make_shared<Dynamic_Info>(ui); 
+    },
+};
+
+#endif

@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 COMPONENTS Core Gui Widgets REQUIRED)
 
 # -------------------------------
-# U8G2 路径
+# U8G2 Path
 # -------------------------------
 set(U8G2_C_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/csrc")
 set(U8G2_CPP_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc")
@@ -66,6 +66,12 @@ set(SIM_SOURCES
     ../examples/ListViewDemo1.cpp
 )
 
+if(NOT USE_STATIC_APP_REGISTER_ENABLED)
+    list(APPEND SIM_SOURCES 
+        ../examples/app_registry.cpp
+    )
+endif()
+
 add_executable(u8g2_emulator ${SIM_SOURCES})
 
 # -------------------------------
@@ -77,6 +83,7 @@ target_include_directories(u8g2_emulator
         ${U8G2_CPP_SRC_DIR}
         ${U8G2_C_SRC_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/etl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../examples/
 )
 
 # -------------------------------

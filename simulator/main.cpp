@@ -31,6 +31,8 @@
 #include "PixelUI.h"
 #include "ui/AppLauncher/AppLauncher.h"
 
+#include "app_registry.h"
+
 U8G2Wrapper display;
 PixelUI ui(display);
 
@@ -44,6 +46,11 @@ class EmulatorThread : public EmuWorker {
 public:
     void grandLoop() override { 
     ui.setDelayFunction(threadDelay);
+
+    #if (USE_STATIC_APP_REGISTER_ENABLED == 0) // If not using static app linking, register Apps manually
+    registerApps();
+    #endif
+
     ui.begin();
     auto appView = AppLauncher::createAppLauncherView(ui, *ui.getViewManagerPtr());
     ui.getViewManagerPtr()->push(appView);
