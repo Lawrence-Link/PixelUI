@@ -21,7 +21,8 @@
 #include "core/app/app_system.h"
 #include "core/animation/animation.h"
 #include "ui/Popup/Popup.h"
-
+#include "core/coroutine/Coroutine.h"
+#include <cinttypes>
 /**
  * @class PixelUI
  * @brief Main class for the PixelUI framework.
@@ -33,14 +34,21 @@ PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
     m_viewManagerPtr = std::make_shared<ViewManager>(*this);
     m_animationManagerPtr = std::make_shared<AnimationManager>();
     m_popupManagerPtr = std::make_shared<PopupManager>(*this);
+    m_coroutineSchedulerPtr = std::make_shared<CoroutineScheduler>(*this);
+}
+
+void PixelUI::addCoroutine(std::shared_ptr<Coroutine> coroutine) { 
+        m_coroutineSchedulerPtr->addCoroutine(coroutine); 
+    }
+void PixelUI::removeCoroutine(std::shared_ptr<Coroutine> coroutine) { 
+    m_coroutineSchedulerPtr->removeCoroutine(coroutine); 
 }
 
 /**
  * @brief Initialize the PixelUI system, including sorting registered applications.
  */
 void PixelUI::begin() {
-    AppManager::getInstance().sortByOrder();
-    printf("app counted: %d\n", AppManager::getInstance().getAppVector().size());
+
 }
 
 /**
@@ -52,6 +60,7 @@ void PixelUI::Heartbeat(uint32_t ms)
     _currentTime += ms;
     m_animationManagerPtr->update(_currentTime);
     m_popupManagerPtr->updatePopups(_currentTime);
+    m_coroutineSchedulerPtr->update(_currentTime);
 }
 
 /** * @brief Add an animation to the manager and start it.
@@ -116,7 +125,6 @@ void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, 
     }
 }
 
-
 /**
  * @brief The main rendering loop for the UI.
  *
@@ -130,20 +138,19 @@ void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, 
  * including the current drawable content and any active popups.
  */
 void PixelUI::renderer() {
-    // 增加对视图切换状态的检查
     if (m_viewManagerPtr->isTransitioning()) {
-        return; // 在视图切换期间，跳过本次渲染
+        return;
     }
     
     if (getActiveAnimationCount() || isContinousRefreshEnabled()) {
         markDirty();
     }
-    if (isDirty()) {
+    if (isDirty_) {
         if (!isFading_){
             this->getU8G2().clearBuffer();
             
             // current drawable content controlled by applications
-            if (currentDrawable_ && isDirty()) {
+            if (currentDrawable_ && isDirty_) {
                 currentDrawable_->draw();
                 isDirty_ = false;
             }

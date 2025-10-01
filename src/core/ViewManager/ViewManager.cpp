@@ -45,26 +45,22 @@ void ViewManager::pop() {
     std::lock_guard<std::mutex> lock(m_stackMutex);
 
     if (m_viewStack.empty()) return;
-    
-    m_isTransitioning = true; // 标志转换开始
 
+    m_isTransitioning = true;
     auto appToExit = m_viewStack.top();
-
-    // 关键改动：立即清除 drawable 指针，避免渲染器访问即将销毁的对象
     m_ui.setDrawable(nullptr); 
     
-    appToExit->onExit(); // 现在可以安全地调用 onExit
+    appToExit->onExit(); 
     m_viewStack.pop(); 
 
     if (!m_viewStack.empty()) {
         auto& previousApp = m_viewStack.top();
-        m_ui.setDrawable( previousApp ); // 设置新的 drawable
+        m_ui.setDrawable( previousApp ); // setting up new drawable
         previousApp->onResume(); // resume the previous application
     }
-    // else 分支的 m_ui.setDrawable(nullptr) 已经提前执行了，无需重复
     
     m_ui.markDirty();
-    m_isTransitioning = false; // 标志转换结束
+    m_isTransitioning = false; // mark the end of the transition
 }
 
 std::shared_ptr<IApplication> ViewManager::getCurrentApp() const {

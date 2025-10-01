@@ -16,7 +16,6 @@
  */
 
 #include "core/animation/animation.h"
-#include <assert.h>
 
 // Convert float multiplication to integer multiplication and bit shift
 #define MUL_FIXED(a, b) ((int64_t)(a) * (b) >> SHIFT_BITS)

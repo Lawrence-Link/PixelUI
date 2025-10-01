@@ -51,14 +51,17 @@ ListItem ItemList[10] = {
 class ListViewDemo : public ListView {
 public:
     ListViewDemo(PixelUI& ui, ListItem *itemList, size_t length) : ListView(ui, itemList, length) {}
+
+    void onSave() override {}
 };
 
+#if USE_STATIC_APP_REGISTER_ENABLED
 static AppRegistrar registrar_about_app({
     .title = "ListView Test",
     .bitmap = image_LISTVIEW_bits,
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<ListView>(ui, ItemList, 10);
+        return std::make_unique<ListViewDemo>(ui, ItemList, 10);
     },
-    .type = MenuItemType::App,
     .order = 6
 });
+#endif

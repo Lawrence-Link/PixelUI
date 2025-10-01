@@ -32,8 +32,9 @@ struct AppItem {
     const char* title;
     const uint8_t* bitmap;
     std::function<std::shared_ptr<IApplication>(PixelUI&)> createApp;
-    MenuItemType type;
-    int8_t order = -1;
+    #if USE_STATIC_APP_REGISTER_ENABLED
+    const int8_t order = -1;
+    #endif
 };
 
 class AppManager {
@@ -42,13 +43,30 @@ public:
         static AppManager instance;
         return instance;
     }
-    void registerApp(const AppItem& item);
+
+    ~AppManager() = default;
+
+    #if USE_STATIC_APP_REGISTER_ENABLED
     void sortByOrder();
+    #endif
+
+    void registerApp(const AppItem& item);
     const etl::vector<AppItem, MAX_APP_NUM>& getAppVector() const;
     size_t getRegisteredCount() const { return appItems_.size(); }
+
     AppManager(const AppManager&) = delete;
     AppManager& operator=(const AppManager&) = delete;
 private:
     AppManager() = default;
     etl::vector<AppItem, MAX_APP_NUM> appItems_;
 };
+
+#if USE_STATIC_APP_REGISTER_ENABLED
+class AppRegistrar {
+public:
+    AppRegistrar(const AppItem& item) {
+        AppManager::getInstance().registerApp(item);
+    }
+};
+#endif
+

@@ -63,6 +63,5 @@ static AppRegistrar registrar_about_app({
         return std::make_unique<AboutApp>(ui); 
     },
     
-    .type = MenuItemType::App,
     .order = 3
 });

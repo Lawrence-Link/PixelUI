@@ -17,13 +17,13 @@
 
 #pragma once
 
-#include "ui/AppView/AppView.h"
 #include "PixelUI.h"
 #include <algorithm>
 #include <cstring>
 #include "etl/vector.h"
 #include "etl/delegate.h"
 #include "core/animation/animation.h"
+#include "core/app/IApplication.h"
 
 // Struct to hold extra data for a list item, like values for switches or sliders.
 struct ListItemExtra{
@@ -74,6 +74,8 @@ public:
     void onPause() override;
     void onExit() override;
 
+    virtual void onSave() = 0;
+
     // --- Public Utility Methods ---
     void resizeLength(size_t itemLength) { m_itemLength = itemLength; }
     PixelUI& getUI() { return m_ui; }
@@ -84,7 +86,7 @@ private:
     size_t m_itemLength;
     
     // --- Layout and Spacing Variables ---
-    uint8_t spacing_ = 3;
+    uint8_t spacing_ = 7;
     uint8_t topMargin_ = 3;
     uint8_t FontHeight = 0;
     

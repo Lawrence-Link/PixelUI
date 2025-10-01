@@ -147,6 +147,5 @@ static AppRegistrar registrar_about_app({
         return std::make_unique<CubeDemo>(ui); 
     },
     
-    .type = MenuItemType::App,
     .order = 1
 });

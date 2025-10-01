@@ -16,7 +16,6 @@
  */
 #include "core/app/IApplication.h"
 #include "core/app/app_system.h"
-#include "app_registry.h"
 
 #include <memory>
 #include <etl/stack.h>
@@ -183,7 +182,7 @@ public:
         u8g2.setFont(u8g2_font_4x6_tr);
         u8g2.drawStr(100, 32, "CNT");
         u8g2.drawStr(100, 39, "1234");
-        histogram.setData(s_static_data_buffer, 25, 0);
+        // histogram.setData(s_static_data_buffer, 25, 0); // deprecated method
         
         // draw widgets
         icon_sounding.draw();
@@ -234,14 +233,12 @@ public:
     }
 };
 
-static AppRegistrar counter_app({
+static AppRegistrar counter_app(AppItem{
     .title = "COUNTER",
     .bitmap = image_info_bits,
     
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
         return std::make_unique<APP_COUNTER>(ui); 
     },
-    
-    .type = MenuItemType::App,
     .order = 0
 });

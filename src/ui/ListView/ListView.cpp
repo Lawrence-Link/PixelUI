@@ -34,10 +34,10 @@ void ListView::onEnter(ExitCallback exitCallback){
     for (int i = 0; i < visibleItemCount_ + 1; i++) {
         itemLoadAnimations_[i] = 0;
     }
-    
+
     // animation: scrollbar
     m_ui.animate(animation_pixel_dots, 32, 400, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-
+    
     startLoadAnimation();
     scrollToTarget(0);
 }
@@ -222,9 +222,7 @@ void ListView::navigateRight() {
 
 bool ListView::handleInput(InputEvent event) {
     switch (event) {
-        // case InputEvent::UP: navigateUp(); return true;
-        // case InputEvent::DOWN: navigateDown(); return true;
-
+        
         case InputEvent::LEFT: navigateUp(); return true;
         case InputEvent::RIGHT: navigateDown(); return true;
         case InputEvent::SELECT: navigateRight(); return true;
@@ -242,7 +240,7 @@ void ListView::drawCursor() {
     u8g2.setDrawColor(1);
 
     if (!currentCursor)
-        u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width("BACK") - 5, u8g2.getDisplayHeight() - 5, "BACK");
+        u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width("<") - 5, u8g2.getDisplayHeight(), "<");
     else
         u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(">") - 5, u8g2.getDisplayHeight(), ">");
 }
@@ -283,18 +281,18 @@ void ListView::draw(){
             u8g2.drawUTF8(drawX, itemY, m_itemList[itemIndex].Title);
             
             if (m_itemList[itemIndex].extra.switchValue) {
-                u8g2.drawRFrame(u8g2.getDisplayWidth() - 39, itemY - 8, 14, 7, 1);
-                u8g2.drawRBox(u8g2.getDisplayWidth() - 39 + switchBoxX, itemY - 8, 7, 7, 2);
+                u8g2.drawRFrame(u8g2.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
+                u8g2.drawRBox(u8g2.getDisplayWidth() - 42 + switchBoxX, itemY - 9, 7, 8, 2);
                 if (*m_itemList[itemIndex].extra.switchValue)
-                    u8g2.drawUTF8(u8g2.getDisplayWidth() - 22, itemY - 1 , "ON");
+                    u8g2.drawUTF8(u8g2.getDisplayWidth() - 25, itemY - 1 , "ON");
                 else 
-                    u8g2.drawUTF8(u8g2.getDisplayWidth() - 22, itemY - 1, "OFF");
+                    u8g2.drawUTF8(u8g2.getDisplayWidth() - 25, itemY - 1, "OFF");
             }
 
             if (m_itemList[itemIndex].extra.intValue) {
                 char buf[5] = {0};
                 snprintf(buf, 5, "%ld", *m_itemList[itemIndex].extra.intValue);
-                u8g2.drawStr(u8g2.getDisplayWidth() - 21, itemY, buf);
+                u8g2.drawStr(u8g2.getDisplayWidth() - 24, itemY, buf);
             }
         }
     }

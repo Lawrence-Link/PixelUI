@@ -19,6 +19,7 @@
 
 #include "U8g2lib.h"
 #include "core/animation/animation.h"
+#include "core/coroutine/Coroutine.h"
 #include "ui/IDrawable.h"
 #include "core/CommonTypes.h"
 
@@ -33,11 +34,11 @@ public:
 };
 
 using InputCallback = std::function<bool(InputEvent)>;
-
-typedef void (*DelayFunction)(uint32_t);
+using DelayFunction = void (*)(uint32_t);
 
 class ViewManager;
 class PopupManager;
+class CoroutineScheduler;
 
 /**
  * @class PixelUI
@@ -56,6 +57,12 @@ public:
      * @brief Initializes the UI framework.
      */
     void begin();
+
+    void addCoroutine(std::shared_ptr<Coroutine> coroutine);
+    void removeCoroutine(std::shared_ptr<Coroutine> coroutine);
+    void clearAllCoroutines() { m_coroutineSchedulerPtr->clear(); }
+    
+    size_t getActiveCoroutineCount() { return m_coroutineSchedulerPtr->getActiveCount(); }
 
     /**
      * @brief Main update loop to be called periodically.
@@ -105,11 +112,6 @@ public:
     void clearUnprotectedAnimations() { m_animationManagerPtr->clearUnprotected(); }
     
     /**
-     * @brief Clears all protection marks.
-     */
-    void clearAllProtectionMarks() { m_animationManagerPtr->clearAllProtectionMarks(); }
-    
-    /**
      * @brief Clears all animations.
      */
     void clearAllAnimations() { m_animationManagerPtr->clear(); }
@@ -117,12 +119,13 @@ public:
     uint32_t getCurrentTime() const { return _currentTime; }
 
     // setters
-    void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
-    void setRefreshCallback(std::function <void()> function) { if (function) m_refresh_callback = function; }
+    void setRefreshCallback(std::function<void()> function) { if (function) m_refresh_callback = function; }
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
     void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
     void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
-    void setDebugPrintFunction(void (*func)(const char*)) { if (func) m_func_debug_print = func; }
+    
+    // TBD:
+    // void setDebugPrintFunction(void (*func)(const char*)) { if (func) m_func_debug_print = func; }
 
     #ifdef USE_DEBUG_OUPUT
         void debugPrint(const char* msg);
@@ -132,16 +135,6 @@ public:
     U8G2& getU8G2() const { return u8g2_; }
     std::shared_ptr<AnimationManager> getAnimationManPtr() { return m_animationManagerPtr; }
     std::shared_ptr<PopupManager> getPopupManagerPtr() { return m_popupManagerPtr; }
-
-    bool isDirty() const { return isDirty_; }
-    bool isFading() const { return isFading_; }
-    bool isPointerValid(const void* ptr) const { return ptr != nullptr; }
-
-    bool isContinousRefreshEnabled() const { return continousMode_; }
-    uint32_t getActiveAnimationCount() const { return m_animationManagerPtr->activeCount(); }
-
-    std::shared_ptr<IDrawable> getDrawable() const { return currentDrawable_; }
-
     std::shared_ptr<ViewManager> getViewManagerPtr() const { return m_viewManagerPtr; }
 
     // popup related functions
@@ -189,14 +182,19 @@ public:
      * @brief The main rendering function.
      */
     void renderer();
-
+    friend class ViewManager;
+    friend class PopupManager;
 protected:
+
+    void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
+
 private:
     U8G2& u8g2_;
 
     std::shared_ptr<AnimationManager> m_animationManagerPtr;
     std::shared_ptr<ViewManager> m_viewManagerPtr;
     std::shared_ptr<PopupManager> m_popupManagerPtr;
+    std::shared_ptr<CoroutineScheduler> m_coroutineSchedulerPtr;
 
     uint32_t _currentTime = 0;
     std::shared_ptr<IDrawable> currentDrawable_;
@@ -208,6 +206,8 @@ private:
     std::function<void()> m_refresh_callback = nullptr;
     DelayFunction m_func_delay = nullptr;
     InputCallback inputCallback_ = nullptr;
-    
+
+    bool isContinousRefreshEnabled() const { return continousMode_; }
     void (*m_func_debug_print)(const char*) = nullptr;
+    uint32_t getActiveAnimationCount() const { return m_animationManagerPtr->activeCount(); }
 };

@@ -29,7 +29,7 @@
 #include "EmuWorker.h"
 
 #include "PixelUI.h"
-#include "ui/AppView/AppView.h"
+#include "ui/AppLauncher/AppLauncher.h"
 
 U8G2Wrapper display;
 PixelUI ui(display);
@@ -45,11 +45,9 @@ public:
     void grandLoop() override { 
     ui.setDelayFunction(threadDelay);
     ui.begin();
-    auto appView = std::make_shared<AppView>(ui, *ui.getViewManagerPtr());
+    auto appView = AppLauncher::createAppLauncherView(ui, *ui.getViewManagerPtr());
     ui.getViewManagerPtr()->push(appView);
         while (running) {
-
-            bool isDirty = ui.isDirty();
         
             auto eventOpt = g_mainWindow->popInputEvent();
             if (eventOpt.has_value()) {

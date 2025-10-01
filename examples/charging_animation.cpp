@@ -207,6 +207,5 @@ static AppRegistrar registrar_about_app({
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
         return std::make_unique<ChargeDemo>(ui);
     },
-    .type = MenuItemType::App,
     .order = 5
 });

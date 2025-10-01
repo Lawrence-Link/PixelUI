@@ -64,40 +64,9 @@ set(SIM_SOURCES
     ../examples/charging_animation.cpp
     ../examples/app_counter.cpp
     ../examples/ListViewDemo1.cpp
-
-    # PixelUI Source code
-    ../src/PixelUI.cpp
-    ../src/core/app/app_system.cpp
-    ../src/core/animation/animation.cpp
-    ../src/ui/AppView/AppView.cpp
-    ../src/ui/Popup/Popup.cpp
-    ../src/ui/ListView/ListView.cpp
-    ../src/core/ViewManager/ViewManager.cpp
-    ../src/widgets/histogram/histogram.cpp
-    ../src/widgets/brace/brace.cpp
 )
 
-set(SIM_HEADERS
-    ${U8G2_HEADERS}
-    u8g2_wrapper.h
-    MainWindow.h
-    EmuWorker.h
-    ../include/PixelUI.h
-    ../include/core/animation/animation.h
-    ../include/core/app/app_system.h
-    ../include/core/app/IApplication.h
-    ../include/ui/AppView/AppView.h
-    ../include/ui/IDrawable.h
-    ../include/ui/Popup/Popup.h
-    ../include/core/ViewManager/ViewManager.h
-    ../include/config.h
-    ../include/ui/ListView/ListView.h
-    ../include/core/CommonTypes.h
-    ../include/widgets/histogram/histogram.h
-    ../include/widgets/brace/brace.h
-)
-
-add_executable(u8g2_emulator ${SIM_SOURCES} ${SIM_HEADERS})
+add_executable(u8g2_emulator ${SIM_SOURCES})
 
 # -------------------------------
 # 包含目录（ETL + PixelUI + U8G2）

@@ -21,7 +21,6 @@
 #include <functional>
 #include "config.h"
 #include "core/CommonTypes.h"
-#include "core/animation/animation.h"
 #include <mutex>
 
 // fixed-point shift bits to support fractional values in integer arithmetic
@@ -76,14 +75,14 @@ public:
     int32_t getProgress() const { return _progress; }
 
 protected:
-    int32_t _progress = 0;      // 第1个成员
+    int32_t _progress = 0;     
 
 private:
-    bool _isActive;             // 第2个成员
-    bool _isProtected = false;  // 第3个成员
-    EasingType _easing;         // 第4个成员
-    uint32_t _startTime;        // 第5个成员
-    uint32_t _duration;         // 第6个成员
+    bool _isActive;             
+    bool _isProtected = false;  
+    EasingType _easing;         
+    uint32_t _startTime;        
+    uint32_t _duration;         
 };
 
 /**

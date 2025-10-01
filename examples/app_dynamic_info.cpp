@@ -67,7 +67,6 @@ static AppRegistrar registrar_about_app({
     .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> { 
         return std::make_shared<Dynamic_Info>(ui); 
     },
-    
-    .type = MenuItemType::App,
+
     .order = 2
 });

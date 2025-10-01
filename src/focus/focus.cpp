@@ -40,10 +40,10 @@ void FocusManager::moveNext() {
         // Start the animation. The starting values for m_current_focus_box
         // will be automatically inherited from the last drawn state.
         FocusBox target = m_Widgets[index]->getFocusBox();
-        m_ui.animate(m_current_focus_box.x, target.x, 200, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.y, target.y, 200, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.w, target.w, 200, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.h, target.h, 200, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.y, target.y, 100, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.w, target.w, 100, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.h, target.h, 100, EasingType::EASE_OUT_QUAD);
     }
 }
 
@@ -76,10 +76,10 @@ void FocusManager::movePrev() {
         // Start the animation. The starting values for m_current_focus_box
         // will be automatically inherited from the last drawn state.
         FocusBox target = m_Widgets[index]->getFocusBox();
-        m_ui.animate(m_current_focus_box.x, target.x, 200, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.y, target.y, 200, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.w, target.w, 200, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.h, target.h, 200, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.y, target.y, 100, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.w, target.w, 100, EasingType::EASE_OUT_QUAD);
+        m_ui.animate(m_current_focus_box.h, target.h, 100, EasingType::EASE_OUT_QUAD);
     }
 }
 
@@ -122,10 +122,10 @@ void FocusManager::draw() {
 
             // Start the shrink animation for width and height,
             // while animating x,y to keep the center stable.
-            m_ui.animate(m_current_focus_box.w, 0, 200, EasingType::EASE_IN_QUAD);
-            m_ui.animate(m_current_focus_box.h, 0, 200, EasingType::EASE_IN_QUAD);
-            m_ui.animate(m_current_focus_box.x, center_x, 200, EasingType::EASE_IN_QUAD);
-            m_ui.animate(m_current_focus_box.y, center_y, 200, EasingType::EASE_IN_QUAD);
+            m_ui.animate(m_current_focus_box.w, 0, 100, EasingType::EASE_IN_QUAD);
+            m_ui.animate(m_current_focus_box.h, 0, 100, EasingType::EASE_IN_QUAD);
+            m_ui.animate(m_current_focus_box.x, center_x, 100, EasingType::EASE_IN_QUAD);
+            m_ui.animate(m_current_focus_box.y, center_y, 100, EasingType::EASE_IN_QUAD);
         }
     }
 
