@@ -31,20 +31,3 @@ void AppManager::registerApp(const AppItem& item) {
         appItems_.push_back(item);
     }
 }
-
-#if USE_STATIC_APP_REGISTER_ENABLED
-void AppManager::sortByOrder() {
-    std::sort(appItems_.begin(), appItems_.end(), [](const AppItem& a, const AppItem& b) {
-            // sort by order if both are valid
-            if (a.order >= 0 && b.order >= 0) {
-                return a.order < b.order;
-            }
-            // if only one is valid, it goes first
-            if (a.order >= 0) return true;
-            if (b.order >= 0) return false;
-
-            // if both are invalid, sort by title alphabetically
-            return strcmp(a.title, b.title) < 0;
-        });
-}
-#endif

@@ -52,7 +52,8 @@ class ListViewDemo : public ListView {
 public:
     ListViewDemo(PixelUI& ui, ListItem *itemList, size_t length) : ListView(ui, itemList, length) {}
 
-    void onSave() override {}
+    void onLoad() override {  } // will be called when loading ListViewDemo
+    void onSave() override {  } // will be called when requesting exit
 };
 
 // ---------------- Application registration ----------------

@@ -17,12 +17,12 @@
 
 #include "ui/ListView/ListView.h"
 #include "core/animation/animation.h"
+#include <inttypes.h>
 
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
     m_ui.setContinousDraw(true);
     U8G2& u8g2 = m_ui.getU8G2();
-
     u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
     FontHeight = u8g2.getFontAscent() - u8g2.getFontDescent();
     
@@ -31,10 +31,18 @@ void ListView::onEnter(ExitCallback exitCallback){
     currentCursor = 0;
     isInitialLoad_ = true;
     
+    onLoad(); // onLoad to initialize varible readings before calculate states for boxes
+
     for (int i = 0; i < visibleItemCount_ + 1; i++) {
         itemLoadAnimations_[i] = 0;
     }
-
+    for (int i = 0; i <= m_itemLength; i++) {
+        if (m_itemList[i].extra.switchValue) {
+            switchAnimStates_[i].boxX = *m_itemList[i].extra.switchValue ? 7 : 0;
+            switchAnimStates_[i].isAnimating = false;
+        }
+    }
+    
     // animation: scrollbar
     m_ui.animate(animation_pixel_dots, 32, 400, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     
@@ -46,17 +54,13 @@ void ListView::onEnter(ExitCallback exitCallback){
 */
 void ListView::startLoadAnimation() {
     isInitialLoad_ = true;
-    
     int maxVisible = std::min(visibleItemCount_ + 1, (int)(m_itemLength + 1));
-    
+
     for (int i = 0; i < maxVisible; i++) {
         int duration = 250 + i * 60;
-        
         bool isLastAnimation = (i == maxVisible - 1);
-        
         auto callback = [this, i, isLastAnimation](int32_t value) {
             this->itemLoadAnimations_[i] = value;
-            
             if (isLastAnimation && value >= FIXED_POINT_ONE) { 
                 this->isInitialLoad_ = false;
                 this->m_ui.getAnimationManPtr()->clearAllProtectionMarks();
@@ -157,27 +161,8 @@ void ListView::selectCurrent(){
         returnToPreviousContext();
         return ;
     }
-    // one without nextlist, but with function
-    if (!m_itemList[currentCursor].nextList && m_itemList[currentCursor].pFunc ){ m_itemList[currentCursor].pFunc(); } // Enter pFunc
-    
-    else if (m_itemList[currentCursor].extra.switchValue) {
-        bool* switchValPtr = m_itemList[currentCursor].extra.switchValue;
 
-        // current state of the switch
-        bool currentState = *switchValPtr;
-
-        // calculate the start and end positions for the switch box
-        // int32_t startX = currentState ? 7 : 0;
-        int32_t endX = currentState ? 0 : 7;
-        
-        // animate switchBoxX ( the dense box inside the switch frame act as the switch button )
-        m_ui.animate(switchBoxX, endX, 200, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-
-        // switch the value after the animation duration
-        *switchValPtr = !currentState;
-        return;
-    }
-    else { 
+    if (m_itemList[currentCursor].nextList){  // next list
         m_ui.getAnimationManPtr()->clear();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
         m_itemLength = m_itemList[currentCursor].nextListLength - 1;
@@ -189,6 +174,33 @@ void ListView::selectCurrent(){
         scrollToTarget(0);
         return;
     }
+
+    if (m_itemList[currentCursor].extra.switchValue) {
+        bool* switchValPtr = m_itemList[currentCursor].extra.switchValue; // get switchValue pointer
+        bool currentState = *switchValPtr;  // retrieve currentState
+        int32_t endX = currentState ? 0 : 7; // calculate the end for the button box animation
+        
+        size_t targetIndex = currentCursor; // setting target index
+        switchAnimStates_[targetIndex].isAnimating = true;
+        
+        auto callback = [this, targetIndex](int32_t value) {
+            this->switchAnimStates_[targetIndex].boxX = value;
+        };
+        
+        auto animation = std::make_shared<CallbackAnimation>(
+            switchAnimStates_[targetIndex].boxX, 
+            endX, 
+            200, 
+            EasingType::EASE_IN_OUT_CUBIC, 
+            callback
+        );
+        
+        m_ui.getAnimationManPtr()->markProtected(animation);
+        m_ui.addAnimation(animation);
+        
+        *switchValPtr = !currentState;
+    }
+    if (m_itemList[currentCursor].pFunc ){ m_itemList[currentCursor].pFunc(); } // Enter pFunc
 }
 
 /*
@@ -253,6 +265,7 @@ void ListView::onResume() {
 void ListView::onPause() {}
 
 void ListView::onExit() {
+    onSave();
     m_ui.markFading();
     m_ui.setContinousDraw(false);
     m_ui.getAnimationManPtr()->clearAllProtectionMarks();
@@ -260,8 +273,7 @@ void ListView::onExit() {
 
 void ListView::draw(){
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(u8g2_font_wqy12_t_gb2312b); 
-
+    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
     int startIndex = std::max(0, topVisibleIndex_ - 2);
     int endIndex = std::min((int)m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
     
@@ -282,21 +294,28 @@ void ListView::draw(){
             
             if (m_itemList[itemIndex].extra.switchValue) {
                 u8g2.drawRFrame(u8g2.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
-                u8g2.drawRBox(u8g2.getDisplayWidth() - 42 + switchBoxX, itemY - 9, 7, 8, 2);
+                
+                int32_t currentSwitchBoxX = 0;
+                if (switchAnimStates_.find(itemIndex) != switchAnimStates_.end()) {
+                    currentSwitchBoxX = switchAnimStates_[itemIndex].boxX;
+                } else { // if animation state hasn't been set, use value read.
+                    currentSwitchBoxX = *m_itemList[itemIndex].extra.switchValue ? 7 : 0;
+                }
+                
+                u8g2.drawRBox(u8g2.getDisplayWidth() - 42 + currentSwitchBoxX, itemY - 9, 7, 8, 2);
+                
                 if (*m_itemList[itemIndex].extra.switchValue)
                     u8g2.drawUTF8(u8g2.getDisplayWidth() - 25, itemY - 1 , "ON");
                 else 
                     u8g2.drawUTF8(u8g2.getDisplayWidth() - 25, itemY - 1, "OFF");
             }
-
             if (m_itemList[itemIndex].extra.intValue) {
                 char buf[5] = {0};
-                snprintf(buf, 5, "%ld", *m_itemList[itemIndex].extra.intValue);
+                snprintf(buf, 5, "%" PRId32, *m_itemList[itemIndex].extra.intValue);
                 u8g2.drawStr(u8g2.getDisplayWidth() - 24, itemY, buf);
             }
         }
     }
-
     u8g2.drawVLine(126, progress_bar_top, progress_bar_bottom);
     drawCursor();
 }

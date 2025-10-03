@@ -1,6 +1,6 @@
 // Blinker.cpp
 #include "blinker/Blinker.h"
-#include "PixelUI.h" // 需要 getCurrentTime()
+#include "PixelUI.h"
 #include <cassert>
 
 Blinker::Blinker(PixelUI& ui, uint32_t interval_ms)
@@ -24,6 +24,7 @@ void Blinker::start() {
 
 void Blinker::stop() {
     m_running = false;
+    m_visible = false;
     m_stop_on_visible = false;
 }
 
