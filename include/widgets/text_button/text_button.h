@@ -19,24 +19,26 @@
 
 #include "../IWidget.h"
 
-class IconButton : public IWidget {
+class TextButton : public IWidget {
 private:
-    const unsigned char* src;
+    const char* src;
     std::function<void()> m_callback;
     int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
     PixelUI& m_ui;
-
+    int32_t anim_w = 0, anim_h = 0;
     int32_t anim_x = 0, anim_y = 0;
 public:
-    IconButton(PixelUI& ui);
-    ~IconButton() = default;
+    TextButton(PixelUI& ui);
+    ~TextButton() = default;
     void onLoad() override;
     void onOffload() override;
     bool onSelect() override ;
     void draw() override;
 
     void setCallback(std::function<void()> cb) {m_callback = cb;}
-    void setCoordinate(uint16_t x, uint16_t y) {m_x = x; m_y = y;};
-    void setMargin(uint16_t w, uint16_t h) {m_w = w; m_h = h;}
-    void setSource(const unsigned char* source) {src = source;};
+    void setPosition(uint16_t x, uint16_t y) {m_x = x; m_y = y;};
+
+    void setSize(uint16_t w, uint16_t h) {m_w = w; m_h = h;}
+    
+    void setText(const char* source) {src = source;};
 };

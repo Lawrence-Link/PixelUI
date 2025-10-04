@@ -64,6 +64,7 @@ set(SIM_SOURCES
     ../examples/charging_animation.cpp
     ../examples/app_counter.cpp
     ../examples/ListViewDemo1.cpp
+    ../examples/app_time_settings.cpp
 )
 
 if(NOT USE_STATIC_APP_REGISTER_ENABLED)

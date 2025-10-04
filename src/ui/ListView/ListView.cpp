@@ -17,7 +17,6 @@
 
 #include "ui/ListView/ListView.h"
 #include "core/animation/animation.h"
-#include <inttypes.h>
 
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
@@ -273,7 +272,7 @@ void ListView::onExit() {
 
 void ListView::draw(){
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
+    u8g2.setFont(u8g2_font_wqy12_t_gb2312b); 
     int startIndex = std::max(0, topVisibleIndex_ - 2);
     int endIndex = std::min((int)m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
     
@@ -295,10 +294,12 @@ void ListView::draw(){
             if (m_itemList[itemIndex].extra.switchValue) {
                 u8g2.drawRFrame(u8g2.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
                 
+                // 使用正确的动画状态
                 int32_t currentSwitchBoxX = 0;
                 if (switchAnimStates_.find(itemIndex) != switchAnimStates_.end()) {
                     currentSwitchBoxX = switchAnimStates_[itemIndex].boxX;
-                } else { // if animation state hasn't been set, use value read.
+                } else {
+                    // 如果没有动画状态，根据switch值设置初始位置
                     currentSwitchBoxX = *m_itemList[itemIndex].extra.switchValue ? 7 : 0;
                 }
                 
@@ -311,7 +312,7 @@ void ListView::draw(){
             }
             if (m_itemList[itemIndex].extra.intValue) {
                 char buf[5] = {0};
-                snprintf(buf, 5, "%" PRId32, *m_itemList[itemIndex].extra.intValue);
+                snprintf(buf, 5, "%ld", *m_itemList[itemIndex].extra.intValue);
                 u8g2.drawStr(u8g2.getDisplayWidth() - 24, itemY, buf);
             }
         }

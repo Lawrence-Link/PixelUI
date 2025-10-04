@@ -22,7 +22,11 @@ add_library(pixelui STATIC
     
     widgets/histogram/histogram.cpp
     widgets/brace/brace.cpp
-    widgets/iconButton/iconButton.cpp
+    widgets/icon_button/icon_button.cpp
+    widgets/text_button/text_button.cpp
+    widgets/num_scroll/num_scroll.cpp
+    widgets/analog_clock/analog_clock.cpp
+
     focus/focus.cpp
     blinker/Blinker.cpp
     

@@ -21,7 +21,7 @@
 #include <etl/stack.h>
 #include "widgets/histogram/histogram.h"
 #include "widgets/brace/brace.h"
-#include "widgets/iconButton/iconButton.h"
+#include "widgets/icon_button/icon_button.h"
 #include "focus/focus.h"
 static const unsigned char image_info_bits[] = {
     0xf0,0xff,0x0f,0xfc,0xff,0x3f,0xfe,0xff,0x7f,0xfe,0xff,0x7f,0xff,0x81,0xff,0xff,0x00,0xff,0x7f,0x3e,0xff,0x7f,0x3f,0xff,0xff,0x3f,0xff,0xff,0x1f,0xff,0xff,0x8f,0xff,0xff,0xc7,0xff,0xff,0xe3,0xff,0xff,0xe3,0xff,0xff,0xe3,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xe3,0xff,0xff,0xe3,0xff,0xff,0xff,0xff,0xfe,0xff,0x7f,0xfe,0xff,0x7f,0xfc,0xff,0x3f,0xf0,0xff,0x0f
@@ -85,31 +85,31 @@ public:
         IApplication::onEnter(cb);
         m_ui.setContinousDraw(true);
         // HISTOGRAM
-        histogram.setCoordinate(97,54);
-        histogram.setMargin(56,18);
+        histogram.setPosition(97,54);
+        histogram.setSize(56,18);
         histogram.setFocusBox(FocusBox(70,46,55,17));
         histogram.setExpand(EXPAND_BASE::BOTTOM_RIGHT, 76, 63);
         // BRACE 
-        brace.setCoordinate(31,54);
+        brace.setPosition(31,54);
         brace.setFocusBox(FocusBox(4, 46, 55, 17));
-        brace.setMargin(56,18);
+        brace.setSize(56,18);
         brace.setDrawContentFunction([this]() { braceContent(); });
         // icon battery
         icon_battery.setSource(image_BAT_75_bits);
-        icon_battery.setMargin(10, 6);
-        icon_battery.setCoordinate(14, 2);
+        icon_battery.setSize(10, 6);
+        icon_battery.setPosition(14, 2);
         // icon sounding
         icon_sounding.setSource(image_SOUND_OFF_bits);
-        icon_sounding.setMargin(7, 7);
-        icon_sounding.setCoordinate(40, 1);
+        icon_sounding.setSize(7, 7);
+        icon_sounding.setPosition(40, 1);
         // icon alert
         icon_alert.setSource(image_Alert_bits);
-        icon_alert.setMargin(9, 7);
-        icon_alert.setCoordinate(28, 1);
+        icon_alert.setSize(9, 7);
+        icon_alert.setPosition(28, 1);
         // icon alarm
         icon_alarm.setSource(image_BELL_bits);
-        icon_alarm.setMargin(6, 7);
-        icon_alarm.setCoordinate(51, 1);
+        icon_alarm.setSize(6, 7);
+        icon_alarm.setPosition(51, 1);
         // Adding widgets to focus manager, enabling cursor navigation
         m_focusMan.addWidget(&brace);
         m_focusMan.addWidget(&histogram);  

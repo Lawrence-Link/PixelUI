@@ -9,6 +9,7 @@ extern AppItem cube_demo_app;
 extern AppItem bouncy_about_app;
 extern AppItem charging_anim;
 extern AppItem ListViewDemo_app;
+extern AppItem time_setting_app;
 
 void registerApps();
 
