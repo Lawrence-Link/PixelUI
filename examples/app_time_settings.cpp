@@ -23,6 +23,7 @@
 
 #include "widgets/num_scroll/num_scroll.h"
 #include "widgets/analog_clock/analog_clock.h"
+#include "widgets/text_button/text_button.h"
 
 class TimeSetting : public IApplication {
 private:
@@ -30,12 +31,14 @@ private:
     NumScroll num_h, num_m, num_s;
     FocusManager m_focusman;
     Clock clock;
-
+    TextButton button_sync;
+    
     std::shared_ptr<Coroutine> animationCoroutine_;
 
     int32_t anim_title_bar = 0;
     int32_t anim_title_x = -50;
-    int32_t anim_analog_clock_x = 180;
+    int32_t anim_analog_clock_x = 103;
+
     void animation_load_coroutine(CoroutineContext& ctx, PixelUI& ui) {
         CORO_BEGIN(ctx);
         CORO_DELAY(ctx,ui, 100, 1); // wait for renderer loading
@@ -45,9 +48,11 @@ private:
         num_m.onLoad();
         m_ui.animate(anim_title_bar, 75, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
         m_ui.animate(anim_title_x, 3, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-        m_ui.animate(anim_analog_clock_x, 3, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+        // m_ui.animate(anim_analog_clock_x, 100, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
         CORO_DELAY(ctx, ui, 100, 123);
         num_s.onLoad();
+        CORO_DELAY(ctx, ui, 100, 11);
+        button_sync.onLoad();
         CORO_END(ctx);
     }
 
@@ -57,7 +62,9 @@ public:
     num_m(ui), 
     num_s(ui), 
     m_focusman(ui),
-    clock(ui) {};
+    clock(ui),
+    button_sync(ui) {};
+
     void draw() override {
         U8G2& u8g2 = m_ui.getU8G2();
 
@@ -73,6 +80,7 @@ public:
         num_m.draw();
         num_s.draw();
         clock.draw();
+        button_sync.draw();
 
         m_focusman.draw();
     }
@@ -123,11 +131,15 @@ public:
         num_s.setValue(0);
         num_s.setFixedIntDigits(2);
 
-        clock.setPosition(100,24);
+        clock.setPosition(103, 24);
         clock.setRadius(20);
         clock.setHour(2);
         clock.setMinute(3);
         clock.setSecond(0);
+
+        button_sync.setPosition(90, 48);
+        button_sync.setSize(33, 13);
+        button_sync.setText("Set");
 
         animationCoroutine_ = std::make_shared<Coroutine>(
             std::bind(&TimeSetting::animation_load_coroutine, this, std::placeholders::_1, std::placeholders::_2), m_ui
@@ -138,6 +150,7 @@ public:
         m_focusman.addWidget(&num_h);
         m_focusman.addWidget(&num_m);
         m_focusman.addWidget(&num_s);
+        m_focusman.addWidget(&button_sync);
     }
 
     void onResume() override {

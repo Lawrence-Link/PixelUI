@@ -24,10 +24,10 @@ void NumScroll::onLoad() {
     anim_h = 0;
 
     FocusBox box;
-    box.x = m_x;
-    box.y = m_y;
-    box.w = m_margin_w;
-    box.h = m_margin_h;
+    box.x = m_x + 1;
+    box.y = m_y + 1;
+    box.w = m_margin_w - 2;
+    box.h = m_margin_h - 2;
     setFocusBox(box);
 
     m_ui.animate(anim_w, anim_h, 
