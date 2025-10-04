@@ -24,6 +24,7 @@
 #include "widgets/num_scroll/num_scroll.h"
 #include "widgets/analog_clock/analog_clock.h"
 #include "widgets/text_button/text_button.h"
+#include "widgets/label/label.h"
 
 class TimeSetting : public IApplication {
 private:
@@ -32,7 +33,7 @@ private:
     FocusManager m_focusman;
     Clock clock;
     TextButton button_sync;
-    
+    Label title;
     std::shared_ptr<Coroutine> animationCoroutine_;
 
     int32_t anim_title_bar = 0;
@@ -45,8 +46,9 @@ private:
         clock.onLoad();
         num_h.onLoad();
         CORO_DELAY(ctx, ui, 100, 12);
+        title.onLoad();
         num_m.onLoad();
-        m_ui.animate(anim_title_bar, 75, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+        m_ui.animate(anim_title_bar, 78, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
         m_ui.animate(anim_title_x, 3, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
         // m_ui.animate(anim_analog_clock_x, 100, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
         CORO_DELAY(ctx, ui, 100, 123);
@@ -63,14 +65,15 @@ public:
     num_s(ui), 
     m_focusman(ui),
     clock(ui),
-    button_sync(ui) {};
+    button_sync(ui),
+    title(ui, 3, 14, "RTC时间") {};
 
     void draw() override {
         U8G2& u8g2 = m_ui.getU8G2();
 
-        u8g2.drawHLine(0, 16, anim_title_bar);
-        u8g2.setFont(u8g2_font_wqy12_t_gb2312);
-        u8g2.drawUTF8(anim_title_x, 12, "RTC时间");
+        // u8g2.setFont(u8g2_font_wqy12_t_gb2312);
+        u8g2.drawHLine(0, 19, anim_title_bar);
+        // u8g2.drawUTF8(anim_title_x, 16, "RTC时间");
 
         clock.setHour(num_h.getValue());
         clock.setMinute(num_m.getValue());
@@ -81,7 +84,7 @@ public:
         num_s.draw();
         clock.draw();
         button_sync.draw();
-
+        title.draw();
         m_focusman.draw();
     }
 
@@ -113,33 +116,33 @@ public:
         m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
 
-        num_h.setPosition(3,45);
+        num_h.setPosition(1,25);
         num_h.setRange(0,23);
         num_h.setSize(24, 16);
         num_h.setValue(0);
         num_h.setFixedIntDigits(2);
 
-        num_m.setPosition(32,45);
+        num_m.setPosition(27,25);
         num_m.setRange(0,59);
         num_m.setSize(24, 16);
         num_m.setValue(0);
         num_m.setFixedIntDigits(2);
 
-        num_s.setPosition(61,45);
+        num_s.setPosition(53,25);
         num_s.setRange(0,59);
         num_s.setSize(24, 16);
         num_s.setValue(0);
         num_s.setFixedIntDigits(2);
 
-        clock.setPosition(103, 24);
+        clock.setPosition(103, 32);
         clock.setRadius(20);
         clock.setHour(2);
         clock.setMinute(3);
         clock.setSecond(0);
 
-        button_sync.setPosition(90, 48);
-        button_sync.setSize(33, 13);
-        button_sync.setText("Set");
+        button_sync.setPosition(1, 44);
+        button_sync.setSize(76, 17);
+        button_sync.setText("写入");
 
         animationCoroutine_ = std::make_shared<Coroutine>(
             std::bind(&TimeSetting::animation_load_coroutine, this, std::placeholders::_1, std::placeholders::_2), m_ui

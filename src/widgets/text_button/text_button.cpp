@@ -62,7 +62,7 @@ void TextButton::draw() {
     int32_t text_x = draw_x + (anim_w - text_width) / 2;
     int32_t text_y = draw_y + (anim_h - font_height) / 2 + font_ascent;
     
-    u8g2.drawUTF8(text_x, text_y + 1, (const char*)src);
+    u8g2.drawUTF8(text_x, text_y + 2, (const char*)src);
     u8g2.setMaxClipWindow();
 }
 

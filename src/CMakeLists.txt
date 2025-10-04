@@ -26,6 +26,7 @@ add_library(pixelui STATIC
     widgets/text_button/text_button.cpp
     widgets/num_scroll/num_scroll.cpp
     widgets/analog_clock/analog_clock.cpp
+    widgets/label/label.cpp
 
     focus/focus.cpp
     blinker/Blinker.cpp
