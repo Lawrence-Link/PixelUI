@@ -25,12 +25,12 @@ enum class POS {
 
 class Label : public IWidget {
 private:
-    const char* src;
-    std::function<void()> m_callback;
-    int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
     PixelUI& m_ui;
+    int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
+    const char* src;
     int32_t anim_w = 0, anim_h = 0;
     int32_t anim_x = 0, anim_y = 0;
+    std::function<void()> m_callback;
     POS load_pos;
 public:
     Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM);

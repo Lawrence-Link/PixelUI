@@ -26,6 +26,7 @@ public:
     ~NumScroll() = default;
 
     void onLoad() override;
+    void onLoadNoAnim();
     void onOffload() override;
     void draw() override;
     bool handleEvent(InputEvent event) override;

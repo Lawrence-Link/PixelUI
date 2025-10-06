@@ -15,10 +15,12 @@ add_library(pixelui STATIC
     ui/Popup/PopupInfo.cpp
     ui/Popup/PopupManager.cpp
     ui/Popup/PopupProgress.cpp
+    ui/Popup/PopupValue4Digits.cpp
     
     ui/ListView/ListView.cpp
     ui/AppLauncher/AppLauncher.cpp
     ui/IconView/IconView.cpp
+    
     
     widgets/histogram/histogram.cpp
     widgets/brace/brace.cpp
@@ -27,6 +29,7 @@ add_library(pixelui STATIC
     widgets/num_scroll/num_scroll.cpp
     widgets/analog_clock/analog_clock.cpp
     widgets/label/label.cpp
+    widgets/curve_chart/curve_chart.cpp
 
     focus/focus.cpp
     blinker/Blinker.cpp

@@ -36,6 +36,24 @@ void NumScroll::onLoad() {
                 PROTECTION::PROTECTED);
 }
 
+void NumScroll::onLoadNoAnim() {
+    m_anim_offset = 0;
+    m_is_active = false;
+
+    anim_w = 0;
+    anim_h = 0;
+
+    FocusBox box;
+    box.x = m_x + 1;
+    box.y = m_y + 1;
+    box.w = m_margin_w - 2;
+    box.h = m_margin_h - 2;
+    setFocusBox(box);
+
+    anim_w = m_margin_w;
+    anim_h = m_margin_h;
+}
+
 void NumScroll::onOffload() {
     m_ui.clearUnprotectedAnimations();
     m_is_active = false;
