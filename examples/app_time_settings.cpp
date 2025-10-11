@@ -162,7 +162,6 @@ public:
 
     void onExit() override {
         m_ui.setContinousDraw(false);
-        m_ui.markFading();
 
         // cleanup the coroutine
         if (animationCoroutine_) {

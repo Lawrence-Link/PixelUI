@@ -101,12 +101,10 @@ public:
 
             case ChargeState::SHRINK_RING:
                 // Check if the ring animation is complete (ringPercent is close to 0).
-                // 检查圆环动画是否完成（ringPercent接近0）。
                 if (m_ui.getCurrentTime() - stateEnterTime > 900) {
                     state = ChargeState::MOVE_LIGHTNING;
                     stateEnterTime = m_ui.getCurrentTime();
                     // Animate lightning moving left, percentage text appearing, and background expanding
-                    // 动画闪电左移，百分比文字出现，背景板展开
                     
                     m_ui.animate(lightningOffsetX, -10, 600, EasingType::EASE_OUT_CUBIC);
                     m_ui.animate(batteryPercent_anim, batteryPercent, 600, EasingType::EASE_OUT_CUBIC);
@@ -159,7 +157,6 @@ public:
 
     void onExit() override {
         m_ui.setContinousDraw(false);
-        m_ui.markFading();
     }
 
 private:

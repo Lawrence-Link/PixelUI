@@ -47,10 +47,12 @@ void ViewManager::pop() {
     if (m_viewStack.empty()) return;
 
     m_isTransitioning = true;
-    auto appToExit = m_viewStack.top();
     m_ui.setDrawable(nullptr); 
     
-    appToExit->onExit(); 
+    m_viewStack.top()->onExit();  
+
+    m_ui.markFading();
+
     m_viewStack.pop(); 
 
     if (!m_viewStack.empty()) {
