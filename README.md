@@ -38,7 +38,7 @@ Its design focuses on **performance, low memory footprint, and easy extensibilit
 - **AppLauncher**: Implementation of IconView, coupled with AppSystem to acquire all registered apps.
 - **Popup**: PopupManagers, Popup base and interface, Popup derivations
 - **Focus**: Focus system for widget choosing.
-- **Blinker**: Non-blocking blink indicator.
+- **Blinker**: To achieve Non-blocking blink.
 
 ### Resource Strategy
 - Minimized dynamic memory allocation to avoid fragmentation.
@@ -97,7 +97,7 @@ int main() {
 
     ui.begin(); // initialize UI instance
 
-    auto appView = AppLauncher::createAppLauncherView(ui, *ui.getViewManagerPtr()); // appView to show loaded apps
+    auto appView = AppLauncher::createAppLauncherView(ui, *ui.getViewManagerPtr()); // a suggested entrance (AppLauncher)
 
     ui.getViewManager().push(appView); // push in the appView to the ViewStack
 
