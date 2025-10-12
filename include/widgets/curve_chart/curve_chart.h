@@ -18,13 +18,7 @@
 #pragma once
 
 #include "../IWidget.h"
-
-enum class EXPAND_BASE {
-    TOP_LEFT,
-    TOP_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_RIGHT
-};
+#include "core/CommonTypes.h"
 
 class CurveChart : public IWidget {
 public:
