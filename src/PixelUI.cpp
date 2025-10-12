@@ -170,15 +170,18 @@ void PixelUI::renderer() {
 void PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue,
                                 const char* title, uint16_t width, uint16_t height,
                                 uint16_t duration, uint8_t priority,
-                                std::function<void(int32_t val)> update_cb) {
+                                std::function<void(int32_t val)> update_cb, bool use_apparent_val) {
     if (minValue >= maxValue) return;
-    if (width < 50) width = 50; if (width > 120) width = 120;
-    if (height < 30) height = 30; if (height > 60) height = 60;
-    if (duration > 30000) duration = 30000; if (duration < 1000) duration = 1000;
+    if (width < 50) width = 50; 
+    if (width > 120) width = 120;
+    if (height < 30) height = 30; 
+    if (height > 60) height = 60;
+    if (duration > 30000) duration = 30000; 
+    if (duration < 1000) duration = 1000;
 
     auto popup = std::make_shared<PopupProgress>(*this, width, height, value,
                                                  minValue, maxValue, title,
-                                                 duration, priority, update_cb);
+                                                 duration, priority, update_cb, use_apparent_val);
     m_popupManagerPtr->addPopup(popup);
     markDirty();
 }
@@ -203,9 +206,12 @@ void PixelUI::showPopupValue4Digits(int32_t& value, const char* title,
                                     uint16_t width, uint16_t height,
                                     uint16_t duration, uint8_t priority,
                                     std::function<void(int32_t val)> update_cb) {
-    if (width < 50) width = 50; if (width > 120) width = 120;
-    if (height < 30) height = 30; if (height > 60) height = 60;
-    if (duration > 30000) duration = 30000; if (duration < 1000) duration = 1000;
+    if (width < 50) width = 50; 
+    if (width > 120) width = 120;
+    if (height < 30) height = 30; 
+    if (height > 60) height = 60;
+    if (duration > 30000) duration = 30000; 
+    if (duration < 1000) duration = 1000;
 
     auto popup = std::make_shared<PopupValue4Digits>(*this, width, height, value,
                                                      title, duration, priority,

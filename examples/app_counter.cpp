@@ -31,6 +31,7 @@
 #include "widgets/brace/brace.h"
 #include "widgets/icon_button/icon_button.h"
 #include "focus/focus.h"
+#include "math.h"
 
 // --- Bitmap definitions for UI elements ---
 
@@ -188,6 +189,8 @@ public:
         m_focusMan.addWidget(&brace);
         m_focusMan.addWidget(&histogram);
 
+        
+
         // Initialize state machine and first-time flag
         loadState = LoadState::INIT;
         first_time = false;
@@ -251,6 +254,10 @@ public:
             case LoadState::HISTO_LOADING:
                 // Start loading animations for histogram and other icons
                 histogram.onLoad();
+
+                for (int i = 0; i <= 100; i++)
+                {histogram.addData(sin(0.3*i)+3);}
+
                 icon_sounding.onLoad();
                 icon_alarm.onLoad();
                 // All loading is complete, move to DONE state
@@ -289,12 +296,12 @@ public:
 
         // Draw placeholder reading
         u8g2.setFont(u8g2_font_profont17_tr);
-        u8g2.drawStr(3, 31, "-.-- mR/h");
+        u8g2.drawStr(3, 31, "-.-- uSv/h");
 
         // Draw count data labels
         u8g2.setFont(u8g2_font_4x6_tr);
-        u8g2.drawStr(100, 32, "CNT");
-        u8g2.drawStr(100, 39, "1234");
+        u8g2.drawStr(100, 32, "CPM");
+        u8g2.drawStr(100, 39, "0000");
         // histogram.setData(s_static_data_buffer, 25, 0); // deprecated method
 
         // Draw all widgets
@@ -306,7 +313,7 @@ public:
 
         // Conditional drawing for histogram expanded view (STATS screen)
         if (histogram.isExpanded()) {
-            u8g2.clearBuffer(); // Clear the screen for the stats view
+            u8g2.clearBuffer(); // Clear the buffer for the stats view
             u8g2.drawStr(3, 10, "<STATS>");
             u8g2.drawStr(3, 20, "Max:");
             u8g2.drawStr(3, 30, "1.45uSv/h");
