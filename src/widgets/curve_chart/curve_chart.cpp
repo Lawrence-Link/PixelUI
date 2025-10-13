@@ -309,7 +309,7 @@ void CurveChart::draw() {
     
     // Draw label
     u8g2.setFont(u8g2_font_4x6_tr);
-    u8g2.drawStr(current_x + half_width - 23, current_y - half_height + 7, "Curve"); // Updated label
+    u8g2.drawStr(current_x + half_width - 19, current_y - half_height + 7, "Curve"); // Updated label
 }
 
 /**

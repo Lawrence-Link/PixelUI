@@ -30,22 +30,22 @@ extern PixelUI ui;
 int my_value = 0;
 
 ListItem sub_CathyFlower[3] = {
-    ListItem(">>> Sub Menu <<<", nullptr, 0, [](){  }),
-    ListItem("- Progress", nullptr, 0, [](){  }),
-    ListItem("- Alert", nullptr, 0, [](){  })
+    ListItem(">>> Sub Menu <<<"),
+    ListItem("- Text"),
+    ListItem("- 进度")
 };
 
 ListItem ItemList[10] = {
     ListItem(">>> ListDemo <<<"),
-    ListItem("- Show pop", nullptr, 0, [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }),
-    ListItem("- Sub Menu", sub_CathyFlower, 3),
-    ListItem("- Bool State", nullptr, 0, nullptr, {.switchValue = &bool_state}),
-    ListItem("- Value", nullptr, 0, [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, 1); }, {.intValue = &my_value}),
-    ListItem("- Alert", nullptr, 0, [](){  }),
-    ListItem("- Progress", nullptr, 0, [](){  }),
-    ListItem("- Anytone", nullptr, 0, [](){  }),
-    ListItem("- Potato", nullptr, 0, [](){  }),
-    ListItem("- Tomato", nullptr, 0, [](){  })
+    ListItem{.title = "- Show pop", .pFunc = [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }},
+    ListItem{.title ="- Sub Menu", .nextList = sub_CathyFlower, .nextListLength = 3},
+    ListItem{.title ="- Bool State", .extra = {.switchValue = &bool_state}},
+    ListItem{.title ="- Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, 1); }, .extra = {.intValue = &my_value}},
+    ListItem{.title ="- Alert"},
+    ListItem{.title ="- Progress"},
+    ListItem{.title ="- Anytone"},
+    ListItem{.title ="- Potato"},
+    ListItem{.title ="- Tomato"}
 };
 
 class ListViewDemo : public ListView {
