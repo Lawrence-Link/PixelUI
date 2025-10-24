@@ -152,13 +152,13 @@ public:
         histogram.setPosition(97,54);
         histogram.setSize(56,18);
         // Define focus box for navigation
-        histogram.setFocusBox(FocusBox(70,46,55,17));
+        // histogram.setFocusBox(FocusBox(70,46,55,17));
         // Define expansion behaviour (to full screen for stats view)
         histogram.setExpand(EXPAND_BASE::BOTTOM_RIGHT, 76, 63);
 
         // --- BRACE SETUP ---
         brace.setPosition(31,54);
-        brace.setFocusBox(FocusBox(4, 46, 55, 17));
+        // brace.setFocusBox(FocusBox(4, 46, 55, 17));
         brace.setSize(56,18);
         // Set custom content drawing function for the brace widget
         brace.setDrawContentFunction([this]() { braceContent(); });
