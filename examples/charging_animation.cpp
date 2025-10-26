@@ -68,7 +68,7 @@ public:
 
         // Draw lightning
         drawChargingLightning(lightIconSize, centerX, centerY);
-
+ 
         // Draw the ring (animated)
         drawBatteryRing(display, 64, 32, 15, 2, ringPercent);
 

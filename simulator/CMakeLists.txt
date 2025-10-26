@@ -95,8 +95,8 @@ target_link_libraries(u8g2_emulator
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
-        u8g2_c
         pixelui
+        u8g2_c
 )
 
 # -------------------------------

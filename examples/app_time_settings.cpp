@@ -34,29 +34,11 @@ private:
     Clock clock;
     TextButton button_sync;
     Label title;
-    std::shared_ptr<Coroutine> animationCoroutine_;
+    Coroutine animationCoroutine_;
 
     int32_t anim_title_bar = 0;
     int32_t anim_title_x = -50;
     int32_t anim_analog_clock_x = 103;
-
-    void animation_load_coroutine(CoroutineContext& ctx, PixelUI& ui) {
-        CORO_BEGIN(ctx);
-        CORO_DELAY(ctx,ui, 100, 1); // wait for renderer loading
-        clock.onLoad();
-        num_h.onLoad();
-        CORO_DELAY(ctx, ui, 100, 12);
-        title.onLoad();
-        num_m.onLoad();
-        m_ui.animate(anim_title_bar, 78, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-        m_ui.animate(anim_title_x, 3, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-        // m_ui.animate(anim_analog_clock_x, 100, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
-        CORO_DELAY(ctx, ui, 100, 123);
-        num_s.onLoad();
-        CORO_DELAY(ctx, ui, 100, 11);
-        button_sync.onLoad();
-        CORO_END(ctx);
-    }
 
 public:
     TimeSetting(PixelUI& ui): m_ui(ui), 
@@ -66,7 +48,24 @@ public:
     m_focusman(ui),
     clock(ui),
     button_sync(ui),
-    title(ui, 3, 14, "RTC时间") {};
+    title(ui, 3, 14, "RTC时间"),
+    animationCoroutine_([this](CoroutineContext& ctx){
+        CORO_BEGIN(ctx);
+        CORO_DELAY(ctx, m_ui, 100, 1); // wait for renderer loading
+        clock.onLoad();
+        num_h.onLoad();
+        CORO_DELAY(ctx, m_ui, 100, 12);
+        title.onLoad();
+        num_m.onLoad();
+        m_ui.animate(anim_title_bar, 78, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+        m_ui.animate(anim_title_x, 3, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+        // m_ui.animate(anim_analog_clock_x, 100, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+        CORO_DELAY(ctx, m_ui, 100, 123);
+        num_s.onLoad();
+        CORO_DELAY(ctx, m_ui, 100, 11);
+        button_sync.onLoad();
+        CORO_END(ctx);
+    }) {};
 
     void draw() override {
         U8G2& u8g2 = m_ui.getU8G2();
@@ -144,11 +143,9 @@ public:
         button_sync.setSize(76, 17);
         button_sync.setText("写入");
 
-        animationCoroutine_ = std::make_shared<Coroutine>(
-            std::bind(&TimeSetting::animation_load_coroutine, this, std::placeholders::_1, std::placeholders::_2), m_ui
-        );
-
-        m_ui.addCoroutine(animationCoroutine_);
+        animationCoroutine_.reset();
+        animationCoroutine_.start();
+        m_ui.addCoroutine(&animationCoroutine_);
 
         m_focusman.addWidget(&num_h);
         m_focusman.addWidget(&num_m);
@@ -164,10 +161,7 @@ public:
         m_ui.setContinousDraw(false);
 
         // cleanup the coroutine
-        if (animationCoroutine_) {
-            m_ui.removeCoroutine(animationCoroutine_);
-            animationCoroutine_.reset();
-        }
+        m_ui.removeCoroutine(&animationCoroutine_);
     }
 };
 #if USE_STATIC_APP_REGISTER_ENABLED

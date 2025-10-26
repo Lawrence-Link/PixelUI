@@ -21,7 +21,7 @@
 
 void registerApps() {
     auto& app_man = AppManager::getInstance(); // acquire for global AppManager singleton..
-
+    
     app_man.registerApp(counter_app);
     app_man.registerApp(cube_demo_app);
     app_man.registerApp(bouncy_about_app);
