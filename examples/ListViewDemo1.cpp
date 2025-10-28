@@ -28,6 +28,7 @@ bool bool_state = false;
 extern PixelUI ui;
 
 int my_value = 0;
+int my_value_4_digits = 0;
 
 ListItem sub_CathyFlower[3] = {
     ListItem(">>> Sub Menu <<<"),
@@ -37,11 +38,11 @@ ListItem sub_CathyFlower[3] = {
 
 ListItem ItemList[10] = {
     ListItem(">>> ListDemo <<<"),
-    ListItem{.title = "- Show pop", .pFunc = [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }},
+    ListItem{.title ="- Show pop", .pFunc = [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }},
     ListItem{.title ="- Sub Menu", .nextList = sub_CathyFlower, .nextListLength = 3},
     ListItem{.title ="- Bool State", .extra = {.switchValue = &bool_state}},
-    ListItem{.title ="- Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, 1); }, .extra = {.intValue = &my_value}},
-    ListItem{.title ="- Alert"},
+    ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, 1); }, .extra = {.intValue = &my_value}},
+    ListItem{.title ="- Show 4 Digits", .pFunc = [](){ ui.showPopupValue4Digits(my_value_4_digits, "Value 4D", 100, 40, 5000, 1); }},
     ListItem{.title ="- Progress"},
     ListItem{.title ="- Anytone"},
     ListItem{.title ="- Potato"},
