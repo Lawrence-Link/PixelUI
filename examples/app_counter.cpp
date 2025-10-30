@@ -130,13 +130,13 @@ public:
     APP_COUNTER(PixelUI& ui) :
     m_ui(ui),
     // Initialize all member widgets with the UI reference
-    histogram(ui),
-    brace(ui),
+    histogram(ui, 69, 45, 56, 18),
+    brace(ui, 3, 45, 56, 18),
     m_focusMan(ui),
-    icon_battery(ui),
-    icon_alert(ui),
-    icon_sounding(ui),
-    icon_alarm(ui)
+    icon_battery(ui, 14, 2, 10, 6),
+    icon_alert(ui, 28, 1, 9, 7),
+    icon_sounding(ui, 40, 1, 7, 7),
+    icon_alarm(ui, 51, 1, 6, 7)
     {}
 
     /**
@@ -149,47 +149,27 @@ public:
         m_ui.setContinousDraw(true);
 
         // --- HISTOGRAM SETUP ---
-        histogram.setPosition(97,54);
-        histogram.setSize(56,18);
-        // Define focus box for navigation
-        // histogram.setFocusBox(FocusBox(70,46,55,17));
         // Define expansion behaviour (to full screen for stats view)
         histogram.setExpand(EXPAND_BASE::BOTTOM_RIGHT, 76, 63);
 
         // --- BRACE SETUP ---
-        brace.setPosition(31,54);
-        // brace.setFocusBox(FocusBox(4, 46, 55, 17));
-        brace.setSize(56,18);
         // Set custom content drawing function for the brace widget
         brace.setDrawContentFunction([this]() { braceContent(); });
 
         // --- ICON BUTTON SETUP ---
         // Battery Icon
         icon_battery.setSource(image_BAT_75_bits);
-        icon_battery.setSize(10, 6);
-        icon_battery.setPosition(14, 2);
-
         // Sounding Icon
         icon_sounding.setSource(image_SOUND_OFF_bits);
-        icon_sounding.setSize(7, 7);
-        icon_sounding.setPosition(40, 1);
-
         // Alert Icon
         icon_alert.setSource(image_Alert_bits);
-        icon_alert.setSize(9, 7);
-        icon_alert.setPosition(28, 1);
-
         // Alarm Icon
         icon_alarm.setSource(image_BELL_bits);
-        icon_alarm.setSize(6, 7);
-        icon_alarm.setPosition(51, 1);
 
         // --- FOCUS MANAGEMENT SETUP ---
         // Add interactive widgets to the focus manager
         m_focusMan.addWidget(&brace);
         m_focusMan.addWidget(&histogram);
-
-        
 
         // Initialize state machine and first-time flag
         loadState = LoadState::INIT;
@@ -361,7 +341,7 @@ public:
      * @brief Cleanup function called when the application exits.
      */
     void onExit() {
-        // Stop all ongoing animations
+        // Stop all ongoing animation
         m_ui.clearAllAnimations();
         // Stop continuous drawing to save power
         m_ui.setContinousDraw(false);

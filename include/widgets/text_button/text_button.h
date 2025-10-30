@@ -33,7 +33,7 @@ private:
     int32_t anim_x = 0, anim_y = 0;           // Animated position
 
 public:
-    explicit TextButton(PixelUI& ui);
+    TextButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     ~TextButton() override = default;
 
     // IWidget overrides

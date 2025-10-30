@@ -42,12 +42,12 @@ private:
 
 public:
     TimeSetting(PixelUI& ui): m_ui(ui), 
-    num_h(ui), 
-    num_m(ui), 
-    num_s(ui), 
+    num_h(ui,  1, 25, 24, 26), 
+    num_m(ui, 27, 25, 24, 16), 
+    num_s(ui, 53, 25, 24, 26), 
     m_focusman(ui),
-    clock(ui),
-    button_sync(ui),
+    clock(ui, 103, 32, 20),
+    button_sync(ui, 1, 44, 76, 17),
     title(ui, 3, 14, "RTC时间"),
     animationCoroutine_([this](CoroutineContext& ctx){
         CORO_BEGIN(ctx);
@@ -115,32 +115,22 @@ public:
         m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
 
-        num_h.setPosition(1,25);
         num_h.setRange(0,23);
-        num_h.setSize(24, 16);
         num_h.setValue(0);
         num_h.setFixedIntDigits(2);
 
-        num_m.setPosition(27,25);
         num_m.setRange(0,59);
-        num_m.setSize(24, 16);
         num_m.setValue(0);
         num_m.setFixedIntDigits(2);
 
-        num_s.setPosition(53,25);
         num_s.setRange(0,59);
-        num_s.setSize(24, 16);
         num_s.setValue(0);
         num_s.setFixedIntDigits(2);
 
-        clock.setPosition(103, 32);
-        clock.setRadius(20);
         clock.setHour(2);
         clock.setMinute(3);
         clock.setSecond(0);
 
-        button_sync.setPosition(1, 44);
-        button_sync.setSize(76, 17);
         button_sync.setText("写入");
 
         animationCoroutine_.reset();
