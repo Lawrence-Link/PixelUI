@@ -36,9 +36,9 @@ public:
     void setDrawContentFunction(std::function<void()> func) { contentWithinBrace = func; }
     
 private:
+    PixelUI& m_ui;
     int16_t pos_x_ = 0, pos_y_ = 0;
     int16_t size_w_ = 0, size_h_ = 0;
-    PixelUI& m_ui;
 
     std::function<void()> contentWithinBrace;
     std::function<void()> m_callback = nullptr;
