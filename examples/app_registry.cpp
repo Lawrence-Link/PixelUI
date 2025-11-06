@@ -28,6 +28,7 @@ void registerApps() {
     app_man.registerApp(charging_anim);
     app_man.registerApp(ListViewDemo_app);
     app_man.registerApp(time_setting_app);
+    app_man.registerApp(button_demo_app);
 }
 
 #endif

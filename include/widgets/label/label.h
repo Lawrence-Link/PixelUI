@@ -39,7 +39,7 @@ public:
     void onOffload() override;
     bool onSelect() override ;
     void draw() override;
-    void setLoadPos(POS pos);
+    void setLoadPos(POS pos) {load_pos = pos;};
     void setCallback(std::function<void()> cb) {m_callback = cb;}
     void setPosition(uint16_t x, uint16_t y) {m_x = x; m_y = y;};
 

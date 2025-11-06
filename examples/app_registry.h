@@ -27,6 +27,7 @@ extern AppItem bouncy_about_app;
 extern AppItem charging_anim;
 extern AppItem ListViewDemo_app;
 extern AppItem time_setting_app;
+extern AppItem button_demo_app;
 
 void registerApps();
 

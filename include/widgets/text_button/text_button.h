@@ -34,7 +34,12 @@ private:
     int32_t anim_x = 0, anim_y = 0;           // Animated position
 
 public:
-    TextButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    TextButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h, char const* text = "")
+        : m_ui(ui), m_x(x), m_y(y), m_w(w), m_h(h), src(text)
+    {
+        setFocusable(true);
+        setFocusBox({m_x, m_y, m_w, m_h});
+    }
     ~TextButton() override = default;
 
     // IWidget overrides

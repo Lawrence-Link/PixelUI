@@ -65,6 +65,7 @@ set(SIM_SOURCES
     ../examples/app_counter.cpp
     ../examples/ListViewDemo1.cpp
     ../examples/app_time_settings.cpp
+    ../examples/app_widgets_demo/app_demo_textbutton_label.cpp
 )
 
 if(NOT USE_STATIC_APP_REGISTER_ENABLED)

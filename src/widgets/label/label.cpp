@@ -55,12 +55,12 @@ void Label::onLoad() {
         case POS::LEFT: {
             anim_x = m_x - u8g2.getUTF8Width(src);
             anim_y = m_y; 
-            m_ui.animate(anim_y, m_y, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+            m_ui.animate(anim_x, m_x, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
         } break;
         case POS::RIGHT: {
             anim_x = m_x + u8g2.getUTF8Width(src);
             anim_y = m_y; 
-            m_ui.animate(anim_y, m_y, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+            m_ui.animate(anim_x, m_x, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
         } break;
     }
 

@@ -26,6 +26,8 @@
 #include "widgets/text_button/text_button.h"
 #include "widgets/label/label.h"
 
+static const unsigned char image_Icon_Clock_bits[] = {0xf0,0xff,0x0f,0xfc,0xe7,0x3f,0x7e,0xff,0x7e,0xee,0xff,0x77,0xdf,0xff,0xfb,0xff,0xf7,0xff,0xfb,0xf7,0xdf,0xff,0xf7,0xff,0xff,0x77,0xff,0xff,0xb7,0xff,0xff,0xd7,0xff,0xfd,0xe7,0xbf,0xfd,0xc7,0xbf,0xff,0x8f,0xff,0xff,0x1f,0xff,0xff,0x3f,0xfe,0xff,0x7f,0xfc,0xfb,0xff,0xdc,0xff,0xff,0xff,0xdf,0xff,0xfb,0xee,0xff,0x77,0x7e,0xff,0x7e,0xfc,0xe7,0x3f,0xf0,0xff,0x0f};
+
 class TimeSetting : public IApplication {
 private:
     PixelUI& m_ui;
@@ -42,9 +44,9 @@ private:
 
 public:
     TimeSetting(PixelUI& ui): m_ui(ui), 
-    num_h(ui,  1, 25, 24, 26), 
+    num_h(ui,  1, 25, 24, 16), 
     num_m(ui, 27, 25, 24, 16), 
-    num_s(ui, 53, 25, 24, 26), 
+    num_s(ui, 53, 25, 24, 16), 
     m_focusman(ui),
     clock(ui, 103, 32, 20),
     button_sync(ui, 1, 44, 76, 17),
@@ -157,7 +159,7 @@ public:
 #if USE_STATIC_APP_REGISTER_ENABLED
 static AppRegistrar time_setting_app({
     .title = "TimeSetting Demo",
-    .bitmap = nullptr,
+    .bitmap = image_Icon_Clock_bits,
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
         return std::make_unique<TimeSetting>(ui);
     },
@@ -166,7 +168,7 @@ static AppRegistrar time_setting_app({
 #else
 AppItem time_setting_app{
     .title = "TimeSetting Demo",
-    .bitmap = nullptr,
+    .bitmap = image_Icon_Clock_bits,
     
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
         return std::make_unique<TimeSetting>(ui); 
