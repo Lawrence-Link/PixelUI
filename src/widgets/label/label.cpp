@@ -25,8 +25,8 @@
  * @param content Text content of the label.
  * @param pos Label alignment position relative to (x, y).
  */
-Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, const uint8_t* font = u8g2_font_wqy12_t_gb2312)
-    : m_ui(ui), m_x(x), m_y(y), src(content), load_pos(pos), m_font(font)
+Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos)
+    : m_ui(ui), m_x(x), m_y(y), src(content), load_pos(pos) 
 { }
 
 /**
@@ -35,7 +35,7 @@ Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, 
  */
 void Label::onLoad() {
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(m_font);
+    u8g2.setFont(u8g2_font_wqy12_t_gb2312);
 
     // Calculate font height
     int8_t font_height = u8g2.getFontAscent() + u8g2.getFontDescent();
