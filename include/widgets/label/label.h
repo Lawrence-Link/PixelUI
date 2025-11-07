@@ -32,8 +32,9 @@ private:
     int32_t anim_x = 0, anim_y = 0;
     std::function<void()> m_callback;
     POS load_pos;
+    uint8_t const* m_font;
 public:
-    Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM);
+    Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM, const uint8_t* font);
     ~Label() = default;
     void onLoad() override;
     void onOffload() override;
