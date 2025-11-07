@@ -31,7 +31,7 @@ public:
     bool handleEvent(InputEvent event) override;
     bool onSelect() override;
 
-    void setPosition(uint16_t x, uint16_t y) { m_x = x; m_y = y; }
+    void setPosition(uint16_t x, uint16_t y) { m_x =x; m_y = y; }
     void setRadius(uint16_t radius) { m_radius = radius; }
     
     // API functions
