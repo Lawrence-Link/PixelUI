@@ -205,7 +205,7 @@ static AppRegistrar anim_demo_app({
 });
 #else
 AppItem anim_demo_app{
-    .title = "Label / Button Demo",
+    .title = "Anim Demo",
     .bitmap = image_Icon_Anim_Demo_bits,
     
     .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
