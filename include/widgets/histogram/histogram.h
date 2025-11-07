@@ -19,13 +19,6 @@
 
 #include "../IWidget.h"
 
-enum class EXPAND_BASE {
-    TOP_LEFT,
-    TOP_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_RIGHT
-};
-
 class Histogram : public IWidget {
 public:
     Histogram(

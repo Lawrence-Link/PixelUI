@@ -28,6 +28,7 @@
 #include <memory>
 #include <etl/stack.h>
 #include "widgets/histogram/histogram.h"
+#include "widgets/curve_chart/curve_chart.h"
 #include "widgets/brace/brace.h"
 #include "widgets/icon_button/icon_button.h"
 #include "focus/focus.h"
@@ -84,7 +85,7 @@ private:
     /** @brief Reference to the main UI context. */
     PixelUI& m_ui;
     /** @brief Widget for displaying historical data. */
-    Histogram histogram;
+    CurveChart histogram;
     /** @brief Widget for displaying a main, bracketed value. */
     Brace brace;
     /** @brief Manages focus and navigation between widgets. */

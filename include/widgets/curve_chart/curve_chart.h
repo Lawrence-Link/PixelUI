@@ -19,13 +19,6 @@
 
 #include "../IWidget.h"
 
-enum class EXPAND_BASE {
-    TOP_LEFT,
-    TOP_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_RIGHT
-};
-
 class CurveChart : public IWidget {
 public:
     CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp, uint16_t size_h_exp, EXPAND_BASE base);
