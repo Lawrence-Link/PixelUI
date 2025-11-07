@@ -28,7 +28,16 @@ enum class EXPAND_BASE {
 
 class Histogram : public IWidget {
 public:
-    Histogram(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h);
+    Histogram(
+        PixelUI& ui, 
+        uint16_t pos_x, 
+        uint16_t pos_y, 
+        uint16_t size_w, 
+        uint16_t size_h, 
+        uint16_t size_w_exp, 
+        uint16_t size_h_exp,
+        EXPAND_BASE base);
+
     ~Histogram() = default;
 
     void onLoad() override;
@@ -39,7 +48,6 @@ public:
 
     void setSize(uint16_t mar_w, uint16_t mar_h) { size_w_ = mar_w; size_h_ = mar_h; }
     void setPosition(uint16_t pos_x, uint16_t pos_y) { pos_x_ = pos_x; pos_y_ = pos_y; }
-    void setExpand(EXPAND_BASE base, uint16_t w, uint16_t h) {base_ = base; exp_w = w; exp_h = h;}
 
     bool isExpanded() const { return is_expanded; }
 

@@ -130,7 +130,7 @@ public:
     APP_COUNTER(PixelUI& ui) :
     m_ui(ui),
     // Initialize all member widgets with the UI reference
-    histogram(ui, 69, 45, 56, 18),
+    histogram(ui, 69, 45, 56, 18, 76, 63, EXPAND_BASE::BOTTOM_RIGHT),
     brace(ui, 3, 45, 56, 18),
     m_focusMan(ui),
     icon_battery(ui, 14, 2, 10, 6),
@@ -150,7 +150,7 @@ public:
 
         // --- HISTOGRAM SETUP ---
         // Define expansion behaviour (to full screen for stats view)
-        histogram.setExpand(EXPAND_BASE::BOTTOM_RIGHT, 76, 63);
+        // histogram.setExpand(EXPAND_BASE::BOTTOM_RIGHT, 76, 63);
 
         // --- BRACE SETUP ---
         // Set custom content drawing function for the brace widget

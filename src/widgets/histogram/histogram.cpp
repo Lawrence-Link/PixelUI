@@ -25,13 +25,30 @@
  * @param ui Reference to the PixelUI instance for rendering and animation.
  * @param pos_x X coordinate of the widget's top-left corner.
  * @param pos_y Y coordinate of the widget's top-left corner.
+ * @param size_w Width of the widget.
+ * @param size_h Height of the widget.
+ * @param size_w_exp Expanded width of the widget when expanded.
+ * @param size_h_exp Expanded height of the widget when expanded.
+ * @param base Expansion anchor base.
  */
-Histogram::Histogram(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h) : 
+Histogram::Histogram(
+    PixelUI& ui, 
+    uint16_t pos_x, 
+    uint16_t pos_y, 
+    uint16_t size_w, 
+    uint16_t size_h, 
+    uint16_t size_w_exp = 0, 
+    uint16_t size_h_exp = 0, 
+    EXPAND_BASE base = EXPAND_BASE::TOP_LEFT) : 
+
     m_ui(ui), 
     pos_x_(pos_x), 
     pos_y_(pos_y),
     size_w_(size_w),
-    size_h_(size_h)
+    size_h_(size_h),
+    exp_h(size_h_exp),
+    exp_w(size_w_exp),
+    base_(base)
 {
     // pos_x_ and pos_y_ now represent the top-left anchor point.
     int32_t start_anim_x = (size_w_ / 2);
@@ -80,7 +97,7 @@ void Histogram::onLoad() {
  */
 void Histogram::initializeDataBuffer() {
     // Allocate buffer based on expanded width or default size
-    m_buffer_size = exp_w > 0 ? exp_w : 200;
+    m_buffer_size = (exp_w > size_w_) ? exp_w : 200;
     
     // Check if buffer already exists before allocating
     // if (m_data_buffer != nullptr) {
