@@ -56,7 +56,6 @@ private:
 public:
     App_Button_Demo(PixelUI& ui): m_ui(ui), 
     m_focusman(ui),
-
     button_onload(ui, 13, 14, 44, 14, "onLoad"),
     button_top(ui, 85, 2, 41, 14, "Top"),
     button_bottom(ui, 85, 18, 41, 14, "Bottom"),

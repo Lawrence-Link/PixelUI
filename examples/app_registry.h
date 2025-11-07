@@ -28,7 +28,7 @@ extern AppItem charging_anim;
 extern AppItem ListViewDemo_app;
 extern AppItem time_setting_app;
 extern AppItem button_demo_app;
-
+extern AppItem anim_demo_app;
 void registerApps();
 
 #endif
