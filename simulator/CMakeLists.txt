@@ -17,7 +17,13 @@ set(U8G2_C_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/csrc")
 set(U8G2_CPP_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc")
 
 file(GLOB U8G2_C_SOURCES "${U8G2_C_SRC_DIR}/*.c")
+
 add_library(u8g2_c STATIC ${U8G2_C_SOURCES})
+
+if (APPLE)
+target_compile_definitions(u8g2_c PRIVATE U8G2_USE_LARGE_FONTS) # in order to use the wqy fonts
+endif()
+
 target_include_directories(u8g2_c PUBLIC ${U8G2_C_SRC_DIR})
 
 file(GLOB U8G2_CPP_SOURCES "${U8G2_CPP_SRC_DIR}/*.cpp")
