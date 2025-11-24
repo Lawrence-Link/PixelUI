@@ -30,6 +30,7 @@ void registerApps() {
     app_man.registerApp(time_setting_app);
     app_man.registerApp(button_demo_app);
     app_man.registerApp(anim_demo_app);
+    app_man.registerApp(greenhouse_app);
 }
 
 #endif

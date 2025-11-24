@@ -73,6 +73,7 @@ set(SIM_SOURCES
     ../examples/app_widgets_demo/app_demo_analogclock_numscroll.cpp
     ../examples/app_widgets_demo/app_demo_textbutton_label.cpp
     ../examples/app_widgets_demo/app_demo_animation.cpp
+    ../examples/app_greenhouse.cpp
 )
 
 if(NOT USE_STATIC_APP_REGISTER_ENABLED)
