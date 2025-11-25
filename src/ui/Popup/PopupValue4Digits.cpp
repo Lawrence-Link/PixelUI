@@ -16,8 +16,6 @@
  */
 
 /*
- * Copyright (C) 2025 Lawrence Link
- *
  * Four-digit numeric popup implementation based on PixelUI.
  * Key features:
  * 1. Four numeric widgets are instantiated on the stack (no dynamic allocation).

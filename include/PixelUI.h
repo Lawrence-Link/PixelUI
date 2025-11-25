@@ -180,6 +180,7 @@ public:
      * @param duration Display duration.
      * @param priority Popup priority.
      * @param update_cb function callback when value changed.
+     * @param use_apparent_val Don't display the "%"
      */
     void showPopupProgress(int32_t& value, 
         int32_t minValue, 

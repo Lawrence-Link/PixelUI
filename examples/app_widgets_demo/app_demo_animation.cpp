@@ -191,6 +191,7 @@ public:
     }
 
     void onExit() override {
+        m_ui.clearAllAnimations();
         m_ui.setContinousDraw(false);
     }
 };

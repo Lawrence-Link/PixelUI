@@ -29,7 +29,7 @@ private:
 
     int32_t anim_x = 0, anim_y = 0;
 public:
-    IconButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    IconButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const unsigned char* source = NULL);
     ~IconButton() = default;
     void onLoad() override;
     void onOffload() override;
