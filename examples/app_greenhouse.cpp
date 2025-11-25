@@ -61,7 +61,6 @@ public:
         CORO_DELAY(ctx, m_ui, 200, 200);
         m_ui.animate(anim_x2_clip_soil, 57, 650, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
         CORO_DELAY(ctx, m_ui, 200, 300);
-        m_ui.animate(anim_width_divider_line, 59, 500, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
         CORO_END(ctx);}),
     btn_light(m_ui, 30, 2, 23, 7, image_light_auto_bits),
     btn_pump(m_ui, 42, 17, 15, 11, image_pump_auto_bits),
@@ -78,6 +77,7 @@ public:
         m_ui.animate(anim_w_brd, anim_h_brd, 60, 37, 450, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
 
         focusManager.addWidget(&btn_light);
+        focusManager.addWidget(&btn_pump);
 
         anim_coroutine.start();
         m_ui.addCoroutine(&anim_coroutine);
@@ -88,7 +88,30 @@ public:
     }
 
     bool handleInput(InputEvent event) override {
-        requestExit();
+        // Check if an interactive widget (like the expanded histogram) has taken over input control
+        IWidget* activeWidget = focusManager.getActiveWidget();
+        if (activeWidget) {
+            // Pass the event to the active widget
+            if (activeWidget->handleEvent(event)) {
+                // If the widget returns true, it signifies the operation is complete (e.g., expanded view closed)
+                // and control should be returned to the FocusManager.
+                focusManager.clearActiveWidget();
+            }
+            return true; // Event was handled by an active widget
+        }
+
+        // No widget has taken over input; proceed with standard focus management and app control
+        if (event == InputEvent::BACK) {
+            requestExit(); // Request to close the application
+        } else if (event == InputEvent::RIGHT) {
+            focusManager.moveNext(); // Move focus to the next widget
+        } else if (event == InputEvent::LEFT) {
+            focusManager.movePrev(); // Move focus to the previous widget
+        } else if (event == InputEvent::SELECT) {
+            focusManager.selectCurrent(); // Trigger the action of the currently focused widget
+        }
+        return true; // Standard app input handling is always true
+
         return false;
     }
 
