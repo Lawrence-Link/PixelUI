@@ -1,0 +1,162 @@
+/*
+ * Copyright (C) 2025 Lawrence Link
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+#include "app_skeleton.h"
+
+Greenhouse_App::Greenhouse_App(PixelUI& ui) :
+m_ui(ui),
+anim_coroutine([this](CoroutineContext& ctx) {
+    CORO_BEGIN(ctx);
+    CORO_DELAY(ctx, m_ui, 160, 100);
+    btn_light.onLoad();
+    m_ui.animate(anim_x2_clip_light, 81, 950, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    m_ui.animate(anim_x_water_pump, 25, 350, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    brace_plant.onLoad();
+    CORO_DELAY(ctx, m_ui, 200, 200);
+    m_ui.animate(anim_x2_clip_soil, 57, 650, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    CORO_DELAY(ctx, m_ui, 200, 300);
+    CORO_END(ctx);}),
+btn_light(m_ui, 30, 2, 23, 7, image_light_auto_bits),
+btn_pump(m_ui, 42, 17, 15, 11, image_pump_auto_bits),
+brace_plant(m_ui, 3, 24, 29, 24),
+focusManager(m_ui)
+{
+        brace_plant.setDrawContentFunction([this]() {
+            m_ui.getU8G2().drawXBMP(7,25, 21, 23, image_plant_bits);
+        });
+}
+
+void Greenhouse_App::onEnter(ExitCallback exitCallback) {
+    IApplication::onEnter(exitCallback);
+    m_ui.animate(anim_w_brd, anim_h_brd, 60, 37, 450, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+
+    focusManager.addWidget(&btn_light);
+    focusManager.addWidget(&btn_pump);
+
+    anim_coroutine.start();
+    m_ui.addCoroutine(&anim_coroutine);
+}
+
+void Greenhouse_App::onExit() {
+    m_ui.clearAllAnimations();
+}
+
+bool Greenhouse_App::handleInput(InputEvent event) {
+    // Check if an interactive widget (like the expanded histogram) has taken over input control
+    IWidget* activeWidget = focusManager.getActiveWidget();
+    if (activeWidget) {
+        // Pass the event to the active widget
+        if (activeWidget->handleEvent(event)) {
+            // If the widget returns true, it signifies the operation is complete (e.g., expanded view closed)
+            // and control should be returned to the FocusManager.
+               focusManager.clearActiveWidget();
+            }
+            return true; // Event was handled by an active widget
+        }
+
+        // No widget has taken over input; proceed with standard focus management and app control
+        if (event == InputEvent::BACK) {
+            requestExit(); // Request to close the application
+        } else if (event == InputEvent::RIGHT) {
+            focusManager.moveNext(); // Move focus to the next widget
+        } else if (event == InputEvent::LEFT) {
+            focusManager.movePrev(); // Move focus to the previous widget
+        } else if (event == InputEvent::SELECT) {
+       focusManager.selectCurrent(); // Trigger the action of the currently focused widget
+    }
+    return true; // Standard app input handling is always true
+}
+
+void Greenhouse_App::draw() 
+{
+    U8G2& u8g2 = m_ui.getU8G2();
+    
+    u8g2.drawRFrame(58, 16, anim_w_brd, anim_h_brd, 3);
+    u8g2.drawFrame(122, 1, 4, 62);  // Progress bar frame
+    u8g2.drawFrame(123, 45, 2, 17); // Progress bar body
+
+    u8g2.drawXBM(6, 2, 22, 15, image_light_bits); // Draw lamp
+
+    u8g2.drawXBM(anim_x_water_pump, 17, 18, 25, image_water_pump_bits); // Draw water pump
+    // u8g2.drawXBM(30, 2, 23, 7, image_light_auto_bits); // Draw Lighting state (AUTO)
+
+    /* Draw wires */
+    u8g2.setClipWindow(30, 6, anim_x2_clip_light, 14);
+    u8g2.drawXBM(30, 6, 50, 8, image_wire_light_bits);
+    u8g2.setMaxClipWindow();
+    u8g2.setClipWindow(34, 44, anim_x2_clip_soil, 48);
+    u8g2.drawXBM(34, 44, 23, 4, image_wire_soil_bits);
+    u8g2.setMaxClipWindow();
+        
+    /* Labels */
+    u8g2.drawXBM(62, 19, 5, 11, image_tmpt_bits); // temperature icon
+    u8g2.drawXBM(1, 52, 5, 11, image_tmpt_bits);
+    u8g2.drawXBM(90, 20, 7, 10, image_humi_bits); // humidity icon
+    u8g2.drawXBM(40, 53, 7, 10, image_humi_bits);
+    u8g2.setFont(u8g2_font_5x8_tr);
+    u8g2.drawStr(63, 41, "P");
+    u8g2.drawStr(63, 50, "N");
+    u8g2.drawStr(91, 41, "K");
+    u8g2.drawStr(89, 50, "mg/Kg");
+        
+   /* Data drawing */
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawUTF8(9, 62, "20°C");
+    u8g2.drawStr(50, 62, "52 %");
+    u8g2.drawStr(83, 11, "120Lux");
+
+    u8g2.setFont(u8g2_font_5x7_tr);
+    u8g2.drawUTF8(69, 28, "20°C");
+    u8g2.drawStr(99, 28, "80%");
+    u8g2.drawStr(70, 41, "35"); // Phosphate
+    u8g2.drawStr(70, 50, "113"); // Potassium
+    u8g2.drawStr(97, 41, "150"); // Nitrogen
+
+    u8g2.drawHLine(58, 32, anim_width_divider_line);
+
+    btn_light.draw();
+    btn_pump.draw();
+    brace_plant.draw();
+    focusManager.draw();
+}
+
+#if USE_STATIC_APP_REGISTER_ENABLED
+static AppRegistrar registrar_greenhouse_app({
+    .title = "Greenhouse",
+    .bitmap = image_greenhouse_bits, // TODO: Add an icon bitmap here
+
+    // Provide a factory function to create application instance.
+    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> {
+        return std::make_shared<Greenhouse_App>(ui);
+    },
+
+    .order = 2
+});
+#else
+
+AppItem greenhouse_app{
+    .title = "Greenhouse",
+    .bitmap = image_greenhouse_bits, // TODO: Add an icon bitmap here
+
+    // Provide a factory function to create application instance.
+    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> {
+        return std::make_shared<Greenhouse_App>(ui);
+    },
+};
+
+#endif
