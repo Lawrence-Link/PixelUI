@@ -16,7 +16,6 @@
  */
 
 #include "focus/focus.h"
-#include <iostream>
 
 /**
  * @brief Clear the currently active widget, if any, and restore focus state.

@@ -301,7 +301,8 @@ void ListView::onResume() {
 /**
  * @brief Called when ListView is paused.
  */
-void ListView::onPause() {}
+void ListView::onPause() {
+}
 
 /**
  * @brief Called when ListView is exited.
@@ -311,7 +312,6 @@ void ListView::onPause() {}
 void ListView::onExit() {
     onSave();
     m_ui.setContinousDraw(false);
-    m_ui.getAnimationManPtr()->clearAllProtectionMarks();
 }
 
 /**

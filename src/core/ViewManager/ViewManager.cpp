@@ -22,10 +22,10 @@
 */
 void ViewManager::push(std::shared_ptr<IApplication> app) {
     if (!app) return;
-        std::lock_guard<std::mutex> lock(m_stackMutex);
         m_isTransitioning = true;
 
         if (!m_viewStack.empty()) {
+            m_ui.clearAllAnimations();
             m_viewStack.top()->onPause(); // Pause the current top application
         }
 
@@ -42,7 +42,7 @@ void ViewManager::push(std::shared_ptr<IApplication> app) {
 @brief Pops the current application from the view stack and resumes the previous application if available.
 */
 void ViewManager::pop() {
-    std::lock_guard<std::mutex> lock(m_stackMutex);
+    // std::lock_guard<std::mutex> lock(m_stackMutex);
 
     if (m_viewStack.empty()) return;
 
@@ -55,6 +55,7 @@ void ViewManager::pop() {
 
     m_viewStack.pop(); 
 
+    m_ui.clearAllAnimations();
     if (!m_viewStack.empty()) {
         auto& previousApp = m_viewStack.top();
         m_ui.setDrawable( previousApp ); // setting up new drawable
@@ -66,7 +67,6 @@ void ViewManager::pop() {
 }
 
 std::shared_ptr<IApplication> ViewManager::getCurrentApp() const {
-    std::lock_guard<std::mutex> lock(m_stackMutex);
     if (m_viewStack.empty()) return nullptr;
     return m_viewStack.top();
 }

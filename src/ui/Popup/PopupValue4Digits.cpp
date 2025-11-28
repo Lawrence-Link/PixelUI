@@ -115,9 +115,9 @@ void PopupValue4Digits::drawContent(int16_t centerX, int16_t centerY, int16_t cu
     m_focusMan.draw();
 
     // Optional: show percentage or unit (currently placeholder)
-    char percentBuffer[16];
-    int16_t percentWidth = u8g2.getStrWidth(percentBuffer);
-    u8g2.drawStr(centerX - percentWidth / 2, centerY + 17, percentBuffer);
+    // char percentBuffer[16];
+    // int16_t percentWidth = u8g2.getStrWidth(percentBuffer);
+    // u8g2.drawStr(centerX - percentWidth / 2, centerY + 17, percentBuffer);
 }
 
 // Handle input events
