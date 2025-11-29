@@ -62,6 +62,7 @@ void IconView::onResume() {
 void IconView::onPause() {
     ui_.markFading();
     ui_.clearAllAnimations();
+    animation_selector_length = selector_length;
 }
 
 /**
