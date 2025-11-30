@@ -70,9 +70,9 @@ void PixelUI::begin() { }
  */
 void PixelUI::Heartbeat(uint32_t ms) {
     _currentTime += ms;
-    m_animationManagerPtr->update(_currentTime);
     m_popupManagerPtr->updatePopups(_currentTime);
     m_coroutineSchedulerPtr->update(_currentTime);
+    m_animationManagerPtr->update(_currentTime);
 }
 
 /**

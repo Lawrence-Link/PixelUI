@@ -21,11 +21,12 @@
 
 class IconButton : public IWidget {
 private:
-    const unsigned char* src;
     std::function<void()> m_callback;
     
     PixelUI& m_ui;
     int32_t pos_x = 0, pos_y = 0, m_w = 0, m_h = 0;
+
+    const unsigned char* src;
 
     int32_t anim_x = 0, anim_y = 0;
 public:

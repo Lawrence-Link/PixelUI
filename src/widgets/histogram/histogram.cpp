@@ -46,8 +46,8 @@ Histogram::Histogram(
     pos_y_(pos_y),
     size_w_(size_w),
     size_h_(size_h),
-    exp_h(size_h_exp),
     exp_w(size_w_exp),
+    exp_h(size_h_exp),
     base_(base)
 {
     // pos_x_ and pos_y_ now represent the top-left anchor point.
