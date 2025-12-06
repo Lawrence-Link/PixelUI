@@ -22,7 +22,7 @@
  * @brief Construct an IconView instance and initialize slot positions.
  * @param ui Reference to the PixelUI context.
  */
-IconView::IconView(PixelUI& ui) : ui_(ui) {
+IconView::IconView(PixelUI& ui, const uint8_t * font) : ui_(ui), font_title(font) {
     initializeSlotPositions();
 }
 
@@ -250,7 +250,7 @@ void IconView::drawSelectedItemTitle() {
     if (items_.empty()) return;
     U8G2& display = ui_.getU8G2();
     const auto& currentItem = items_[currentIndex_];
-    display.setFont(u8g2_font_wqy12_t_gb2312);
+    display.setFont(font_title);
     int titleWidth = display.getUTF8Width(currentItem.title);
     display.drawUTF8((display.getWidth() - titleWidth) / 2, animation_item_title_Y, currentItem.title);
 }
