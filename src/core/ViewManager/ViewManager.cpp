@@ -25,6 +25,7 @@ void ViewManager::push(std::shared_ptr<IApplication> app) {
         m_isTransitioning = true;
 
         if (!m_viewStack.empty()) {
+            m_ui.clearAllCoroutines();
             m_ui.clearAllAnimations();
             m_viewStack.top()->onPause(); // Pause the current top application
         }
@@ -55,6 +56,7 @@ void ViewManager::pop() {
 
     m_viewStack.pop(); 
 
+    m_ui.clearAllCoroutines();
     m_ui.clearAllAnimations();
     if (!m_viewStack.empty()) {
         auto& previousApp = m_viewStack.top();

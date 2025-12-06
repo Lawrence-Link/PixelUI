@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
     worker.start();  // enable background thread for u8g2 emulation
     int ret = app.exec();
     worker.stop();   // stop the worker thread gracefully :)
-
+    
+    delete hbTimer;
     return ret;
 }
