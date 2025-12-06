@@ -63,14 +63,8 @@ void CurveChart::onLoad() {
     m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
     m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
     
-    // ---------------------------------
-    FocusBox fbox;
-    fbox.x = pos_x_ + 1; // Top-Left X + 1
-    fbox.y = pos_y_ + 1; // Top-Left Y + 1
-    fbox.w = size_w_ - 1;
-    fbox.h = size_h_ - 1;
-    
-    setFocusBox(fbox);
+    // Focusbox config
+    setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
 
     // Initialize internal data structures
     initializeDataBuffer();

@@ -27,7 +27,10 @@
  */
 Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, const uint8_t* font)
     : m_ui(ui), m_x(x), m_y(y), src(content), load_pos(pos), m_font(font)
-{ }
+{
+    setFocusable(true);
+    setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
+}
 
 /**
  * @brief Initialize the label when loaded. Calculates animated starting position
@@ -63,9 +66,6 @@ void Label::onLoad() {
             m_ui.animate(anim_x, m_x, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
         } break;
     }
-
-    // Set focus box slightly inside label boundaries
-    setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
 }
 
 /**

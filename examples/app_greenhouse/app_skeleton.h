@@ -22,6 +22,9 @@ private:
     int32_t anim_x2_clip_soil = 20, anim_y2_clip_soil = 20;
     int32_t anim_x_water_pump = 42;
     int32_t anim_width_divider_line = 0;
+
+    enum class ControlState {AUTO, ON};
+    ControlState state_pump = ControlState::AUTO, state_lamp = ControlState::AUTO;
 public:
 
     Greenhouse_App(PixelUI& ui);

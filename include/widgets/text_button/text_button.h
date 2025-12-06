@@ -50,7 +50,13 @@ public:
 
     // Setters
     void setCallback(std::function<void()> cb) { m_callback = cb; }
-    void setPosition(uint16_t x, uint16_t y) { m_x = x; m_y = y; }
-    void setSize(uint16_t w, uint16_t h) { m_w = w; m_h = h; }
+    void setPosition(uint16_t x, uint16_t y) {
+        m_x = x; m_y = y; 
+        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2)); // reconfigure the focusbox
+    }
+    void setSize(uint16_t w, uint16_t h) {
+        m_w = w; m_h = h; 
+        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2)); // reconfigure the focusbux
+    }
     void setText(const char* text) { src = text; }
 };

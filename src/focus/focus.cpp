@@ -137,6 +137,12 @@ void FocusManager::selectCurrent() {
             m_state = State::IDLE;
         }
     }
+    
+    FocusBox target = m_Widgets[index]->getFocusBox();
+    m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
+    m_ui.animate(m_current_focus_box.y, target.y, 100, EasingType::EASE_OUT_QUAD);
+    m_ui.animate(m_current_focus_box.w, target.w, 100, EasingType::EASE_OUT_QUAD);
+    m_ui.animate(m_current_focus_box.h, target.h, 100, EasingType::EASE_OUT_QUAD);
 }
 
 /**

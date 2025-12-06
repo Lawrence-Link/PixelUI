@@ -39,6 +39,18 @@ focusManager(m_ui)
         brace_plant.setDrawContentFunction([this]() {
             m_ui.getU8G2().drawXBMP(7,25, 21, 23, image_plant_bits);
         });
+
+        btn_light.setCallback([this]() {
+            state_lamp = static_cast<ControlState> (!(bool)state_lamp);
+            btn_light.setSource((state_lamp == ControlState::AUTO) ? image_light_auto_bits : image_light_on_bits );
+            if (state_lamp == ControlState::ON) btn_light.setSize(11,7);
+            else btn_light.setSize(23, 7);
+        });
+
+        btn_pump.setCallback([this]() {
+            state_pump = static_cast<ControlState> (!(bool)state_pump);
+            btn_pump.setSource((state_pump == ControlState::AUTO) ? image_pump_auto_bits : image_pump_on_bits);
+        });
 }
 
 void Greenhouse_App::onEnter(ExitCallback exitCallback) {
@@ -151,7 +163,7 @@ static AppRegistrar registrar_greenhouse_app({
 
 AppItem greenhouse_app{
     .title = "Greenhouse",
-    .bitmap = image_greenhouse_bits, // TODO: Add an icon bitmap here
+    .bitmap = image_icon_greenhouse_bits, // TODO: Add an icon bitmap here
 
     // Provide a factory function to create application instance.
     .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> {

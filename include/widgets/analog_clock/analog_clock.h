@@ -55,7 +55,7 @@ private:
     uint8_t m_minute = 0;     // Current minute (0-59)
     uint8_t m_second = 0;     // Current second (0-59)
     
-    // 动画状态
+    // Animation varibles
     AnimState m_anim_state = AnimState::EXPANDING;  
     int32_t m_dial_progress = 0;     // (0-360)
     int32_t m_marks_progress = 0;    // (0-14 for better curve)
