@@ -94,14 +94,11 @@ CoroutineScheduler::CoroutineScheduler(PixelUI& ui) : ui_(ui) {}
  */
 void CoroutineScheduler::addCoroutine(Coroutine* coroutine) { // <-- 改为 Coroutine*
     // Check if the pointer is null
+    std::lock_guard<std::mutex> lock (mutex_);
     if (!coroutine) return; 
     
     // Add the coroutine to the internal list
     coroutines_.push_back(coroutine);
-    
-    // Start the coroutine (e.g., set its initial state or execute the first step)
-    // 注意：我们将 start() 的调用移到了 app_about.cpp 中，以保持一致性
-    // coroutine->start(); // <-- 这一行可以保留，也可以像 app_about.cpp 中那样在添加前调用
 }
 
 /**
@@ -110,6 +107,7 @@ void CoroutineScheduler::addCoroutine(Coroutine* coroutine) { // <-- 改为 Coro
  * @param coroutine A shared pointer to the Coroutine object to be removed.
  */
 void CoroutineScheduler::removeCoroutine(Coroutine* coroutine) { // <-- 改为 Coroutine*
+    std::lock_guard<std::mutex> lock(mutex_);
     // Use the erase-remove idiom to safely remove the matching element from the vector.
     coroutines_.erase(
         std::remove(coroutines_.begin(), coroutines_.end(), coroutine),
@@ -125,6 +123,7 @@ void CoroutineScheduler::removeCoroutine(Coroutine* coroutine) { // <-- 改为 C
  * used to determine if a coroutine's resume condition has been met.
  */
 void CoroutineScheduler::update(uint32_t currentTime) {
+    std::lock_guard<std::mutex> lock(mutex_);
     // Remove finished coroutines
     // Use the erase-remove_if idiom to remove all coroutines for which isFinished() returns true.
     coroutines_.erase(
@@ -150,6 +149,7 @@ void CoroutineScheduler::update(uint32_t currentTime) {
  * * Stops and clears all coroutines currently being scheduled or waiting for execution.
  */
 void CoroutineScheduler::clear() {
+    std::lock_guard<std::mutex> lock(mutex_);
     // Empty the internal vector storing the coroutines
     coroutines_.clear();
 }
@@ -159,5 +159,6 @@ void CoroutineScheduler::clear() {
  * * @return The total number of coroutines currently in the scheduler, either running or suspended.
  */
 size_t CoroutineScheduler::getActiveCount() const {
+    std::lock_guard<std::mutex> lock(mutex_);
     return coroutines_.size();
 }
