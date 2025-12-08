@@ -27,7 +27,7 @@
  * removes the lowest priority popup to make room for the new one.
  */
 void PopupManager::addPopup(std::shared_ptr<IPopup> popup) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    // std::lock_guard<std::mutex> lock(mutex_);
     if (!popup) return;
 
     if (_popups.size() >= _popups.max_size()) {
@@ -58,7 +58,7 @@ void PopupManager::addPopup(std::shared_ptr<IPopup> popup) {
  * Finds the popup in the container and erases it.
  */
 void PopupManager::removePopup(std::shared_ptr<IPopup> popup) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    // std::lock_guard<std::mutex> lock(mutex_);
     auto it = std::find(_popups.begin(), _popups.end(), popup);
     if (it != _popups.end()) {
         _popups.erase(it);
@@ -69,7 +69,7 @@ void PopupManager::removePopup(std::shared_ptr<IPopup> popup) {
  * @brief Clear all popups from the manager
  */
 void PopupManager::clearPopups() {
-    std::lock_guard<std::mutex> lock(mutex_);
+    // std::lock_guard<std::mutex> lock(mutex_);
     _popups.clear();
 }
 
@@ -80,7 +80,7 @@ void PopupManager::clearPopups() {
  * are drawn on top.
  */
 void PopupManager::drawPopups() {
-    std::lock_guard<std::mutex> lock(mutex_);
+    // std::lock_guard<std::mutex> lock(mutex_);
     for (auto& popup : _popups) {
         popup->draw();
     }
@@ -94,7 +94,7 @@ void PopupManager::drawPopups() {
  * return false (finished animation or expired).
  */
 void PopupManager::updatePopups(uint32_t currentTime) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    // std::lock_guard<std::mutex> lock(mutex_);
     auto it = _popups.begin();
     while (it != _popups.end()) {
         if (!(*it)->update(currentTime)) {
@@ -114,7 +114,7 @@ void PopupManager::updatePopups(uint32_t currentTime) {
  * the first chance to consume the input.
  */
 bool PopupManager::handleTopPopupInput(InputEvent event) {
-    std::lock_guard<std::mutex> lock(mutex_);
+    // std::lock_guard<std::mutex> lock(mutex_);
     for (auto it = _popups.rbegin(); it != _popups.rend(); ++it) {
         if ((*it)->handleInput(event)) {
             return true; 

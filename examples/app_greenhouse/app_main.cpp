@@ -150,7 +150,7 @@ void Greenhouse_App::draw()
 #if USE_STATIC_APP_REGISTER_ENABLED
 static AppRegistrar registrar_greenhouse_app({
     .title = "Greenhouse",
-    .bitmap = image_greenhouse_bits, // TODO: Add an icon bitmap here
+    .bitmap = image_icon_greenhouse_bits, // TODO: Add an icon bitmap here
 
     // Provide a factory function to create application instance.
     .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> {

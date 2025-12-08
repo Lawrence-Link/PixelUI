@@ -70,9 +70,7 @@ void PixelUI::begin() { }
  */
 void PixelUI::Heartbeat(uint32_t ms) {
     _currentTime += ms;
-    m_popupManagerPtr->updatePopups(_currentTime);
-    m_coroutineSchedulerPtr->update(_currentTime);
-    m_animationManagerPtr->update(_currentTime);
+    update_symbol_.store(1);
 }
 
 /**
@@ -89,6 +87,8 @@ void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
  */
 void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
                       EasingType easing, PROTECTION prot) {
+
+    assert(this != nullptr);
     auto animation = std::make_shared<CallbackAnimation>(
         value, targetValue, duration, easing,
         [&value](int32_t currentValue) { value = currentValue; }
@@ -102,6 +102,8 @@ void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
  */
 void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY,
                       uint32_t duration, EasingType easing, PROTECTION prot) {
+
+    assert(this != nullptr);
     auto animX = std::make_shared<CallbackAnimation>(x, targetX, duration, easing, [&x](int32_t val) { x = val; });
     auto animY = std::make_shared<CallbackAnimation>(y, targetY, duration, easing, [&y](int32_t val) { y = val; });
     addAnimation(animX);
@@ -119,6 +121,13 @@ void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY,
  */
 void PixelUI::renderer() {
     if (m_viewManagerPtr->isTransitioning()) return;
+
+    if (update_symbol_) { // check for update before rendering context
+        update_symbol_.store(0) ;
+        m_popupManagerPtr->updatePopups(_currentTime);
+        m_coroutineSchedulerPtr->update(_currentTime);
+        m_animationManagerPtr->update(_currentTime);
+    }
 
     static uint8_t lastPopupCount = 0;
     uint8_t currentPopupCount = m_popupManagerPtr->getPopupCounts();

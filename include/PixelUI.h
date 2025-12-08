@@ -227,6 +227,7 @@ private:
 
     uint32_t _currentTime = 0;
     std::shared_ptr<IDrawable> currentDrawable_;
+    std::atomic_bool update_symbol_ = false;
 
     bool isDirty_ = false;
     bool isFading_ = false;
