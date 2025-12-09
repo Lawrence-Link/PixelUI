@@ -5,7 +5,6 @@
 #include "core/coroutine/Coroutine.h"
 #include "widgets/icon_button/icon_button.h"
 #include "widgets/brace/brace.h"
-#include "focus/focus.h"
 #include "app_resources.h"
 
 class Greenhouse_App : public IApplication {
@@ -15,7 +14,6 @@ private:
     IconButton btn_light;
     IconButton btn_pump;
     Brace brace_plant;
-    FocusManager focusManager;
 
     int32_t anim_w_brd = 70, anim_h_brd = 70;
     int32_t anim_x2_clip_light = 30, anim_y2_clip_light= 6;

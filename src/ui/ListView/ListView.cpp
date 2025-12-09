@@ -271,10 +271,29 @@ void ListView::navigateRight() { selectCurrent(); }
  */
 bool ListView::handleInput(InputEvent event) {
     switch (event) {
-        case InputEvent::LEFT: navigateUp(); return true;
-        case InputEvent::RIGHT: navigateDown(); return true;
-        case InputEvent::SELECT: navigateRight(); return true;
-        case InputEvent::BACK: requestExit(); return true;
+        #ifdef LISTVIEW_NAVI_UP 
+        case LISTVIEW_NAVI_UP: navigateUp(); return true; 
+        #endif
+
+        #ifdef LISTVIEW_NAVI_DOWN
+        case LISTVIEW_NAVI_DOWN: navigateDown(); return true;
+        #endif
+
+        #ifdef LISTVIEW_NAVI_RIGHT
+        case LISTVIEW_NAVI_RIGHT: navigateRight(); return true;
+        #endif
+
+        #ifdef LISTVIEW_NAVI_BACK
+        case LISTVIEW_NAVI_BACK: requestExit(); return true;
+        #endif
+
+        #ifdef LISTVIEW_NAVI_LEFT
+        case LISTVIEW_NAVI_LEFT: navigateLeft(); return true;
+        #endif
+
+        #ifdef LISTVIEW_NAVI_SELECT
+        case LISTVIEW_NAVI_SELECT: selectCurrent(); return true;
+        #endif
         default: return false;
     }
 }

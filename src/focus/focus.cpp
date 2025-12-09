@@ -40,6 +40,38 @@ void FocusManager::clearActiveWidget() {
         }
     }
 }
+/**
+ * @brief Handle input events for focus management.
+ * @param event The input event to handle.
+ * @return true if the event was handled by an active widget, false otherwise.
+ */
+bool FocusManager::handleInput(InputEvent event) {
+    // Check if an interactive widget (like the expanded histogram) has taken over input control
+    IWidget* activeWidget = getActiveWidget();
+    if (activeWidget) {
+        // Pass the event to the active widget
+        if (activeWidget->handleEvent(event)) {
+            // If the widget returns true, it signifies the operation is complete (e.g., expanded view closed)
+            // and control should be returned to the FocusManager.
+            clearActiveWidget();
+        }
+        return true; // Event was handled by an active widget
+    }
+
+    // No widget has taken over input; proceed with standard focus management and app control
+    if (!m_Widgets.empty()) {
+        if (event == FOCUS_MANAGER_NAVI_NEXT) {
+            moveNext(); // Move focus to the next widget
+        } else if (event == FOCUS_MANAGER_NAVI_PREV) {
+            movePrev(); // Move focus to the previous widget
+        } else if (event == FOCUS_MANAGER_NAVI_SELECT) {
+            selectCurrent(); // Select the currently focused widget
+        } else {
+            return false; // Event was not handled
+        }
+    }
+    return true; // Event was handled  
+}
 
 /**
  * @brief Check if the active widget has timed out.

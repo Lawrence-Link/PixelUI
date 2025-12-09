@@ -72,10 +72,10 @@ void IconView::onPause() {
  */
 bool IconView::handleInput(InputEvent event) {
     switch (event) {
-        case InputEvent::LEFT:   navigateLeft(); return true;
-        case InputEvent::RIGHT:  navigateRight(); return true;
-        case InputEvent::SELECT: selectCurrentItem(); return true;
-        case InputEvent::BACK:   requestExit(); return true; // Trigger exit callback.
+        case ICONVIEW_NAVI_LEFT:   navigateLeft(); return true;
+        case ICONVIEW_NAVI_RIGHT:  navigateRight(); return true;
+        case ICONVIEW_NAVI_SELECT: selectCurrentItem(); return true;
+        case ICONVIEW_NAVI_BACK:   requestExit(); return true; // Trigger exit callback.
         default: return false;
     }
 }

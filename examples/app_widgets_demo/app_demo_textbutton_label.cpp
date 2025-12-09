@@ -40,8 +40,6 @@ private:
     TextButton button_right;
     Label label_demo;
     
-    FocusManager m_focusman;
-
     int32_t anim_title_bar = 0;
     int32_t anim_title_x = -50;
     int32_t anim_analog_clock_x = 103;
@@ -55,7 +53,6 @@ private:
 
 public:
     App_Button_Demo(PixelUI& ui): m_ui(ui), 
-    m_focusman(ui),
     button_onload(ui, 13, 14, 44, 14, "onLoad"),
     button_top(ui, 85, 2, 41, 14, "Top"),
     button_bottom(ui, 85, 18, 41, 14, "Bottom"),
@@ -97,29 +94,13 @@ public:
         button_left.draw();
         button_right.draw();
         label_demo.draw();
-        m_focusman.draw();
     }
 
     bool handleInput(InputEvent event) override {
-        IWidget* activeWidget = m_focusman.getActiveWidget();
-        if (activeWidget) {
-            // If so, pass the event to that widget
-            if (activeWidget->handleEvent(event)) {
-                // If the widget returns true, it means it has finished processing and control is handed back to the FocusManager
-                m_focusman.clearActiveWidget();
-            }
-            return true; // Event has been handled, return true
-        }
         // No widget has taken over input, execute the original focus management logic
         if (event == InputEvent::BACK) {
             requestExit();
-        } else if (event == InputEvent::RIGHT) {
-            m_focusman.moveNext();
-        } else if (event == InputEvent::LEFT) {
-            m_focusman.movePrev();
-        } else if (event == InputEvent::SELECT) {
-            m_focusman.selectCurrent();
-        }
+        } 
         return true;
     }
     
@@ -158,11 +139,11 @@ public:
             m_slide = slide_direction::slide_bottom;
         });
 
-        m_focusman.addWidget(&button_onload);
-        m_focusman.addWidget(&button_top);
-        m_focusman.addWidget(&button_bottom);
-        m_focusman.addWidget(&button_left);
-        m_focusman.addWidget(&button_right);
+        m_ui.addWidgetToFocusManager(&button_onload);
+        m_ui.addWidgetToFocusManager(&button_top);
+        m_ui.addWidgetToFocusManager(&button_bottom);
+        m_ui.addWidgetToFocusManager(&button_left);
+        m_ui.addWidgetToFocusManager(&button_right);
     }
 
     void onResume() override {

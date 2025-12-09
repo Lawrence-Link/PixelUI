@@ -33,8 +33,7 @@ anim_coroutine([this](CoroutineContext& ctx) {
     CORO_END(ctx);}),
 btn_light(m_ui, 30, 2, 23, 7, image_light_auto_bits),
 btn_pump(m_ui, 42, 17, 15, 11, image_pump_auto_bits),
-brace_plant(m_ui, 3, 24, 29, 24),
-focusManager(m_ui)
+brace_plant(m_ui, 3, 24, 29, 24)
 {
         brace_plant.setDrawContentFunction([this]() {
             m_ui.getU8G2().drawXBMP(7,25, 21, 23, image_plant_bits);
@@ -57,8 +56,8 @@ void Greenhouse_App::onEnter(ExitCallback exitCallback) {
     IApplication::onEnter(exitCallback);
     m_ui.animate(anim_w_brd, anim_h_brd, 60, 37, 450, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
 
-    focusManager.addWidget(&btn_light);
-    focusManager.addWidget(&btn_pump);
+    m_ui.addWidgetToFocusManager(&btn_light);
+    m_ui.addWidgetToFocusManager(&btn_pump);
 
     anim_coroutine.start();
     m_ui.addCoroutine(&anim_coroutine);
@@ -69,28 +68,9 @@ void Greenhouse_App::onExit() {
 }
 
 bool Greenhouse_App::handleInput(InputEvent event) {
-    // Check if an interactive widget (like the expanded histogram) has taken over input control
-    IWidget* activeWidget = focusManager.getActiveWidget();
-    if (activeWidget) {
-        // Pass the event to the active widget
-        if (activeWidget->handleEvent(event)) {
-            // If the widget returns true, it signifies the operation is complete (e.g., expanded view closed)
-            // and control should be returned to the FocusManager.
-               focusManager.clearActiveWidget();
-            }
-            return true; // Event was handled by an active widget
-        }
-
-        // No widget has taken over input; proceed with standard focus management and app control
-        if (event == InputEvent::BACK) {
-            requestExit(); // Request to close the application
-        } else if (event == InputEvent::RIGHT) {
-            focusManager.moveNext(); // Move focus to the next widget
-        } else if (event == InputEvent::LEFT) {
-            focusManager.movePrev(); // Move focus to the previous widget
-        } else if (event == InputEvent::SELECT) {
-       focusManager.selectCurrent(); // Trigger the action of the currently focused widget
-    }
+    if (event == InputEvent::BACK) {
+        requestExit(); // Request to close the application
+    }  
     return true; // Standard app input handling is always true
 }
 
@@ -144,7 +124,6 @@ void Greenhouse_App::draw()
     btn_light.draw();
     btn_pump.draw();
     brace_plant.draw();
-    focusManager.draw();
 }
 
 #if USE_STATIC_APP_REGISTER_ENABLED

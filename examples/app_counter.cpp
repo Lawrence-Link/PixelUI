@@ -88,8 +88,6 @@ private:
     CurveChart histogram;
     /** @brief Widget for displaying a main, bracketed value. */
     Brace brace;
-    /** @brief Manages focus and navigation between widgets. */
-    FocusManager m_focusMan;
     /** @brief Icon button for battery status. */
     IconButton icon_battery;
     /** @brief Icon button for alert status. */
@@ -133,7 +131,6 @@ public:
     // Initialize all member widgets with the UI reference
     histogram(ui, 69, 45, 56, 18, 76, 63, EXPAND_BASE::BOTTOM_RIGHT),
     brace(ui, 3, 45, 56, 18),
-    m_focusMan(ui),
     icon_battery(ui, 14, 2, 10, 6),
     icon_alert(ui, 28, 1, 9, 7),
     icon_sounding(ui, 40, 1, 7, 7),
@@ -169,8 +166,8 @@ public:
 
         // --- FOCUS MANAGEMENT SETUP ---
         // Add interactive widgets to the focus manager
-        m_focusMan.addWidget(&brace);
-        m_focusMan.addWidget(&histogram);
+        m_ui.addWidgetToFocusManager(&brace);
+        m_ui.addWidgetToFocusManager(&histogram);
 
         // Initialize state machine and first-time flag
         loadState = LoadState::INIT;
@@ -302,9 +299,6 @@ public:
             u8g2.drawStr(3, 50, "0.25uSv/h");
         }
         histogram.draw();
-
-        // Draw the focus box for the currently selected widget
-        m_focusMan.draw();
     }
 
     /**
@@ -313,28 +307,9 @@ public:
      * @return true if the event was handled, false otherwise.
      */
     bool handleInput(InputEvent event) override {
-        // Check if an interactive widget (like the expanded histogram) has taken over input control
-        IWidget* activeWidget = m_focusMan.getActiveWidget();
-        if (activeWidget) {
-            // Pass the event to the active widget
-            if (activeWidget->handleEvent(event)) {
-                // If the widget returns true, it signifies the operation is complete (e.g., expanded view closed)
-                // and control should be returned to the FocusManager.
-                m_focusMan.clearActiveWidget();
-            }
-            return true; // Event was handled by an active widget
-        }
-
-        // No widget has taken over input; proceed with standard focus management and app control
         if (event == InputEvent::BACK) {
             requestExit(); // Request to close the application
-        } else if (event == InputEvent::RIGHT) {
-            m_focusMan.moveNext(); // Move focus to the next widget
-        } else if (event == InputEvent::LEFT) {
-            m_focusMan.movePrev(); // Move focus to the previous widget
-        } else if (event == InputEvent::SELECT) {
-            m_focusMan.selectCurrent(); // Trigger the action of the currently focused widget
-        }
+        } 
         return true; // Standard app input handling is always true
     }
 

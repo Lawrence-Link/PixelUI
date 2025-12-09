@@ -33,6 +33,7 @@ void ViewManager::push(std::shared_ptr<IApplication> app) {
         m_viewStack.push(app);    // Push the new application onto the stack
         m_ui.setDrawable(app);    // Grant app with drawable control
         
+        m_ui.clearFocusManager();
         app->onEnter([this]() {this->pop();}); // Handle app with exit callback
         m_ui.markDirty();
 
@@ -56,6 +57,7 @@ void ViewManager::pop() {
 
     m_viewStack.pop(); 
 
+    m_ui.clearFocusManager();
     m_ui.clearAllCoroutines();
     m_ui.clearAllAnimations();
     if (!m_viewStack.empty()) {

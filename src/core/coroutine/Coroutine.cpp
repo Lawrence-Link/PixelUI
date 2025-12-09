@@ -47,7 +47,7 @@ void Coroutine::resume(uint32_t currentTime) {
     }
     
     if (context_.state == CoroutineState::RUNNING) {
-        function_(context_); // <-- 不再传递 ui_
+        function_(context_); 
     }
 }
 
@@ -58,7 +58,6 @@ void Coroutine::reset() {
     context_.state = CoroutineState::CREATED;
     context_.pc = 0;
     context_.waitUntil = 0;
-    // 注意: localData 未清零，这通常是期望的行为，但如果需要可以添加
 }
 
 
@@ -128,7 +127,7 @@ void CoroutineScheduler::update(uint32_t currentTime) {
     // Use the erase-remove_if idiom to remove all coroutines for which isFinished() returns true.
     coroutines_.erase(
         std::remove_if(coroutines_.begin(), coroutines_.end(),
-            [](const Coroutine* coro) { // <-- 改为 Coroutine*
+            [](const Coroutine* coro) { 
                 return coro->isFinished(); // Check if the coroutine has completed its work
             }),
         coroutines_.end()

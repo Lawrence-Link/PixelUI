@@ -114,17 +114,23 @@ bool NumScroll::handleEvent(InputEvent event) {
     updateInteractionTime(m_ui.getCurrentTime());
 
     switch (event) {
-        case InputEvent::LEFT:
+        #ifdef NUMSCROLL_NAVI_DOWN
+        case NUMSCROLL_NAVI_DOWN:
             decrementValue();
             return false;
+        #endif
 
-        case InputEvent::RIGHT:
+        #ifdef NUMSCROLL_NAVI_UP
+        case NUMSCROLL_NAVI_UP:
             incrementValue();
             return false;
+        #endif
 
-        case InputEvent::SELECT:
+        #ifdef NUMSCROLL_NAVI_SELECT
+        case NUMSCROLL_NAVI_SELECT:
             m_ui.markDirty();
             return true;
+        #endif
 
         default:
             return false;

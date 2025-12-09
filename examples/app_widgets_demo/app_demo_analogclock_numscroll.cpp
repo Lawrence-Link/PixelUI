@@ -32,7 +32,6 @@ class TimeSetting : public IApplication {
 private:
     PixelUI& m_ui;
     NumScroll num_h, num_m, num_s;
-    FocusManager m_focusman;
     Clock clock;
     TextButton button_sync;
     Label title;
@@ -47,7 +46,6 @@ public:
     num_h(ui,  1, 25, 24, 16), 
     num_m(ui, 27, 25, 24, 16), 
     num_s(ui, 53, 25, 24, 16), 
-    m_focusman(ui),
     clock(ui, 103, 32, 20),
     button_sync(ui, 1, 44, 76, 17),
     title(ui, 3, 14, "RTC时间"),
@@ -86,28 +84,11 @@ public:
         clock.draw();
         button_sync.draw();
         title.draw();
-        m_focusman.draw();
     }
 
     bool handleInput(InputEvent event) override {
-        IWidget* activeWidget = m_focusman.getActiveWidget();
-        if (activeWidget) {
-            // If so, pass the event to that widget
-            if (activeWidget->handleEvent(event)) {
-                // If the widget returns true, it means it has finished processing and control is handed back to the FocusManager
-                m_focusman.clearActiveWidget();
-            }
-            return true; // Event has been handled, return true
-        }
-        // No widget has taken over input, execute the original focus management logic
         if (event == InputEvent::BACK) {
             requestExit();
-        } else if (event == InputEvent::RIGHT) {
-            m_focusman.moveNext();
-        } else if (event == InputEvent::LEFT) {
-            m_focusman.movePrev();
-        } else if (event == InputEvent::SELECT) {
-            m_focusman.selectCurrent();
         }
         return true;
     }
@@ -139,10 +120,10 @@ public:
         animationCoroutine_.start();
         m_ui.addCoroutine(&animationCoroutine_);
 
-        m_focusman.addWidget(&num_h);
-        m_focusman.addWidget(&num_m);
-        m_focusman.addWidget(&num_s);
-        m_focusman.addWidget(&button_sync);
+        m_ui.addWidgetToFocusManager(&num_h);
+        m_ui.addWidgetToFocusManager(&num_m);
+        m_ui.addWidgetToFocusManager(&num_s);
+        m_ui.addWidgetToFocusManager(&button_sync);
     }
 
     void onResume() override {
