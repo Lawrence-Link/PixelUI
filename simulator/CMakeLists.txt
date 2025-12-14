@@ -69,6 +69,7 @@ set(SIM_SOURCES
     ../examples/app_cube_demo.cpp
     ../examples/charging_animation.cpp
     ../examples/app_counter.cpp
+    ../examples/app_pixel_clock.cpp
     ../examples/ListViewDemo1.cpp
     ../examples/app_widgets_demo/app_demo_analogclock_numscroll.cpp
     ../examples/app_widgets_demo/app_demo_textbutton_label.cpp

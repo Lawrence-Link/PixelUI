@@ -30,6 +30,7 @@ extern AppItem time_setting_app;
 extern AppItem button_demo_app;
 extern AppItem anim_demo_app;
 extern AppItem greenhouse_app;
+extern AppItem pixel_clock_app;
 void registerApps();
 
 #endif
