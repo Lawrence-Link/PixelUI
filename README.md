@@ -71,9 +71,12 @@ cmake --build build
 
 ## 📜 License
 
-PixelUI is released under the **GNU General Public License v3.0 (GPL-3.0)**.  
-This means you are free to use, modify, and redistribute PixelUI, but **any derivative work must also be licensed under GPLv3**.
+At the BETA stage, PixelUI is released under the GNU General Public License v3.0 (GPL-3.0).
+This means you are free to use, modify, and redistribute PixelUI, but any derivative work must also be licensed under GPLv3.
+
+For future stable releases, PixelUI is planned to be distributed under the BSD 2-Clause License (BSD v2).
 
 👉 See the [LICENSE](./LICENSE) file for the full license text, or visit:  
 
 [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html)
+
