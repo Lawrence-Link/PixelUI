@@ -35,7 +35,7 @@ public:
      * @brief Constructor for AboutApp.
      * @param ui Reference to the PixelUI instance.
      */
-    AboutApp(PixelUI& ui) : m_ui(ui){};
+    AboutApp(PixelUI& ui, void* parameter) : m_ui(ui){};
     ~AboutApp() = default;
 
     /**
@@ -82,7 +82,7 @@ public:
     /**
      * @brief Cleanup function called when the application exits.
      */
-    void onExit() {
+    void onExit() override {
         // No cleanup needed.
     }
 };
@@ -107,8 +107,8 @@ AppItem about_app{
     .bitmap = image_info_bits,
 
     // Provide a factory function to create application instance.
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<AboutApp>(ui);
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
+        return std::make_unique<AboutApp>(ui, parameter);
     },
 };
 

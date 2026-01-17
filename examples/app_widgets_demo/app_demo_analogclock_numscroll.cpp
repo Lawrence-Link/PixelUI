@@ -42,7 +42,7 @@ private:
     int32_t anim_analog_clock_x = 103;
 
 public:
-    TimeSetting(PixelUI& ui): m_ui(ui), 
+    TimeSetting(PixelUI& ui, void* parameter): m_ui(ui), 
     num_h(ui,  1, 25, 24, 16), 
     num_m(ui, 27, 25, 24, 16), 
     num_s(ui, 53, 25, 24, 16), 
@@ -151,8 +151,8 @@ AppItem time_setting_app{
     .title = "TimeSetting Demo",
     .bitmap = image_Icon_Clock_bits,
     
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
-        return std::make_unique<TimeSetting>(ui); 
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<TimeSetting>(ui, parameter); 
     },
 };
 #endif

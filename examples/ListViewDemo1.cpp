@@ -71,7 +71,7 @@ static AppRegistrar registrar_ListViewDemo_app({
     AppItem ListViewDemo_app{
     .title = "ListView Test",
     .bitmap = image_LISTVIEW_bits,
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
         return std::make_unique<ListViewDemo>(ui, ItemList, 10);
     },
 };

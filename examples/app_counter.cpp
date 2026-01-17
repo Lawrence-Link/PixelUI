@@ -126,7 +126,7 @@ public:
      * @brief Constructor for APP_COUNTER.
      * @param ui Reference to the PixelUI instance.
      */
-    APP_COUNTER(PixelUI& ui) :
+    APP_COUNTER(PixelUI& ui, void* parameter = nullptr) :
     m_ui(ui),
     // Initialize all member widgets with the UI reference
     histogram(ui, 69, 45, 56, 18, 76, 63, EXPAND_BASE::BOTTOM_RIGHT),
@@ -316,7 +316,7 @@ public:
     /**
      * @brief Cleanup function called when the application exits.
      */
-    void onExit() {
+    void onExit() override {
         // Stop all ongoing animation
         m_ui.clearAllAnimations();
         // Stop continuous drawing to save power
@@ -351,8 +351,8 @@ AppItem counter_app{
     .title = "COUNTER",
     .bitmap = image_counter_bits,
 
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<APP_COUNTER>(ui);
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
+        return std::make_unique<APP_COUNTER>(ui, parameter);
     },
 };
 #endif

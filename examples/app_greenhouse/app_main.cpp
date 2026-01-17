@@ -18,7 +18,7 @@
 
 #include "app_skeleton.h"
 
-Greenhouse_App::Greenhouse_App(PixelUI& ui) :
+Greenhouse_App::Greenhouse_App(PixelUI& ui, void* parameter) :
 m_ui(ui),
 anim_coroutine([this](CoroutineContext& ctx) {
     CORO_BEGIN(ctx);
@@ -144,9 +144,8 @@ AppItem greenhouse_app{
     .title = "Greenhouse",
     .bitmap = image_icon_greenhouse_bits, // TODO: Add an icon bitmap here
 
-    // Provide a factory function to create application instance.
-    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> {
-        return std::make_shared<Greenhouse_App>(ui);
+    .createApp = [](PixelUI& ui, void* parameter) -> std::shared_ptr<IApplication> {
+        return std::make_shared<Greenhouse_App>(ui, parameter);
     },
 };
 

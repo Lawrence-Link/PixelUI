@@ -35,7 +35,7 @@ public:
      * @brief Constructor for Dynamic_Info.
      * @param ui Reference to the PixelUI instance.
      */
-    Dynamic_Info(PixelUI& ui) : m_ui(ui) {};
+    Dynamic_Info(PixelUI& ui, void* parameter) : m_ui(ui) {};
     ~Dynamic_Info() = default;
 
     /** @brief Y-coordinate for the main title text. */
@@ -106,8 +106,8 @@ AppItem bouncy_about_app{
     .bitmap = image_info_bits, // TODO: Add an icon bitmap here
 
     // Provide a factory function to create application instance.
-    .createApp = [](PixelUI& ui) -> std::shared_ptr<IApplication> {
-        return std::make_shared<Dynamic_Info>(ui);
+    .createApp = [](PixelUI& ui, void* parameter) -> std::shared_ptr<IApplication> {
+        return std::make_shared<Dynamic_Info>(ui, parameter);
     },
 };
 

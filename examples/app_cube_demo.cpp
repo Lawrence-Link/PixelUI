@@ -168,7 +168,7 @@ public:
      * @brief Constructor for CubeDemo.
      * @param ui Reference to the PixelUI instance.
      */
-    CubeDemo(PixelUI& ui):m_ui(ui) {};
+    CubeDemo(PixelUI& ui, void* parameter):m_ui(ui) {};
 
     /**
      * @brief Main drawing function, called continuously due to `setContinousDraw(true)`.
@@ -219,7 +219,7 @@ public:
     /**
      * @brief Cleanup function called when the application exits.
      */
-    void onExit() {
+    void onExit() override {
         // Disable continuous drawing to save power when the app is not active
         m_ui.setContinousDraw(false);
     }
@@ -252,8 +252,8 @@ AppItem cube_demo_app{
     .title = "Cube Demo",
     .bitmap = image_sans2_bits,
 
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<CubeDemo>(ui);
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
+        return std::make_unique<CubeDemo>(ui, parameter);
     },
 };
 #endif

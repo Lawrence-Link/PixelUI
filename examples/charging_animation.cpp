@@ -48,7 +48,7 @@ private:
     unsigned long stateEnterTime = 0; // The time when each state is entered
 
 public:
-    ChargeDemo(PixelUI& ui) : m_ui(ui) {}
+    ChargeDemo(PixelUI& ui, void* parameter) : m_ui(ui) {}
 
     // ---------------- Drawing function ----------------
     void draw() override {
@@ -203,8 +203,8 @@ static AppRegistrar registrar_charging_anim({
 AppItem charging_anim{
     .title = "Charging animation",
     .bitmap = image_Icon_Charging_bits,
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<ChargeDemo>(ui);
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
+        return std::make_unique<ChargeDemo>(ui, parameter);
     },
 };
 #endif

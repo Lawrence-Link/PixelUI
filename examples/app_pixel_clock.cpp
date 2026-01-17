@@ -65,7 +65,7 @@ private:
     static constexpr int32_t DIGIT_HEIGHT_SMALL = 16; // Height for small font
     
 public:
-    APP_PIXEL_CLOCK(PixelUI& ui) : m_ui(ui) {
+    APP_PIXEL_CLOCK(PixelUI& ui, void* parameter) : m_ui(ui) {
         resetDigitState(hourTens);
         resetDigitState(hourOnes);
         resetDigitState(minuteTens);
@@ -340,8 +340,8 @@ static AppRegistrar pixel_clock_app({
 AppItem pixel_clock_app{
     .title = "Clock",
     .bitmap = image_clock_bits,
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<APP_PIXEL_CLOCK>(ui);
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
+        return std::make_unique<APP_PIXEL_CLOCK>(ui, parameter);
     },
 };
 #endif

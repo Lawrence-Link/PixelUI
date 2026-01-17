@@ -25,7 +25,7 @@ private:
     ControlState state_pump = ControlState::AUTO, state_lamp = ControlState::AUTO;
 public:
 
-    Greenhouse_App(PixelUI& ui);
+    Greenhouse_App(PixelUI& ui, void* parameter);
     void onEnter(ExitCallback exitCallback) override;
     void onExit() override;
     bool handleInput(InputEvent event) override;

@@ -58,7 +58,7 @@ private:
     int32_t prev_timestamp;
     int32_t curr_timestamp;
 public:
-    App_Anim_Demo(PixelUI& ui): m_ui(ui)
+    App_Anim_Demo(PixelUI& ui, void* parameter): m_ui(ui)
     {}
 
     void draw() override {
@@ -209,8 +209,8 @@ AppItem anim_demo_app{
     .title = "Anim Demo",
     .bitmap = image_Icon_Anim_Demo_bits,
     
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
-        return std::make_unique<App_Anim_Demo>(ui); 
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<App_Anim_Demo>(ui, parameter); 
     },
 };
 #endif

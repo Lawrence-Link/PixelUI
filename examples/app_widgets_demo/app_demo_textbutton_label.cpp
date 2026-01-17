@@ -52,7 +52,7 @@ private:
     } m_slide = slide_direction::slide_top;
 
 public:
-    App_Button_Demo(PixelUI& ui): m_ui(ui), 
+    App_Button_Demo(PixelUI& ui, void* parameter): m_ui(ui), 
     button_onload(ui, 13, 14, 44, 14, "onLoad"),
     button_top(ui, 85, 2, 41, 14, "Top"),
     button_bottom(ui, 85, 18, 41, 14, "Bottom"),
@@ -168,8 +168,8 @@ AppItem button_demo_app{
     .title = "Label / Button Demo",
     .bitmap = image_icon_text_button_bits,
     
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> { 
-        return std::make_unique<App_Button_Demo>(ui); 
+    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> { 
+        return std::make_unique<App_Button_Demo>(ui, parameter); 
     },
 };
 #endif
