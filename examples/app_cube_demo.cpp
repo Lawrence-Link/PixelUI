@@ -225,29 +225,6 @@ public:
     }
 };
 
-// ---------------- Application registration ----------------
-/**
- * @brief Application registration block.
- *
- * Registers the CubeDemo class with the application system.
- */
-#if USE_STATIC_APP_REGISTER_ENABLED
-static AppRegistrar registrar_about_app({
-    .title = "Cube Demo", ///< Display title of the application.
-    .bitmap = image_sans2_bits, ///< Bitmap icon for the application menu.
-
-    /**
-     * @brief Factory function to create a new instance of CubeDemo.
-     * @param ui Reference to the PixelUI context.
-     * @return A unique pointer to the newly created CubeDemo instance.
-     */
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<CubeDemo>(ui);
-    },
-
-    .order = 1 ///< Application order in the menu.
-});
-#else
 AppItem cube_demo_app{
     .title = "Cube Demo",
     .bitmap = image_sans2_bits,
@@ -256,4 +233,3 @@ AppItem cube_demo_app{
         return std::make_unique<CubeDemo>(ui, parameter);
     },
 };
-#endif

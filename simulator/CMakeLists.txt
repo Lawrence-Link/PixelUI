@@ -52,9 +52,6 @@ if(ENABLE_ASAN)
     endif()
 endif()
 
-
-
-
 # -------------------------------
 # Simulator source code
 # -------------------------------
@@ -77,11 +74,9 @@ set(SIM_SOURCES
     ../examples/app_greenhouse/app_main.cpp
 )
 
-if(NOT USE_STATIC_APP_REGISTER_ENABLED)
     list(APPEND SIM_SOURCES 
         ../examples/app_registry.cpp
     )
-endif()
 
 add_executable(u8g2_emulator ${SIM_SOURCES})
 

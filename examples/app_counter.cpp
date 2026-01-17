@@ -331,22 +331,7 @@ public:
  * Registers the APP_COUNTER class with the application system,
  * providing its title, icon bitmap, and a factory function for creation.
  */
-#if USE_STATIC_APP_REGISTER_ENABLED
-static AppRegistrar counter_app(AppItem{
-    .title = "COUNTER", ///< Display title of the application.
-    .bitmap = image_info_bits, ///< Bitmap icon for the application menu.
 
-    /**
-     * @brief Factory function to create a new instance of APP_COUNTER.
-     * @param ui Reference to the PixelUI context.
-     * @return A unique pointer to the newly created APP_COUNTER instance.
-     */
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<APP_COUNTER>(ui);
-    },
-    .order = 0 ///< Application order in the menu.
-});
-#else
 AppItem counter_app{
     .title = "COUNTER",
     .bitmap = image_counter_bits,
@@ -355,4 +340,3 @@ AppItem counter_app{
         return std::make_unique<APP_COUNTER>(ui, parameter);
     },
 };
-#endif

@@ -195,16 +195,7 @@ public:
         m_ui.setContinousDraw(false);
     }
 };
-#if USE_STATIC_APP_REGISTER_ENABLED
-static AppRegistrar anim_demo_app({
-    .title = "Anim Demo",
-    .bitmap = image_icon_text_button_bits,
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<App_Anim_Demo>(ui);
-    },
-    .order = 5
-});
-#else
+
 AppItem anim_demo_app{
     .title = "Anim Demo",
     .bitmap = image_Icon_Anim_Demo_bits,
@@ -213,4 +204,3 @@ AppItem anim_demo_app{
         return std::make_unique<App_Anim_Demo>(ui, parameter); 
     },
 };
-#endif

@@ -326,17 +326,6 @@ public:
     }
 };
 
-// ---------------- Application registration ----------------
-#if USE_STATIC_APP_REGISTER_ENABLED
-static AppRegistrar pixel_clock_app({
-    .title = "Clock",
-    .bitmap = image_clock_bits,
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<APP_PIXEL_CLOCK>(ui);
-    },
-    .order = 4
-});
-#else
 AppItem pixel_clock_app{
     .title = "Clock",
     .bitmap = image_clock_bits,
@@ -344,4 +333,3 @@ AppItem pixel_clock_app{
         return std::make_unique<APP_PIXEL_CLOCK>(ui, parameter);
     },
 };
-#endif

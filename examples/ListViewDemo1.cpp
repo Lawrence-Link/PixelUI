@@ -57,22 +57,10 @@ public:
     void onSave() override {  } // will be called when requesting exit
 };
 
-// ---------------- Application registration ----------------
-#if USE_STATIC_APP_REGISTER_ENABLED
-static AppRegistrar registrar_ListViewDemo_app({
-    .title = "ListView Test",
-    .bitmap = image_LISTVIEW_bits,
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<ListViewDemo>(ui, ItemList, 10);
-    },
-    .order = 6
-});
-#else // register manually
-    AppItem ListViewDemo_app{
+AppItem ListViewDemo_app{
     .title = "ListView Test",
     .bitmap = image_LISTVIEW_bits,
     .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
         return std::make_unique<ListViewDemo>(ui, ItemList, 10);
     },
 };
-#endif

@@ -137,16 +137,7 @@ public:
         m_ui.removeCoroutine(&animationCoroutine_);
     }
 };
-#if USE_STATIC_APP_REGISTER_ENABLED
-static AppRegistrar time_setting_app({
-    .title = "TimeSetting Demo",
-    .bitmap = image_Icon_Clock_bits,
-    .createApp = [](PixelUI& ui) -> std::unique_ptr<IApplication> {
-        return std::make_unique<TimeSetting>(ui);
-    },
-    .order = 5
-});
-#else
+
 AppItem time_setting_app{
     .title = "TimeSetting Demo",
     .bitmap = image_Icon_Clock_bits,
@@ -155,4 +146,3 @@ AppItem time_setting_app{
         return std::make_unique<TimeSetting>(ui, parameter); 
     },
 };
-#endif
