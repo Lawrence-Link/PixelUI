@@ -21,7 +21,7 @@
 
 class CurveChart : public IWidget {
 public:
-    CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp, uint16_t size_h_exp, EXPAND_BASE base);
+    CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp, uint16_t size_h_exp, EXPAND_BASE base, char* label = nullptr);
     ~CurveChart() = default;
 
     void onLoad() override;
@@ -91,6 +91,9 @@ private:
     int32_t anim_h = 0;
     int32_t anim_x = 0;
     int32_t anim_y = 0;
+
+    char* m_label = nullptr;
+
     void expandWidget();
     void contractWidget();
     void calculateExpandPosition(int32_t& target_x, int32_t& target_y);

@@ -16,9 +16,10 @@
  */
 
 #include "widgets/histogram/histogram.h"
+#include "calc/TextAlignHelper/TextAlignHelper.h"
 #include <cmath>
 #include <algorithm>
-#include <limits> // Added for std::numeric_limits
+#include <limits>
 
 /**
  * @brief Constructor for Histogram widget.
@@ -39,8 +40,9 @@ Histogram::Histogram(
     uint16_t size_h, 
     uint16_t size_w_exp = 0, 
     uint16_t size_h_exp = 0, 
-    EXPAND_BASE base = EXPAND_BASE::TOP_LEFT) : 
-
+    EXPAND_BASE base = EXPAND_BASE::TOP_LEFT,
+    char* label 
+) : 
     m_ui(ui), 
     pos_x_(pos_x), 
     pos_y_(pos_y),
@@ -48,7 +50,8 @@ Histogram::Histogram(
     size_h_(size_h),
     exp_w(size_w_exp),
     exp_h(size_h_exp),
-    base_(base)
+    base_(base),
+    m_label(label)
 {
     // pos_x_ and pos_y_ now represent the top-left anchor point.
     int32_t start_anim_x = (size_w_ / 2);
@@ -433,9 +436,30 @@ void Histogram::draw() {
     // Draw histogram bars, passing top-left coordinates, current width, and height
     drawHistogramData(tl_x, tl_y, current_w, current_h, u8g2);
 
-    // Draw label (positioned relative to the top-right corner)
-    u8g2.setFont(u8g2_font_4x6_tr);
-    u8g2.drawStr(tl_x + current_w - 19, tl_y + 7, "Hist");
+    // Draw label if provided (positioned in the top-right area)
+    if (m_label != nullptr) {
+        u8g2.setFont(u8g2_font_4x6_tr);
+        
+        // Define label area in top-right corner (matching original offset logic)
+        Rect label_area = {
+            static_cast<int16_t>(tl_x + current_w - 20 - 2),  // Right area
+            static_cast<int16_t>(tl_y + 2),               // Top margin
+            20,                                            // Width for label area
+            6                                              // Height matches font height
+        };
+        
+        // Calculate text position using TextAlignHelper
+        // Use Top alignment for Y to position near top, Right alignment for X
+        TextPos text_pos = TextAlignHelper::calcTextPos(
+            u8g2.getU8g2(),
+            label_area,
+            m_label,
+            TextAlignX::Right,
+            TextAlignY::Top
+        );
+        
+        u8g2.drawStr(text_pos.x, text_pos.y, m_label);
+    }
 }
 
 /**

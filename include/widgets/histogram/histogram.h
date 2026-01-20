@@ -29,7 +29,9 @@ public:
         uint16_t size_h, 
         uint16_t size_w_exp, 
         uint16_t size_h_exp,
-        EXPAND_BASE base);
+        EXPAND_BASE base,
+        char* label = nullptr
+    );
 
     ~Histogram() = default;
 
@@ -102,6 +104,8 @@ private:
     
     bool is_expanded = false;  // Add this line
     
+    char * m_label = nullptr;
+
     void expandWidget();
     void contractWidget();
     void calculateExpandPosition(int32_t& target_x, int32_t& target_y);

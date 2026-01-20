@@ -16,6 +16,7 @@
  */
 
 #include "widgets/curve_chart/curve_chart.h"
+#include "calc/TextAlignHelper/TextAlignHelper.h"
 #include <cmath>
 #include <algorithm>
 #include <limits>
@@ -26,7 +27,7 @@
  * @param pos_x X coordinate of the widget's top-left corner (new anchor).
  * @param pos_y Y coordinate of the widget's top-left corner (new anchor).
  */
-CurveChart::CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp = 0, uint16_t size_h_exp = 0, EXPAND_BASE base = EXPAND_BASE::TOP_LEFT) : 
+CurveChart::CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp = 0, uint16_t size_h_exp = 0, EXPAND_BASE base = EXPAND_BASE::TOP_LEFT, char* label ) : 
     m_ui(ui), 
     pos_x_(pos_x), 
     pos_y_(pos_y),
@@ -34,7 +35,8 @@ CurveChart::CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t siz
     size_h_(size_h),
     exp_w(size_w_exp),
     exp_h(size_h_exp),
-    base_(base)
+    base_(base),
+    m_label(label)
 {
     // pos_x_ and pos_y_ now represent the top-left anchor point.
     int32_t start_anim_x = (size_w_ / 2);
@@ -398,10 +400,30 @@ void CurveChart::draw() {
     // Draw curve data from internal buffer, passing top-left coordinates, current width, and height
     drawCuveData(tl_x, tl_y, current_w, current_h, u8g2);
     
-    // Draw label
-    u8g2.setFont(u8g2_font_4x6_tr);
-    // Positioned relative to the top-right corner
-    u8g2.drawStr(tl_x + current_w - 23, tl_y + 7, "Curve"); 
+    // Draw label if provided (positioned in the top-right area)
+    if (m_label != nullptr) {
+        u8g2.setFont(u8g2_font_4x6_tr);
+        
+        // Define label area in top-right corner (matching original offset logic)
+        Rect label_area = {
+            static_cast<int16_t>(tl_x + current_w - 24 - 2),  // Right area
+            static_cast<int16_t>(tl_y + 2),               // Top margin
+            24,                                            // Width for label area
+            6                                              // Height matches font height
+        };
+        
+        // Calculate text position using TextAlignHelper
+        // Use Top alignment for Y to position near top, Right alignment for X
+        TextPos text_pos = TextAlignHelper::calcTextPos(
+            u8g2.getU8g2(),
+            label_area,
+            m_label,
+            TextAlignX::Right,
+            TextAlignY::Top
+        );
+        
+        u8g2.drawStr(text_pos.x, text_pos.y, m_label);
+    }
 }
 
 /**
