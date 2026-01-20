@@ -54,3 +54,4 @@ Thumbs.db
 *.tmp
 
 third_party/u8g2/build/
+.cache/
