@@ -58,7 +58,7 @@ public:
 
     void start();
     void resume(uint32_t currentTime);
-    void reset(); // <-- 重置方法
+    void reset(); 
     bool isFinished() const { return context_.state == CoroutineState::FINISHED; }
     bool shouldRun(uint32_t currentTime) const;
     
@@ -86,7 +86,6 @@ public:
 
 private:
     std::vector<Coroutine*> coroutines_; 
-    mutable std::mutex mutex_;
     PixelUI& ui_;
 };
 
