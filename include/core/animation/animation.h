@@ -21,7 +21,6 @@
 #include <functional>
 #include "config.h"
 #include "core/CommonTypes.h"
-#include <mutex>
 
 // fixed-point shift bits to support fractional values in integer arithmetic
 // eg. SHIFT_BITS = 12 means 0.5f is represented as 0.5 * (1 << 12) = 2048
@@ -104,7 +103,6 @@ public:
 
 private:
     etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
-    mutable std::mutex _mutex; 
 };
 
 /**
