@@ -99,7 +99,7 @@ CoroutineScheduler::CoroutineScheduler(PixelUI& ui) : ui_(ui) {}
  * * Adds a new coroutine to the list of scheduled items and immediately starts its execution.
  * @param coroutine A shared pointer to the Coroutine object to be added.
  */
-void CoroutineScheduler::addCoroutine(Coroutine* coroutine) { // <-- 改为 Coroutine*
+void CoroutineScheduler::addCoroutine(Coroutine* coroutine) { 
     // Check if the pointer is null
     if (!coroutine) return; 
     
