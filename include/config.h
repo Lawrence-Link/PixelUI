@@ -62,6 +62,8 @@ constexpr int MAX_ONSCREEN_WIDGET_NUM = 6;
 // Maximum width (number of digits) for fixed-width integer display
 constexpr int MAX_INT_FIXED_WIDTH = 6;
 
+constexpr int MAX_COROUTINE_NUM = 10; // Maximum number of concurrent coroutines allowed in the system
+
 
 /* Input Event Router */
 

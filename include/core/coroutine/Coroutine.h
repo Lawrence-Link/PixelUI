@@ -27,8 +27,8 @@
 #pragma once
 
 #include <functional>
-#include <vector>
-#include <memory>
+#include <etl/vector.h>
+#include "config.h"
 
 class PixelUI;
 
@@ -94,7 +94,7 @@ public:
     size_t getActiveCount() const;
 
 private:
-    std::vector<Coroutine*> coroutines_; 
+    etl::vector<Coroutine*, MAX_COROUTINE_NUM> coroutines_;
     PixelUI& ui_;
 };
 
