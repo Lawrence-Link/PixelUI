@@ -27,8 +27,13 @@
 #pragma once
 
 #include "u8g2.h"
-#include <vector>
+#include <etl/array.h>
 #include "../third_party/u8g2/cppsrc/U8g2lib.h"
+
+constexpr size_t FRAMEBUFFER_WIDTH = 128;
+constexpr size_t FRAMEBUFFER_HEIGHT = 64;
+using FramebufferRow = etl::array<bool, FRAMEBUFFER_WIDTH>;
+using Framebuffer = etl::array<FramebufferRow, FRAMEBUFFER_HEIGHT>;
 
 class U8G2Wrapper : public U8G2 {
 public:
@@ -40,7 +45,7 @@ public:
     void drawTestString(const char* str);
     int getWidth()   { return this->U8G2::getDisplayWidth();}
     int getHeight()  { return this->U8G2::getDisplayHeight(); }
-    std::vector<std::vector<bool>> getFramebufferPixels();
+    Framebuffer getFramebufferPixels();
 
 private:
     int width = 128;  // default width

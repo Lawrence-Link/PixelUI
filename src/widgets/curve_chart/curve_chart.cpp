@@ -26,9 +26,9 @@
 
 #include "widgets/curve_chart/curve_chart.h"
 #include "calc/TextAlignHelper/TextAlignHelper.h"
-#include <cmath>
-#include <algorithm>
-#include <limits>
+#include <math.h>
+#include <etl/algorithm.h>
+#include <etl/limits.h>
 
 /**
  * @brief Constructor for CurveChart widget.
@@ -36,7 +36,7 @@
  * @param pos_x X coordinate of the widget's top-left corner (new anchor).
  * @param pos_y Y coordinate of the widget's top-left corner (new anchor).
  */
-CurveChart::CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp = 0, uint16_t size_h_exp = 0, EXPAND_BASE base = EXPAND_BASE::TOP_LEFT, char* label ) : 
+CurveChart::CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp = 0, uint16_t size_h_exp = 0, EXPAND_BASE base = EXPAND_BASE::TOP_LEFT, const char* label) :
     m_ui(ui), 
     pos_x_(pos_x), 
     pos_y_(pos_y),
@@ -84,7 +84,7 @@ void CurveChart::onLoad() {
 void CurveChart::initializeDataBuffer() {
     // Initialize buffer with expanded width size
     m_buffer_size = (exp_w > size_w_) ? exp_w : 200; // Default to 200 if exp_w not set
-    m_data_buffer = std::make_unique<float[]>(m_buffer_size); // acquisition for buffer memory
+    m_data_buffer.reset(new float[m_buffer_size]); // acquisition for buffer memory
     
     // Initialize buffer with zeros
     for (int i = 0; i < m_buffer_size; ++i) {
@@ -96,11 +96,11 @@ void CurveChart::initializeDataBuffer() {
     m_data_count = 0;
     m_max_value = 0.0f;
     m_sum_value = 0.0f;
-    m_min_value = std::numeric_limits<float>::max();
+    m_min_value = etl::numeric_limits<float>::max();
     
     // Reset history statistics
     m_hist_max_value = 0.0f;
-    m_hist_min_value = std::numeric_limits<float>::max();
+    m_hist_min_value = etl::numeric_limits<float>::max();
     m_hist_sum_value = 0.0f;
     m_hist_count = 0;
     
@@ -116,7 +116,7 @@ void CurveChart::onOffload() {
 }
 
 void CurveChart::addData(float value) {
-    if (m_data_buffer == nullptr) {
+    if (!m_data_buffer) {
         initializeDataBuffer();
     }
     
@@ -144,8 +144,8 @@ void CurveChart::addData(float value) {
     
 void CurveChart::updateStatistics(float new_value, float old_value, bool replacing_data) {
     // Update history statistics (all-time)
-    m_hist_max_value = std::max(m_hist_max_value, new_value);
-    if (m_hist_min_value == std::numeric_limits<float>::max() || new_value < m_hist_min_value) {
+    m_hist_max_value = etl::max(m_hist_max_value, new_value);
+    if (m_hist_min_value == etl::numeric_limits<float>::max() || new_value < m_hist_min_value) {
         m_hist_min_value = new_value;
     }
     m_hist_sum_value += new_value;
@@ -155,8 +155,8 @@ void CurveChart::updateStatistics(float new_value, float old_value, bool replaci
     if (!replacing_data) {
         // Adding new data (buffer not full yet)
         m_sum_value += new_value;
-        m_max_value = std::max(m_max_value, new_value);
-        if (m_min_value == std::numeric_limits<float>::max() || new_value < m_min_value) {
+        m_max_value = etl::max(m_max_value, new_value);
+        if (m_min_value == etl::numeric_limits<float>::max() || new_value < m_min_value) {
             m_min_value = new_value;
         }
     } else {
@@ -164,11 +164,11 @@ void CurveChart::updateStatistics(float new_value, float old_value, bool replaci
         m_sum_value = m_sum_value - old_value + new_value;
         
         // For max/min, we need to check if we're removing the extreme value
-        if (old_value == m_max_value || old_value == m_min_value || m_min_value == std::numeric_limits<float>::max()) {
+        if (old_value == m_max_value || old_value == m_min_value || m_min_value == etl::numeric_limits<float>::max()) {
             recalculateExtremes();
         } else {
-            m_max_value = std::max(m_max_value, new_value);
-            m_min_value = std::min(m_min_value, new_value);
+            m_max_value = etl::max(m_max_value, new_value);
+            m_min_value = etl::min(m_min_value, new_value);
         }
     }
 }
@@ -176,7 +176,7 @@ void CurveChart::updateStatistics(float new_value, float old_value, bool replaci
 void CurveChart::recalculateExtremes() {
     if (m_data_count == 0) {
         m_max_value = 0.0f;
-        m_min_value = std::numeric_limits<float>::max();
+        m_min_value = etl::numeric_limits<float>::max();
         return;
     }
     
@@ -184,16 +184,16 @@ void CurveChart::recalculateExtremes() {
     int scan_limit = m_data_count; 
     
     // To scan only valid data points:
-    float current_max = -std::numeric_limits<float>::max();
-    float current_min = std::numeric_limits<float>::max();
+    float current_max = -etl::numeric_limits<float>::max();
+    float current_min = etl::numeric_limits<float>::max();
     
     // The safest way to scan the currently valid data in a circular buffer:
     for (int i = 0; i < scan_limit; ++i) {
         // Calculate the index starting from the oldest data point
         int data_index = (m_write_index - m_data_count + i + m_buffer_size) % m_buffer_size;
         float value = m_data_buffer[data_index];
-        current_max = std::max(current_max, value);
-        current_min = std::min(current_min, value);
+        current_max = etl::max(current_max, value);
+        current_min = etl::min(current_min, value);
     }
     
     m_max_value = current_max;
@@ -224,7 +224,7 @@ float CurveChart::getAverageValueInWindow() const {
  * @return Minimum float value in buffer (or 0.0f if empty).
  */
 float CurveChart::getMinValueInWindow() const {
-    if (m_data_count == 0 || m_min_value == std::numeric_limits<float>::max()) {
+    if (m_data_count == 0 || m_min_value == etl::numeric_limits<float>::max()) {
         return 0.0f;
     }
     return m_min_value;
@@ -255,12 +255,12 @@ float CurveChart::getAverageValueInHistory() const {
  */
 float CurveChart::getMinValueInHistory() const {
     if (m_hist_count == 0) return 0.0f;
-    if (m_hist_min_value == std::numeric_limits<float>::max()) return 0.0f;
+    if (m_hist_min_value == etl::numeric_limits<float>::max()) return 0.0f;
     return m_hist_min_value;
 }
 
 void CurveChart::clearData() {
-    if (m_data_buffer != nullptr) {
+    if (m_data_buffer) {
         for (int i = 0; i < m_buffer_size; ++i) {
             m_data_buffer[i] = 0.0f;
         }
@@ -271,11 +271,11 @@ void CurveChart::clearData() {
     m_data_count = 0;
     m_max_value = 0.0f;
     m_sum_value = 0.0f;
-    m_min_value = std::numeric_limits<float>::max();
+    m_min_value = etl::numeric_limits<float>::max();
     
     // Reset history statistics
     m_hist_max_value = 0.0f;
-    m_hist_min_value = std::numeric_limits<float>::max();
+    m_hist_min_value = etl::numeric_limits<float>::max();
     m_hist_sum_value = 0.0f;
     m_hist_count = 0;
     
@@ -447,13 +447,13 @@ void CurveChart::draw() {
  */
 void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, U8G2& u8g2) {
     // Return early if there's no data or the buffer is invalid
-    if (m_data_buffer == nullptr || m_data_count == 0) {
+    if (!m_data_buffer || m_data_count == 0) {
         return;
     }
     
     // Determine how many horizontal steps to draw
     // Subtract 3 to account for 2px borders (width - 3 = drawable columns from right border to left border inclusive)
-    int points_to_draw = std::min(width - 3, static_cast<int>(m_data_count));
+    int points_to_draw = etl::min(width - 3, static_cast<int>(m_data_count));
     if (points_to_draw <= 1) { 
         // Handle single point case
         if (points_to_draw == 1) {
@@ -472,16 +472,16 @@ void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, U8G2& u
     
     // Calculate visible window min/max (with caching)
     if (m_visible_cache_dirty || m_cached_visible_width != points_to_draw) {
-        m_cached_visible_max = -std::numeric_limits<float>::max();
-        m_cached_visible_min = std::numeric_limits<float>::max();
+        m_cached_visible_max = -etl::numeric_limits<float>::max();
+        m_cached_visible_min = etl::numeric_limits<float>::max();
         
         for (int i = 0; i < points_to_draw; ++i) {
             int buffer_offset = i + 1;
             int data_index = (m_write_index - buffer_offset + m_buffer_size) % m_buffer_size;
             if (buffer_offset <= m_data_count) {
                 float value = m_data_buffer[data_index];
-                m_cached_visible_max = std::max(m_cached_visible_max, value);
-                m_cached_visible_min = std::min(m_cached_visible_min, value);
+                m_cached_visible_max = etl::max(m_cached_visible_max, value);
+                m_cached_visible_min = etl::min(m_cached_visible_min, value);
             }
         }
         
@@ -535,8 +535,8 @@ void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, U8G2& u
         int current_y = y_bottom - y_offset; 
         
         // Ensure Y stays within the vertical bounds of the chart area 
-        current_y = std::max(y_top, current_y);
-        current_y = std::min(y_bottom, current_y);
+        current_y = etl::max(y_top, current_y);
+        current_y = etl::min(y_bottom, current_y);
 
         // 3. Draw line segment
         if (prev_x != -1) {

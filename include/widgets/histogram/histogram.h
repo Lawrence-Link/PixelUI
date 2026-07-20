@@ -27,6 +27,8 @@
 #pragma once
 
 #include "../IWidget.h"
+#include <etl/limits.h>
+#include <etl/memory.h>
 
 class Histogram : public IWidget {
 public:
@@ -39,7 +41,7 @@ public:
         uint16_t size_w_exp, 
         uint16_t size_h_exp,
         EXPAND_BASE base,
-        char* label = nullptr
+        const char* label = nullptr
     );
 
     ~Histogram() = default;
@@ -84,7 +86,7 @@ private:
     EXPAND_BASE base_;
 
     // Internal data buffer for real-time data streaming
-    std::unique_ptr<float[]> m_data_buffer;
+    etl::unique_ptr<float[]> m_data_buffer;
     int m_buffer_size = 0;
     int m_write_index = 0;
     int m_data_count = 0;
@@ -96,7 +98,7 @@ private:
 
     // Statistics tracking (history - all time)
     float m_hist_max_value = 0.0f;
-    float m_hist_min_value = std::numeric_limits<float>::max();
+    float m_hist_min_value = etl::numeric_limits<float>::max();
     float m_hist_sum_value = 0.0f;
     uint32_t m_hist_count = 0;
 
@@ -113,7 +115,7 @@ private:
     
     bool is_expanded = false;  // Add this line
     
-    char * m_label = nullptr;
+    const char* m_label = nullptr;
 
     void expandWidget();
     void contractWidget();

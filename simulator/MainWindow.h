@@ -28,11 +28,11 @@
 
 #include <QMainWindow>
 #include <QKeyEvent>
-#include <vector>
-#include <queue>
-#include <mutex>
-#include <optional>
+#include <etl/mutex.h>
+#include <etl/optional.h>
+#include <etl/queue.h>
 #include "PixelUI.h"
+#include "u8g2_wrapper.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -43,10 +43,10 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr, int _width = 128, int _height=64, int _scale = 10);
     ~MainWindow();
-    void setPixels(const std::vector<std::vector<bool>>& pixels);
+    void setPixels(const Framebuffer& pixels);
 
     void pushInputEvent(InputEvent event);
-    std::optional<InputEvent> popInputEvent();
+    etl::optional<InputEvent> popInputEvent();
     
     // void setDisplaySize(int _width, int _height, int _scale) { // setter to display size
     //     dSize_w = _width;
@@ -58,10 +58,10 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
-    std::queue<InputEvent> inputQueue;
-    std::mutex queueMutex;
+    etl::queue<InputEvent, 16> inputQueue;
+    etl::mutex queueMutex;
 private:
-    std::vector<std::vector<bool>> pixels;
+    Framebuffer pixels{};
 
     // Height and width for each pixel block. (initial)
     int dSize_w = 128;

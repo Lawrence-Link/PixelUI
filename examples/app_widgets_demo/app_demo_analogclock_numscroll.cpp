@@ -151,7 +151,7 @@ AppItem time_setting_app{
     .title = "TimeSetting Demo",
     .bitmap = image_Icon_Clock_bits,
     
-    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> { 
-        return std::make_unique<TimeSetting>(ui, parameter); 
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new TimeSetting(ui, parameter));
     },
 };

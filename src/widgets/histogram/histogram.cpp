@@ -26,9 +26,9 @@
 
 #include "widgets/histogram/histogram.h"
 #include "calc/TextAlignHelper/TextAlignHelper.h"
-#include <cmath>
-#include <algorithm>
-#include <limits>
+#include <math.h>
+#include <etl/algorithm.h>
+#include <etl/limits.h>
 
 /**
  * @brief Constructor for Histogram widget.
@@ -50,7 +50,7 @@ Histogram::Histogram(
     uint16_t size_w_exp = 0, 
     uint16_t size_h_exp = 0, 
     EXPAND_BASE base = EXPAND_BASE::TOP_LEFT,
-    char* label 
+    const char* label
 ) : 
     m_ui(ui), 
     pos_x_(pos_x), 
@@ -105,7 +105,7 @@ void Histogram::onLoad() {
 void Histogram::initializeDataBuffer() {
     // Allocate buffer based on expanded width or default size
     m_buffer_size = (exp_w > size_w_) ? exp_w : 200;
-    m_data_buffer = std::make_unique<float[]> (m_buffer_size);
+    m_data_buffer.reset(new float[m_buffer_size]);
 
     // Clear buffer
     for (int i = 0; i < m_buffer_size; ++i) {
@@ -117,11 +117,11 @@ void Histogram::initializeDataBuffer() {
     m_data_count = 0;
     m_max_value = 0.0f;
     m_sum_value = 0.0f;
-    m_min_value = std::numeric_limits<float>::max();
+    m_min_value = etl::numeric_limits<float>::max();
     
     // Reset history statistics
     m_hist_max_value = 0.0f;
-    m_hist_min_value = std::numeric_limits<float>::max();
+    m_hist_min_value = etl::numeric_limits<float>::max();
     m_hist_sum_value = 0.0f;
     m_hist_count = 0;
     
@@ -144,7 +144,7 @@ void Histogram::onOffload() {
  * @param value The new float value to add.
  */
 void Histogram::addData(float value) {
-    if (m_data_buffer == nullptr) {
+    if (!m_data_buffer) {
         initializeDataBuffer();
     }
     
@@ -178,8 +178,8 @@ void Histogram::addData(float value) {
  */
 void Histogram::updateStatistics(float new_value, float old_value, bool replacing_data) {
     // Update history statistics (all-time)
-    m_hist_max_value = std::max(m_hist_max_value, new_value);
-    if (m_hist_min_value == std::numeric_limits<float>::max() || new_value < m_hist_min_value) {
+    m_hist_max_value = etl::max(m_hist_max_value, new_value);
+    if (m_hist_min_value == etl::numeric_limits<float>::max() || new_value < m_hist_min_value) {
         m_hist_min_value = new_value;
     }
     m_hist_sum_value += new_value;
@@ -189,9 +189,9 @@ void Histogram::updateStatistics(float new_value, float old_value, bool replacin
     if (!replacing_data) {
         // Buffer not full, simple update
         m_sum_value += new_value;
-        m_max_value = std::max(m_max_value, new_value);
+        m_max_value = etl::max(m_max_value, new_value);
         // Only update min if a valid (non-max) value is added or if min is still at its maximum possible value
-        if (m_min_value == std::numeric_limits<float>::max() || new_value < m_min_value) {
+        if (m_min_value == etl::numeric_limits<float>::max() || new_value < m_min_value) {
             m_min_value = new_value;
         }
     } else {
@@ -199,11 +199,11 @@ void Histogram::updateStatistics(float new_value, float old_value, bool replacin
         m_sum_value = m_sum_value - old_value + new_value;
 
         // Recalculate extremes if old value was max or min (recalculating min if old_value was the placeholder max is safer)
-        if (old_value == m_max_value || old_value == m_min_value || m_min_value == std::numeric_limits<float>::max()) {
+        if (old_value == m_max_value || old_value == m_min_value || m_min_value == etl::numeric_limits<float>::max()) {
             recalculateExtremes();
         } else {
-            m_max_value = std::max(m_max_value, new_value);
-            m_min_value = std::min(m_min_value, new_value);
+            m_max_value = etl::max(m_max_value, new_value);
+            m_min_value = etl::min(m_min_value, new_value);
         }
     }
 }
@@ -214,7 +214,7 @@ void Histogram::updateStatistics(float new_value, float old_value, bool replacin
 void Histogram::recalculateExtremes() {
     if (m_data_count == 0) {
         m_max_value = 0.0f;
-        m_min_value = std::numeric_limits<float>::max(); // Reset min to max
+        m_min_value = etl::numeric_limits<float>::max(); // Reset min to max
         m_sum_value = 0.0f;
         return;
     }
@@ -223,8 +223,8 @@ void Histogram::recalculateExtremes() {
     m_min_value = m_data_buffer[0];
 
     for (int i = 1; i < m_data_count; ++i) {
-        m_max_value = std::max(m_max_value, m_data_buffer[i]);
-        m_min_value = std::min(m_min_value, m_data_buffer[i]);
+        m_max_value = etl::max(m_max_value, m_data_buffer[i]);
+        m_min_value = etl::min(m_min_value, m_data_buffer[i]);
     }
 }
 
@@ -281,7 +281,7 @@ float Histogram::getAverageValueInHistory() const {
  */
 float Histogram::getMinValueInHistory() const {
     if (m_hist_count == 0) return 0.0f;
-    if (m_hist_min_value == std::numeric_limits<float>::max()) return 0.0f;
+    if (m_hist_min_value == etl::numeric_limits<float>::max()) return 0.0f;
     return m_hist_min_value;
 }
 
@@ -289,7 +289,7 @@ float Histogram::getMinValueInHistory() const {
  * @brief Clear all data in the histogram buffer and reset statistics.
  */
 void Histogram::clearData() {
-    if (m_data_buffer != nullptr) {
+    if (m_data_buffer) {
         for (int i = 0; i < m_buffer_size; ++i) {
             m_data_buffer[i] = 0.0f;
         }
@@ -298,11 +298,11 @@ void Histogram::clearData() {
     m_data_count = 0;
     m_max_value = 0.0f;
     m_sum_value = 0.0f;
-    m_min_value = std::numeric_limits<float>::max();
+    m_min_value = etl::numeric_limits<float>::max();
     
     // Reset history statistics
     m_hist_max_value = 0.0f;
-    m_hist_min_value = std::numeric_limits<float>::max();
+    m_hist_min_value = etl::numeric_limits<float>::max();
     m_hist_sum_value = 0.0f;
     m_hist_count = 0;
     
@@ -480,27 +480,27 @@ void Histogram::draw() {
  * @param u8g2 Reference to U8G2 for drawing.
  */
 void Histogram::drawHistogramData(int tl_x, int tl_y, int width, int height, U8G2& u8g2) {
-    if (m_data_buffer == nullptr || m_data_count == 0) {
+    if (!m_data_buffer || m_data_count == 0) {
         return;
     }
 
     // Determine number of points to draw based on current width
     // Subtract 3 to account for 2px borders (width - 3 = drawable columns from right border to left border inclusive)
-    int points_to_draw = std::min(width - 3, static_cast<int>(m_data_count));
+    int points_to_draw = etl::min(width - 3, static_cast<int>(m_data_count));
     if (points_to_draw <= 0) return;
 
     // Calculate visible window min/max (with caching)
     if (m_visible_cache_dirty || m_cached_visible_width != points_to_draw) {
-        m_cached_visible_max = -std::numeric_limits<float>::max();
-        m_cached_visible_min = std::numeric_limits<float>::max();
+        m_cached_visible_max = -etl::numeric_limits<float>::max();
+        m_cached_visible_min = etl::numeric_limits<float>::max();
         
         for (int i = 0; i < points_to_draw; ++i) {
             int buffer_offset = i + 1;
             int data_index = (m_write_index - buffer_offset + m_buffer_size) % m_buffer_size;
             if (buffer_offset <= m_data_count) {
                 float value = m_data_buffer[data_index];
-                m_cached_visible_max = std::max(m_cached_visible_max, value);
-                m_cached_visible_min = std::min(m_cached_visible_min, value);
+                m_cached_visible_max = etl::max(m_cached_visible_max, value);
+                m_cached_visible_min = etl::min(m_cached_visible_min, value);
             }
         }
         
@@ -527,8 +527,8 @@ void Histogram::drawHistogramData(int tl_x, int tl_y, int width, int height, U8G
             int bar_height = static_cast<int>(value * scale_factor);
 
             // Clamp bar height to available vertical space
-            bar_height = std::min(bar_height, height - 4);
-            bar_height = std::max(bar_height, 0);
+            bar_height = etl::min(bar_height, height - 4);
+            bar_height = etl::max(bar_height, 0);
 
             // Calculate bar position: start from right border (tl_x + width - 2), move left
             int bar_x = tl_x + width - 2 - i;

@@ -34,7 +34,7 @@
 #include "core/app/IApplication.h"
 #include "core/app/app_system.h"
 
-#include <memory>
+#include <etl/memory.h>
 #include <etl/stack.h>
 #include "widgets/histogram/histogram.h"
 #include "widgets/curve_chart/curve_chart.h"
@@ -345,7 +345,7 @@ AppItem counter_app{
     .title = "COUNTER",
     .bitmap = image_counter_bits,
 
-    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
-        return std::make_unique<APP_COUNTER>(ui, parameter);
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new APP_COUNTER(ui, parameter));
     },
 };

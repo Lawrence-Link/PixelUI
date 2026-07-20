@@ -35,6 +35,15 @@ constexpr int MAX_TEXT_LENGTH = 30;
 // Maximum number of apps that can be registered
 constexpr int MAX_APP_NUM = 10;
 
+// Maximum number of applications held by the view stack
+constexpr int MAX_VIEW_DEPTH = 8;
+
+// Maximum number of items displayed by an IconView
+constexpr int MAX_ICONVIEW_ITEMS = MAX_APP_NUM;
+
+// Inline storage reserved for callbacks and captured lambdas
+constexpr int CALLBACK_STORAGE_SIZE = 32;
+
 // Maximum slots in a single AppView
 constexpr int MAX_APPVIEW_SLOT_NUM = 10;
 

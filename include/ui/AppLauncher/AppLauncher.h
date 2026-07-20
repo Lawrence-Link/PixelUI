@@ -3,10 +3,10 @@
 #include "PixelUI.h"
 #include "core/app/IApplication.h"
 #include "core/ViewManager/ViewManager.h"
-#include <memory>
+#include <etl/memory.h>
 
 class AppLauncher {
 public:
     // Factory method: creates and returns a fully configured app launcher view.
-    static std::shared_ptr<IApplication> createAppLauncherView(PixelUI& ui, ViewManager& viewManager);
+    static etl::unique_ptr<IApplication> createAppLauncherView(PixelUI& ui, ViewManager& viewManager);
 };

@@ -22,7 +22,7 @@ Its design focuses on **performance, low memory footprint, and easy extensibilit
 ### Core
 - **PixelUI**: Entry point and central dispatcher, including input routing and animations, etc.
 - **Renderer**: Draws the current UI to display buffer.
-- **AnimationManager** manages animations with shared pointers. using Fixed-point arithmetic ensures predictable performance on MCUs without FPU. Supports protected animations, survive bulk cleanup operations.
+- **AnimationManager** manages uniquely owned animations with ETL containers. Fixed-point arithmetic ensures predictable performance on MCUs without FPU. Protected animations survive bulk cleanup operations.
 - **Coroutine** A light-weight coroutine implementation, useful when writing animation load sequence.
 - **ViewManager**: Stack-based view management.
 

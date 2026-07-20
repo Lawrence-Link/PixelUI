@@ -26,8 +26,8 @@
 
 #include "ui/Popup/PopupInfo.h"
 #include "PixelUI.h"
-#include <cstring>
-#include <algorithm>
+#include <string.h>
+#include <etl/algorithm.h>
 
 /**
  * @brief Construct a PopupInfo object
@@ -140,7 +140,7 @@ void PopupInfo::drawContent(int16_t centerX, int16_t centerY, int16_t currentWid
             if (_textLines[i].length > 0) {
                 constexpr size_t MAX_LINE_BUFFER = 64;
                 char lineBuffer[MAX_LINE_BUFFER];
-                size_t copyLength = std::min((size_t)_textLines[i].length, MAX_LINE_BUFFER - 1);
+                size_t copyLength = etl::min((size_t)_textLines[i].length, MAX_LINE_BUFFER - 1);
                 strncpy(lineBuffer, _textLines[i].start, copyLength);
                 lineBuffer[copyLength] = '\0';
 

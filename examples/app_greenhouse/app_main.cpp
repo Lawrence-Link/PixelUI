@@ -139,7 +139,7 @@ AppItem greenhouse_app{
     .title = "Greenhouse",
     .bitmap = image_icon_greenhouse_bits, // TODO: Add an icon bitmap here
 
-    .createApp = [](PixelUI& ui, void* parameter) -> std::shared_ptr<IApplication> {
-        return std::make_shared<Greenhouse_App>(ui, parameter);
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new Greenhouse_App(ui, parameter));
     },
 };

@@ -25,7 +25,8 @@
  */
 
 #include "ui/IconView/IconView.h"
-#include <algorithm>
+#include <etl/algorithm.h>
+#include <stdio.h>
 
 /**
  * @brief Construct an IconView instance and initialize slot positions.
@@ -109,7 +110,7 @@ void IconView::draw() {
  * @brief Set the list of icons to be displayed.
  * @param items A vector of IconItem structures.
  */
-void IconView::setItems(const std::vector<IconItem>& items) {
+void IconView::setItems(const IconItemList& items) {
     items_ = items;
     currentIndex_ = 0;
     scrollToIndex(0);
@@ -354,7 +355,7 @@ int IconView::calculateIconX(int index) {
 int IconView::getVisibleStartIndex() {
     int leftmostX = -iconWidth_;
     for (int i = 0; i < static_cast<int>(items_.size()); ++i) {
-        if (calculateIconX(i) >= leftmostX) return std::max(0, i - 1);
+        if (calculateIconX(i) >= leftmostX) return etl::max(0, i - 1);
     }
     return 0;
 }
@@ -366,7 +367,7 @@ int IconView::getVisibleStartIndex() {
 int IconView::getVisibleEndIndex() {
     int rightmostX = 128 + iconWidth_;
     for (int i = static_cast<int>(items_.size()) - 1; i >= 0; --i) {
-        if (calculateIconX(i) <= rightmostX) return std::min(static_cast<int>(items_.size()) - 1, i + 1);
+        if (calculateIconX(i) <= rightmostX) return etl::min(static_cast<int>(items_.size()) - 1, i + 1);
     }
     return static_cast<int>(items_.size()) - 1;
 }

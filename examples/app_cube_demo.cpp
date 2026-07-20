@@ -33,8 +33,8 @@
 
 #include "core/app/IApplication.h"
 #include "core/app/app_system.h"
-#include <memory>
-#include <cmath>
+#include <etl/memory.h>
+#include <math.h>
 
 /** @brief Bitmap data for the application icon (24x24). */
 static const unsigned char image_sans2_bits[] = {
@@ -238,7 +238,7 @@ AppItem cube_demo_app{
     .title = "Cube Demo",
     .bitmap = image_sans2_bits,
 
-    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
-        return std::make_unique<CubeDemo>(ui, parameter);
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new CubeDemo(ui, parameter));
     },
 };

@@ -52,14 +52,14 @@ void U8G2Wrapper::drawTestString(const char* str) {
     u8g2_SendBuffer(&u8g2);
 }
 
-std::vector<std::vector<bool>> U8G2Wrapper::getFramebufferPixels() {
+Framebuffer U8G2Wrapper::getFramebufferPixels() {
     uint8_t* buffer = u8g2_GetBufferPtr(&u8g2);
     size_t buffer_size = u8g2_GetBufferSize(&u8g2);
 
     int bytes_per_column = (height + 7) / 8;
     
     // pixel buffer is width * height, each column has `bytes_per_column` bytes.
-    std::vector<std::vector<bool>> pixels(height, std::vector<bool>(width, false));
+    Framebuffer pixels{};
 
     for (int x = 0; x < width; ++x) {
         for (int byte_row = 0; byte_row < bytes_per_column; ++byte_row) {

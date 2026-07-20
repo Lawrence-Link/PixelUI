@@ -27,14 +27,13 @@
 #pragma once
 
 #include "PixelUI.h"
-#include <algorithm>
-#include <cstring>
+#include <etl/algorithm.h>
 #include "etl/vector.h"
 #include "etl/delegate.h"
 #include "core/animation/animation.h"
 #include "core/app/IApplication.h"
 #include "etl/map.h"
-#include <cstdint>
+#include <stdint.h>
 
 // Struct to hold extra data for a list item, like values for switches or sliders.
 struct ListItemExtra{
@@ -49,7 +48,7 @@ struct ListItem{
     mutable char title[MAX_LISTITEM_NAME_NUM]; // The display title of the item. 'mutable' allows it to be changed even if the struct is 'const'.
     ListItem * nextList = nullptr;                       // Pointer to a sub-menu (another list).
     int32_t nextListLength = 0;                     // The number of items in the sub-menu. (signed to avoid mixed-signedness)
-    std::function<void()> pFunc = nullptr;               // A function to execute when the item is selected.
+    VoidCallback pFunc = nullptr;               // A function to execute when the item is selected.
     ListItemExtra extra = {nullptr,nullptr};                       // Extra data for dynamic UI elements.
     bool use_fade = false; // Whether render fade animation when navigate to new app.
 };

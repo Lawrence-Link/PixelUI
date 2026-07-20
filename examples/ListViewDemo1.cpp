@@ -69,7 +69,7 @@ public:
 AppItem ListViewDemo_app{
     .title = "ListView Test",
     .bitmap = image_LISTVIEW_bits,
-    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
-        return std::make_unique<ListViewDemo>(ui, ItemList, 10);
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new ListViewDemo(ui, ItemList, 10));
     },
 };

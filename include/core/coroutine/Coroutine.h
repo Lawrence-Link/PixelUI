@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <functional>
 #include <etl/vector.h>
+#include <etl/inplace_function.h>
 #include "config.h"
 
 class PixelUI;
@@ -55,7 +55,7 @@ struct CoroutineContext {
 /**
  * @brief definition for the CoroutineFunction type
  */
-using CoroutineFunction = std::function<void(CoroutineContext&)>;
+using CoroutineFunction = etl::inplace_function<void(CoroutineContext&), CALLBACK_STORAGE_SIZE>;
 
 /**
  * @brief Coroutine class

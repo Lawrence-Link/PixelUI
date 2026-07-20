@@ -25,7 +25,7 @@
  */
 
 #include "widgets/num_scroll/num_scroll.h"
-#include <cstdio>
+#include <stdio.h>
 #include "config.h"
 #include <etl/string.h>
 

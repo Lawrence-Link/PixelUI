@@ -27,9 +27,7 @@
 #pragma once
 #include <QObject>
 #include <QThread>
-#include <atomic>
-#include <chrono>
-#include <thread>
+#include <etl/atomic.h>
 
 class EmuWorker : public QObject {
     Q_OBJECT
@@ -42,7 +40,7 @@ public:
 
     virtual void grandLoop() {  // the pseudo main loop
         while (running) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            QThread::msleep(50);
             emit updateRequested();
         }
     }
@@ -51,8 +49,8 @@ signals:
     void updateRequested();
 
 protected:
-    std::atomic<bool> running{false};
+    etl::atomic<bool> running{false};
 
 private:
-    std::thread workerThread;
+    QThread workerThread;
 };

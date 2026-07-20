@@ -26,7 +26,7 @@
 
 #include "core/app/app_system.h"
 #include "etl/vector.h"
-#include <cstring>
+#include <string.h>
 
 /*
 * @brief Retrieves the vector of registered applications.

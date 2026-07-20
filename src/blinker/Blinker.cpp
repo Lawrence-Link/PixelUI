@@ -26,7 +26,7 @@
 
 #include "blinker/Blinker.h"
 #include "PixelUI.h"
-#include <cassert>
+#include <assert.h>
 
 Blinker::Blinker(PixelUI& ui, uint32_t interval_ms)
     : m_ui(ui),

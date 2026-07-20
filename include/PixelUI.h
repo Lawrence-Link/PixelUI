@@ -31,6 +31,10 @@
 #include "core/coroutine/Coroutine.h"
 #include "ui/IDrawable.h"
 #include "core/CommonTypes.h"
+#include "config.h"
+#include <etl/atomic.h>
+#include <etl/inplace_function.h>
+#include <etl/memory.h>
 
 /**
  * @class IInputHandler
@@ -42,7 +46,9 @@ public:
     virtual ~IInputHandler() = default;
 };
 
-using InputCallback = std::function<bool(InputEvent)>;
+using InputCallback = etl::inplace_function<bool(InputEvent), CALLBACK_STORAGE_SIZE>;
+using VoidCallback = etl::inplace_function<void(), CALLBACK_STORAGE_SIZE>;
+using ValueCallback = etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE>;
 using DelayFunction = void (*)(uint32_t);
 
 class ViewManager;
@@ -62,7 +68,7 @@ class PixelUI
 {
 public:
     PixelUI(U8G2& u8g2);
-    ~PixelUI() = default;
+    ~PixelUI();
 
     /**
      * @brief Initializes the UI framework.
@@ -109,13 +115,13 @@ public:
      * @brief Adds a custom animation to the manager.
      * @param animation The animation to add.
      */
-    void addAnimation(std::shared_ptr<Animation> animation);
+    void addAnimation(etl::unique_ptr<Animation> animation);
     
     /**
      * @brief Marks an animation as protected, preventing it from being cleared.
      * @param animation The animation to protect.
      */
-    void markAnimationProtected(std::shared_ptr<Animation> animation) { m_animationManagerPtr->markProtected(animation); }
+    void markAnimationProtected(Animation* animation) { m_animationManagerPtr->markProtected(animation); }
     
     /**
      * @brief Clears all unprotected animations.
@@ -130,7 +136,7 @@ public:
     uint32_t getCurrentTime() const { return _currentTime; }
 
     // setters
-    void setRefreshCallback(std::function<void()> function) { if (function) m_refresh_callback = function; }
+    void setRefreshCallback(VoidCallback function) { if (function) m_refresh_callback = function; }
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
     void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
     void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
@@ -140,9 +146,9 @@ public:
 
     // getters
     U8G2& getU8G2() const { return u8g2_; }
-    std::shared_ptr<AnimationManager> getAnimationManPtr() { return m_animationManagerPtr; }
-    std::shared_ptr<PopupManager> getPopupManagerPtr() { return m_popupManagerPtr; }
-    std::shared_ptr<ViewManager> getViewManagerPtr() const { return m_viewManagerPtr; }
+    AnimationManager* getAnimationManPtr() { return m_animationManagerPtr.get(); }
+    PopupManager* getPopupManagerPtr() { return m_popupManagerPtr.get(); }
+    ViewManager* getViewManagerPtr() const { return m_viewManagerPtr.get(); }
 
     // popup related functions
 
@@ -174,7 +180,7 @@ public:
         uint16_t height = 30, 
         uint16_t duration = 3000, 
         uint8_t priority = 0, 
-        std::function<void(int32_t val)> update_cb = nullptr);
+        ValueCallback update_cb = nullptr);
     
     /**
      * @brief Shows a progress popup.
@@ -197,7 +203,7 @@ public:
         uint16_t height = 40, 
         uint16_t duration = 3000, 
         uint8_t priority = 0, 
-        std::function<void(int32_t val)> update_cb = nullptr, bool use_apparent_val = false);
+        ValueCallback update_cb = nullptr, bool use_apparent_val = false);
 
     /**
      * @brief Marks the display buffer as dirty, forcing a redraw.
@@ -223,28 +229,28 @@ public:
     friend class FocusManager;
 
 protected:
-    void setDrawable(std::shared_ptr<IDrawable> drawable) { currentDrawable_ = drawable; }
+    void setDrawable(IDrawable* drawable) { currentDrawable_ = drawable; }
     bool isFading() const { return isFading_; }
 
 private:
 private:
     U8G2& u8g2_;
 
-    std::shared_ptr<AnimationManager> m_animationManagerPtr;
-    std::shared_ptr<ViewManager> m_viewManagerPtr;
-    std::shared_ptr<PopupManager> m_popupManagerPtr;
-    std::shared_ptr<CoroutineScheduler> m_coroutineSchedulerPtr;
-    std::shared_ptr<FocusManager> m_focusManagerPtr;
+    etl::unique_ptr<AnimationManager> m_animationManagerPtr;
+    etl::unique_ptr<ViewManager> m_viewManagerPtr;
+    etl::unique_ptr<PopupManager> m_popupManagerPtr;
+    etl::unique_ptr<CoroutineScheduler> m_coroutineSchedulerPtr;
+    etl::unique_ptr<FocusManager> m_focusManagerPtr;
 
     uint32_t _currentTime = 0;
-    std::shared_ptr<IDrawable> currentDrawable_;
-    std::atomic_bool update_symbol_ = false;
+    IDrawable* currentDrawable_ = nullptr;
+    etl::atomic<bool> update_symbol_{false};
 
     bool isDirty_ = false;
     bool isFading_ = false;
     bool continousMode_ = false;
 
-    std::function<void()> m_refresh_callback = nullptr;
+    VoidCallback m_refresh_callback = nullptr;
     DelayFunction m_func_delay = nullptr;
     InputCallback inputCallback_ = nullptr;
 

@@ -28,7 +28,6 @@
 #include <QPainter>
 #include "u8g2_wrapper.h"
 #include <QMouseEvent>
-#include <iostream>
 
 QPoint mousePosU8g2 = QPoint(-1, -1);
 
@@ -41,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent, int _width, int _height, int _scale) : Q
 
 MainWindow::~MainWindow() {}
 
-void MainWindow::setPixels(const std::vector<std::vector<bool>> &newPixels)
+void MainWindow::setPixels(const Framebuffer &newPixels)
 {
     pixels = newPixels;
     // 计算像素块大小，保持和窗口宽高对应
@@ -51,8 +50,8 @@ void MainWindow::setPixels(const std::vector<std::vector<bool>> &newPixels)
 
 void MainWindow::pushInputEvent(InputEvent event)
 {
-    std::lock_guard<std::mutex> lock(queueMutex);
-    inputQueue.push(event);
+    etl::lock_guard<etl::mutex> lock(queueMutex);
+    if (!inputQueue.full()) inputQueue.push(event);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
@@ -106,11 +105,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
-std::optional<InputEvent> MainWindow::popInputEvent()
+etl::optional<InputEvent> MainWindow::popInputEvent()
 {
-    std::lock_guard<std::mutex> lock(queueMutex);
+    etl::lock_guard<etl::mutex> lock(queueMutex);
     if (inputQueue.empty()) {
-        return std::nullopt; // 没有事件
+        return etl::nullopt; // 没有事件
     }
     InputEvent event = inputQueue.front();
     inputQueue.pop();

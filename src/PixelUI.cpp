@@ -34,7 +34,7 @@
 #include "ui/Popup/PopupValue4Digits.h"
 #include "core/coroutine/Coroutine.h"
 #include "focus/focus.h"
-#include <cinttypes>
+#include <inttypes.h>
 
 /**
  * @brief Construct a PixelUI instance with a U8G2 display reference
@@ -43,16 +43,18 @@
  * Initializes core subsystems: ViewManager, AnimationManager, PopupManager, and CoroutineScheduler.
  */
 PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
-    m_viewManagerPtr = std::make_shared<ViewManager>(*this);
-    m_animationManagerPtr = std::make_shared<AnimationManager>();
-    m_popupManagerPtr = std::make_shared<PopupManager>(*this);
-    m_coroutineSchedulerPtr = std::make_shared<CoroutineScheduler>(*this);
-    m_focusManagerPtr = std::make_shared<FocusManager>(*this);
+    m_viewManagerPtr.reset(new ViewManager(*this));
+    m_animationManagerPtr.reset(new AnimationManager());
+    m_popupManagerPtr.reset(new PopupManager(*this));
+    m_coroutineSchedulerPtr.reset(new CoroutineScheduler(*this));
+    m_focusManagerPtr.reset(new FocusManager(*this));
 }
+
+PixelUI::~PixelUI() = default;
 
 /**
  * @brief Add a coroutine to the scheduler
- * @param coroutine Shared pointer to the Coroutine object
+ * @param coroutine Non-owning pointer to the Coroutine object
  */
 void PixelUI::addCoroutine(Coroutine* coroutine) { 
     m_coroutineSchedulerPtr->addCoroutine(coroutine); 
@@ -60,7 +62,7 @@ void PixelUI::addCoroutine(Coroutine* coroutine) {
 
 /**
  * @brief Remove a coroutine from the scheduler
- * @param coroutine Shared pointer to the Coroutine object
+ * @param coroutine Non-owning pointer to the Coroutine object
  */
 void PixelUI::removeCoroutine(Coroutine* coroutine) { 
     m_coroutineSchedulerPtr->removeCoroutine(coroutine); 
@@ -86,11 +88,12 @@ void PixelUI::Heartbeat(uint32_t ms) {
 
 /**
  * @brief Add and start an animation
- * @param animation Shared pointer to an Animation object
+ * @param animation Uniquely owned Animation object
  */
-void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
+void PixelUI::addAnimation(etl::unique_ptr<Animation> animation) {
+    if (!animation) return;
     animation->start(_currentTime);
-    m_animationManagerPtr->addAnimation(animation);
+    m_animationManagerPtr->addAnimation(etl::move(animation));
 }
 
 /**
@@ -99,12 +102,13 @@ void PixelUI::addAnimation(std::shared_ptr<Animation> animation) {
 void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
                       EasingType easing, PROTECTION prot) {
 
-    auto animation = std::make_shared<CallbackAnimation>(
+    etl::unique_ptr<Animation> animation(new CallbackAnimation(
         value, targetValue, duration, easing,
         [&value](int32_t currentValue) { value = currentValue; }
-    );
-    if (prot == PROTECTION::PROTECTED) m_animationManagerPtr->markProtected(animation);
-    addAnimation(animation);
+    ));
+    Animation* animationPtr = animation.get();
+    if (prot == PROTECTION::PROTECTED) m_animationManagerPtr->markProtected(animationPtr);
+    addAnimation(etl::move(animation));
 }
 
 /**
@@ -113,14 +117,16 @@ void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
 void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY,
                       uint32_t duration, EasingType easing, PROTECTION prot) {
 
-    auto animX = std::make_shared<CallbackAnimation>(x, targetX, duration, easing, [&x](int32_t val) { x = val; });
-    auto animY = std::make_shared<CallbackAnimation>(y, targetY, duration, easing, [&y](int32_t val) { y = val; });
-    addAnimation(animX);
-    addAnimation(animY);
+    etl::unique_ptr<Animation> animX(new CallbackAnimation(x, targetX, duration, easing, [&x](int32_t val) { x = val; }));
+    etl::unique_ptr<Animation> animY(new CallbackAnimation(y, targetY, duration, easing, [&y](int32_t val) { y = val; }));
+    Animation* animXPtr = animX.get();
+    Animation* animYPtr = animY.get();
     if (prot == PROTECTION::PROTECTED) {
-        m_animationManagerPtr->markProtected(animX);
-        m_animationManagerPtr->markProtected(animY);
+        m_animationManagerPtr->markProtected(animXPtr);
+        m_animationManagerPtr->markProtected(animYPtr);
     }
+    addAnimation(etl::move(animX));
+    addAnimation(etl::move(animY));
 }
 /**
  * @brief Add a widget to the FocusManager
@@ -217,7 +223,7 @@ void PixelUI::renderer() {
 void PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue,
                                 const char* title, uint16_t width, uint16_t height,
                                 uint16_t duration, uint8_t priority,
-                                std::function<void(int32_t val)> update_cb, bool use_apparent_val) {
+                                ValueCallback update_cb, bool use_apparent_val) {
     if (minValue >= maxValue) return;
     if (width < 50) width = 50; 
     if (width > 120) width = 120;
@@ -226,10 +232,10 @@ void PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxVal
     if (duration > 30000) duration = 30000; 
     if (duration < 1000) duration = 1000;
 
-    auto popup = std::make_shared<PopupProgress>(*this, width, height, value,
-                                                 minValue, maxValue, title,
-                                                 duration, priority, update_cb, use_apparent_val);
-    m_popupManagerPtr->addPopup(popup);
+    etl::unique_ptr<IPopup> popup(new PopupProgress(*this, width, height, value,
+                                                    minValue, maxValue, title,
+                                                    duration, priority, update_cb, use_apparent_val));
+    m_popupManagerPtr->addPopup(etl::move(popup));
     markDirty();
 }
 
@@ -240,9 +246,9 @@ void PixelUI::showPopupInfo(const char* text, const char* title,
                             uint16_t width, uint16_t height,
                             uint16_t duration, uint8_t priority) {
     if (!text) return;
-    auto popup = std::make_shared<PopupInfo>(*this, width, height, text, title,
-                                             duration, priority);
-    m_popupManagerPtr->addPopup(popup);
+    etl::unique_ptr<IPopup> popup(new PopupInfo(*this, width, height, text, title,
+                                                duration, priority));
+    m_popupManagerPtr->addPopup(etl::move(popup));
     markDirty();
 }
 
@@ -252,7 +258,7 @@ void PixelUI::showPopupInfo(const char* text, const char* title,
 void PixelUI::showPopupValue4Digits(int32_t& value, const char* title,
                                     uint16_t width, uint16_t height,
                                     uint16_t duration, uint8_t priority,
-                                    std::function<void(int32_t val)> update_cb) {
+                                    ValueCallback update_cb) {
     if (width < 50) width = 50; 
     if (width > 120) width = 120;
     if (height < 30) height = 30; 
@@ -260,10 +266,10 @@ void PixelUI::showPopupValue4Digits(int32_t& value, const char* title,
     if (duration > 30000) duration = 30000; 
     if (duration < 1000) duration = 1000;
 
-    auto popup = std::make_shared<PopupValue4Digits>(*this, width, height, value,
-                                                     title, duration, priority,
-                                                     update_cb);
-    m_popupManagerPtr->addPopup(popup);
+    etl::unique_ptr<IPopup> popup(new PopupValue4Digits(*this, width, height, value,
+                                                        title, duration, priority,
+                                                        update_cb));
+    m_popupManagerPtr->addPopup(etl::move(popup));
     markDirty();
 }
 

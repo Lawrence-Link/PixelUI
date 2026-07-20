@@ -27,12 +27,13 @@
 #pragma once
 
 #include "PixelUI.h"
-#include <functional>
+#include <etl/inplace_function.h>
+#include "config.h"
 
 class IApplication : public IDrawable, public IInputHandler {
 public:
 
-    using ExitCallback = std::function<void()>; // Exit callback function
+    using ExitCallback = etl::inplace_function<void(), CALLBACK_STORAGE_SIZE>; // Exit callback function
     virtual ~IApplication() = default;
 
     // Called when the app is pushed to the top of the stack

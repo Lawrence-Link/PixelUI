@@ -26,8 +26,8 @@
 
 #include "core/app/IApplication.h"
 #include "core/app/app_system.h"
-#include <memory>
-#include <ctime>
+#include <etl/memory.h>
+#include <time.h>
 
 /** @brief Bitmap data for clock application icon (24x24). */
 static const unsigned char image_clock_bits[] = {
@@ -338,7 +338,7 @@ public:
 AppItem pixel_clock_app{
     .title = "Clock",
     .bitmap = image_clock_bits,
-    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> {
-        return std::make_unique<APP_PIXEL_CLOCK>(ui, parameter);
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new APP_PIXEL_CLOCK(ui, parameter));
     },
 };

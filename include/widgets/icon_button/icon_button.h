@@ -30,7 +30,7 @@
 
 class IconButton : public IWidget {
 private:
-    std::function<void()> m_callback;
+    VoidCallback m_callback;
     
     PixelUI& m_ui;
     int32_t pos_x = 0, pos_y = 0, m_w = 0, m_h = 0;
@@ -46,7 +46,7 @@ public:
     bool onSelect() override ;
     void draw() override;
 
-    void setCallback(std::function<void()> cb) {m_callback = cb;}
+    void setCallback(VoidCallback cb) {m_callback = cb;}
     void setPosition(uint16_t x, uint16_t y) {
         pos_x = x; pos_y = y;
         IWidget::setFocusBox(FocusBox(pos_x - 1, pos_y - 1, m_w + 2, m_h + 2));

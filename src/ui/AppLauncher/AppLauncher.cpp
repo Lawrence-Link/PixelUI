@@ -28,9 +28,9 @@
 #include "ui/IconView/IconView.h"
 #include "core/app/app_system.h"
 
-std::shared_ptr<IApplication> AppLauncher::createAppLauncherView(PixelUI& ui, ViewManager& viewManager) {
+etl::unique_ptr<IApplication> AppLauncher::createAppLauncherView(PixelUI& ui, ViewManager& viewManager) {
     // Create an IconView instance.
-    auto iconView = std::make_shared<IconView>(ui);
+    etl::unique_ptr<IconView> iconView(new IconView(ui));
 
     // Configure the appearance and behavior of the IconView.
     iconView->setTitle("< Apps >");
@@ -41,8 +41,7 @@ std::shared_ptr<IApplication> AppLauncher::createAppLauncherView(PixelUI& ui, Vi
     // Get the app list from AppManager and convert it to IconItems.
     auto& appManager = AppManager::getInstance();
     const auto& apps = appManager.getAppVector();
-    std::vector<IconItem> iconItems;
-    iconItems.reserve(apps.size()); // Pre-allocate memory.
+    IconItemList iconItems;
     for (const auto& app : apps) {
         // We use const_cast because AppItem* will be stored in a void*,
         // but we guarantee it will not be modified.
@@ -57,12 +56,12 @@ std::shared_ptr<IApplication> AppLauncher::createAppLauncherView(PixelUI& ui, Vi
             if (appItem && appItem->createApp) {
                 auto appInstance = appItem->createApp(ui, nullptr);
                 if (appInstance) {
-                    viewManager.push(appInstance);
+                    viewManager.push(etl::move(appInstance));
                 }
             }
         }
     );
     
     // Return the fully configured view.
-    return iconView;
+    return etl::unique_ptr<IApplication>(etl::move(iconView));
 }

@@ -26,8 +26,8 @@
 
 #include "ui/ListView/ListView.h"
 #include "core/animation/animation.h"
-#include <cinttypes>
-#include <cstdio>
+#include <inttypes.h>
+#include <stdio.h>
 
 /**
  * @brief Called when the ListView is entered.
@@ -79,7 +79,7 @@ void ListView::onEnter(ExitCallback exitCallback){
  */
 void ListView::startLoadAnimation() {
     isInitialLoad_ = true;
-    int maxVisible = std::min(visibleItemCount_ + 1, (int32_t)(m_itemLength + 1));
+    int maxVisible = etl::min(visibleItemCount_ + 1, (int32_t)(m_itemLength + 1));
 
     for (int i = 0; i < maxVisible; i++) {
         int duration = 250 + i * 60;
@@ -92,12 +92,12 @@ void ListView::startLoadAnimation() {
             }
         };
 
-        auto animation = std::make_shared<CallbackAnimation>(
+        etl::unique_ptr<Animation> animation(new CallbackAnimation(
             0, FIXED_POINT_ONE, duration, EasingType::EASE_IN_OUT_CUBIC, callback
-        );
+        ));
         
-        m_ui.getAnimationManPtr()->markProtected(animation);
-        m_ui.addAnimation(animation);
+        m_ui.getAnimationManPtr()->markProtected(animation.get());
+        m_ui.addAnimation(etl::move(animation));
     }
 }
 
@@ -131,8 +131,8 @@ void ListView::updateScrollPosition() {
     else if (currentCursor >= topVisibleIndex_ + visibleItemCount_)
         newTopIndex = currentCursor - visibleItemCount_ + 1;
     
-    int maxTopIndex = std::max((int32_t)0, m_itemLength + 1 - visibleItemCount_);
-    newTopIndex = std::max(0, std::min(newTopIndex, maxTopIndex));
+    int maxTopIndex = etl::max((int32_t)0, m_itemLength + 1 - visibleItemCount_);
+    newTopIndex = etl::max(0, etl::min(newTopIndex, maxTopIndex));
     
     if (newTopIndex != topVisibleIndex_) {
         int32_t targetScrollOffset = -newTopIndex * (FontHeight + spacing_);
@@ -224,12 +224,12 @@ void ListView::selectCurrent(){
         switchAnimStates_[targetIndex].isAnimating = true;
 
         auto callback = [this, targetIndex](int32_t value) { switchAnimStates_[targetIndex].boxX = value; };
-        auto animation = std::make_shared<CallbackAnimation>(
+        etl::unique_ptr<Animation> animation(new CallbackAnimation(
             switchAnimStates_[targetIndex].boxX, endX, 200, EasingType::EASE_IN_OUT_CUBIC, callback
-        );
+        ));
 
-        m_ui.getAnimationManPtr()->markProtected(animation);
-        m_ui.addAnimation(animation);
+        m_ui.getAnimationManPtr()->markProtected(animation.get());
+        m_ui.addAnimation(etl::move(animation));
 
         *switchValPtr = !currentState;
         // return;
@@ -352,8 +352,8 @@ void ListView::onExit() {
 void ListView::draw() {
     U8G2& u8g2 = m_ui.getU8G2();
     u8g2.setFont(u8g2_font_wqy12_t_gb2312b); 
-    int startIndex = std::max((int32_t)0, topVisibleIndex_ - 2);
-    int endIndex = std::min(m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
+    int startIndex = etl::max((int32_t)0, topVisibleIndex_ - 2);
+    int endIndex = etl::min(m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
     
     for (int itemIndex = startIndex; itemIndex <= endIndex; itemIndex++) {
         int32_t itemY = calculateItemY(itemIndex);

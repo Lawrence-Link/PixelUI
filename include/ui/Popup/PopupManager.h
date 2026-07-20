@@ -4,10 +4,9 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
 #include "PopupInterface.h"
 #include "etl/vector.h"
+#include "etl/memory.h"
 #include "config.h"
 
 class PixelUI;
@@ -18,15 +17,15 @@ class PixelUI;
  */
 class PopupManager {
 private:
-    etl::vector<std::shared_ptr<IPopup>, MAX_POPUP_NUM> _popups;
+    etl::vector<etl::unique_ptr<IPopup>, MAX_POPUP_NUM> _popups;
     PixelUI& m_ui;
     
 public:
     PopupManager(PixelUI& ui) : m_ui(ui) {}
     ~PopupManager() = default;
 
-    void addPopup(std::shared_ptr<IPopup> popup);
-    void removePopup(std::shared_ptr<IPopup> popup);
+    void addPopup(etl::unique_ptr<IPopup> popup);
+    void removePopup(IPopup* popup);
     void clearPopups();
     void drawPopups();
     void updatePopups(uint32_t currentTime);

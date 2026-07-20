@@ -39,7 +39,7 @@ public:
     void draw() override;
     bool onSelect() override { if (m_callback) m_callback(); return false;}
 
-    void setCallback(std::function<void()> cb) { m_callback = cb; };
+    void setCallback(VoidCallback cb) { m_callback = cb; };
     void setSize(uint16_t mar_w, uint16_t mar_h) {
         size_h_ = mar_w; size_h_ = mar_h;
         setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
@@ -48,15 +48,15 @@ public:
         pos_x_ = pos_x; pos_y_=pos_y;
         setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
     }
-    void setDrawContentFunction(std::function<void()> func) { contentWithinBrace = func; }
+    void setDrawContentFunction(VoidCallback func) { contentWithinBrace = func; }
     
 private:
     PixelUI& m_ui;
     int16_t pos_x_ = 0, pos_y_ = 0;
     int16_t size_w_ = 0, size_h_ = 0;
 
-    std::function<void()> contentWithinBrace;
-    std::function<void()> m_callback = nullptr;
+    VoidCallback contentWithinBrace;
+    VoidCallback m_callback = nullptr;
 
     int32_t anim_w = 0;
     int32_t anim_h = 0;

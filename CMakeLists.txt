@@ -7,6 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Build simulator
 option(BUILD_SIMULATOR "Build PC Qt simulator" ON)
 
+if(NOT BUILD_SIMULATOR)
+    add_subdirectory(third_party/etl EXCLUDE_FROM_ALL)
+    add_subdirectory(third_party/u8g2 EXCLUDE_FROM_ALL)
+endif()
+
 add_subdirectory(src)
 
 if(NOT BUILD_SIMULATOR)

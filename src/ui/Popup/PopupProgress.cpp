@@ -26,8 +26,8 @@
 
 #include "ui/Popup/PopupProgress.h"
 #include "PixelUI.h"
-#include <cstdio>
-#include <cinttypes>
+#include <stdio.h>
+#include <inttypes.h>
 
 /**
  * @brief Construct a progress popup
@@ -46,7 +46,9 @@
  */
 PopupProgress::PopupProgress(PixelUI& ui, uint16_t width, uint16_t height, 
                             int32_t& value, int32_t minValue, int32_t maxValue,
-                            const char* title, uint16_t duration, uint8_t priority, std::function<void(int32_t value)> cb_function, bool UseApparentVal)
+                            const char* title, uint16_t duration, uint8_t priority,
+                            etl::inplace_function<void(int32_t value), CALLBACK_STORAGE_SIZE> cb_function,
+                            bool UseApparentVal)
     : PopupBase(ui, width, height, priority, duration), 
       _value(value), _minValue(minValue), _maxValue(maxValue), _title(title), m_cb(cb_function), use_apparent_val(UseApparentVal)
 {
@@ -133,7 +135,7 @@ void PopupProgress::drawContent(int16_t centerX, int16_t centerY, int16_t curren
     if (!use_apparent_val) {
         formatValueAsPercentage(percentBuffer, sizeof(percentBuffer));
     } else {
-        sprintf(percentBuffer, "%" PRId32, _value);
+        snprintf(percentBuffer, sizeof(percentBuffer), "%" PRId32, _value);
     }
     int16_t percentWidth = u8g2.getStrWidth(percentBuffer);
     u8g2.drawStr(centerX - percentWidth / 2, centerY + 17, percentBuffer);

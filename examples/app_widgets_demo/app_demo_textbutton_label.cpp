@@ -168,7 +168,7 @@ AppItem button_demo_app{
     .title = "Label / Button Demo",
     .bitmap = image_icon_text_button_bits,
     
-    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> { 
-        return std::make_unique<App_Button_Demo>(ui, parameter); 
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new App_Button_Demo(ui, parameter));
     },
 };

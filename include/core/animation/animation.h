@@ -24,10 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
-#include <cstdint>
-#include <memory>
+#include <stdint.h>
+#include <stddef.h>
 #include "etl/vector.h"
-#include <functional>
+#include "etl/inplace_function.h"
+#include "etl/memory.h"
 #include "config.h"
 #include "core/CommonTypes.h"
 
@@ -100,18 +101,18 @@ private:
 class AnimationManager {
 public:
     ~AnimationManager() = default;
-    void addAnimation(std::shared_ptr<Animation> animation);
+    void addAnimation(etl::unique_ptr<Animation> animation);
     void update(uint32_t currentTime);
     void clear();
     
     // Protection mechanism
-    void markProtected(std::shared_ptr<Animation> animation);
+    void markProtected(Animation* animation);
     void clearUnprotected();
     void clearAllProtectionMarks();
     size_t activeCount() const;
 
 private:
-    etl::vector<std::shared_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
+    etl::vector<etl::unique_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
 };
 
 /**
@@ -121,7 +122,7 @@ private:
 class CallbackAnimation : public Animation {
 public:
     CallbackAnimation(int32_t startVal, int32_t endVal, uint32_t duration, EasingType easing,
-                      std::function<void(int32_t)> updateCallback)
+                      etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE> updateCallback)
         : Animation(duration, easing),
           _startVal(startVal),
           _endVal(endVal),
@@ -140,5 +141,5 @@ public:
 private:
     int32_t _startVal;
     int32_t _endVal;
-    std::function<void(int32_t)> _updateCallback;
+    etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE> _updateCallback;
 };

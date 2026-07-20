@@ -171,7 +171,7 @@ public:
         u8g2.setFont(u8g2_font_5x8_tr);
         // sprintf(print_buf, "X = %d", anim_block_x);
         // u8g2.drawStr(5, 36, print_buf);
-        sprintf(print_buf, "Y = %d", anim_block_y);
+        snprintf(print_buf, sizeof(print_buf), "Y = %d", anim_block_y);
         u8g2.drawStr(5, 61, print_buf);
         // sprintf(print_buf, "W = %d", anim_block_w);
         // u8g2.drawStr(5, 52, print_buf);
@@ -209,7 +209,7 @@ AppItem anim_demo_app{
     .title = "Anim Demo",
     .bitmap = image_Icon_Anim_Demo_bits,
     
-    .createApp = [](PixelUI& ui, void* parameter) -> std::unique_ptr<IApplication> { 
-        return std::make_unique<App_Anim_Demo>(ui, parameter); 
+    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
+        return etl::unique_ptr<IApplication>(new App_Anim_Demo(ui, parameter));
     },
 };

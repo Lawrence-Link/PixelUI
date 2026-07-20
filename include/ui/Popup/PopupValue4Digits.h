@@ -6,7 +6,8 @@
 
 #include "PopupBase.h"
 #include <stddef.h>
-#include <functional>
+#include <etl/inplace_function.h>
+#include "config.h"
 #include "widgets/num_scroll/num_scroll.h"
 #include "focus/focus.h"
 /**
@@ -19,12 +20,13 @@ private:
     const char* _title;
     NumScroll num_thousands, num_hundreds, num_tens, num_ones;
     FocusManager m_focusMan;
-    std::function<void(int32_t value)> m_cb;
+    etl::inplace_function<void(int32_t value), CALLBACK_STORAGE_SIZE> m_cb;
 
 public:
     PopupValue4Digits(PixelUI& ui, uint16_t width, uint16_t height, 
                   int32_t& value,
-                  const char* title = "", uint16_t duration = 3000, uint8_t priority = 0, std::function<void(int32_t value)> cb_function = nullptr);
+                  const char* title = "", uint16_t duration = 3000, uint8_t priority = 0,
+                  etl::inplace_function<void(int32_t value), CALLBACK_STORAGE_SIZE> cb_function = nullptr);
     ~PopupValue4Digits() {
         m_ui.markDirty();
     };

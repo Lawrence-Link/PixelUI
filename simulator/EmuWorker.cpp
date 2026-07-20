@@ -26,22 +26,23 @@
 
 #include "EmuWorker.h"
 
-EmuWorker::EmuWorker(QObject *parent) : QObject(parent), running(false) {}
+EmuWorker::EmuWorker(QObject *parent) : QObject(parent), running(false) {
+    connect(&workerThread, &QThread::started, this, &EmuWorker::grandLoop, Qt::DirectConnection);
+}
 
 EmuWorker::~EmuWorker() {
     stop();
 }
 
 void EmuWorker::start() {
-    if (running) return;  // Already running
+    if (running || workerThread.isRunning()) return;  // Already running
     running = true;
-    workerThread = std::thread(&EmuWorker::grandLoop, this);
+    workerThread.start();
 }
 
 void EmuWorker::stop() {
-    if (!running) return;  // Not running
+    if (!running && !workerThread.isRunning()) return;  // Not running
     running = false;
-    if (workerThread.joinable()) {
-        workerThread.join();  // Wait for the thread to finish
-    }
+    workerThread.quit();
+    workerThread.wait();
 }

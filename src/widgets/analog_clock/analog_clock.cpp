@@ -25,7 +25,7 @@
  */
 
 #include "widgets/analog_clock/analog_clock.h"
-#include <cmath>
+#include <math.h>
 
 /**
  * @brief Construct a new Clock object

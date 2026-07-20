@@ -28,9 +28,9 @@
 
 #include "PixelUI.h"
 #include "core/app/IApplication.h"
-#include <functional>
-#include <vector>
-#include <string>
+#include <etl/inplace_function.h>
+#include <etl/string.h>
+#include <etl/vector.h>
 
 // A generic interface for an icon-based item.
 struct IconItem {
@@ -43,7 +43,8 @@ struct IconItem {
 };
 
 // Callback function type definitions.
-using SelectionCallback = std::function<void(int index, const IconItem& item)>;
+using IconItemList = etl::vector<IconItem, MAX_ICONVIEW_ITEMS>;
+using SelectionCallback = etl::inplace_function<void(int index, const IconItem& item), CALLBACK_STORAGE_SIZE>;
 
 // IconView is now a complete, standalone view component.
 class IconView : public IApplication {
@@ -59,7 +60,7 @@ public:
     void onPause() override;
 
     // --- Configuration Methods ---
-    void setItems(const std::vector<IconItem>& items);
+    void setItems(const IconItemList& items);
     void setSelectionCallback(SelectionCallback callback);
     void setTitle(const char* title);
     
@@ -70,11 +71,11 @@ public:
 
 private:
     PixelUI& ui_;
-    std::vector<IconItem> items_;
+    IconItemList items_;
     SelectionCallback selectionCallback_;
     
     // Title-related members.
-    std::string title_;
+    etl::string<MAX_TEXT_LENGTH> title_;
     int titleY_ = 10;
     const uint8_t * font_title = NULL;
     
@@ -102,7 +103,7 @@ private:
     int centerX_ = 64;
     int iconY_ = 18;
     
-    std::vector<float> slotPositionsX_;
+    etl::vector<float, 3> slotPositionsX_;
     
     // --- Private Methods ---
     void initializeSlotPositions();

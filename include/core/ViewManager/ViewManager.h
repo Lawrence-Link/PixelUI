@@ -27,9 +27,9 @@
 #pragma once
 
 #include "core/app/IApplication.h"
-#include <stack>
-#include <memory>
-#include <atomic>
+#include <etl/stack.h>
+#include <etl/memory.h>
+#include <etl/atomic.h>
 #include "ui/Popup/PopupManager.h"
 
 class ViewManager {
@@ -51,13 +51,13 @@ public:
             return false;
         });
     }
-    void push(std::shared_ptr<IApplication> app);
+    void push(etl::unique_ptr<IApplication> app);
     void pop();
-    bool isTransitioning() const noexcept { return m_isTransitioning.load(std::memory_order_relaxed); }
+    bool isTransitioning() const noexcept { return m_isTransitioning.load(etl::memory_order_relaxed); }
 
-    std::shared_ptr<IApplication> getCurrentApp() const;
+    IApplication* getCurrentApp() const;
 private:
     PixelUI &m_ui;
-    std::stack<std::shared_ptr<IApplication>> m_viewStack;
-    std::atomic<bool> m_isTransitioning{false};
+    etl::stack<etl::unique_ptr<IApplication>, MAX_VIEW_DEPTH> m_viewStack;
+    etl::atomic<bool> m_isTransitioning{false};
 };

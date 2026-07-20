@@ -27,10 +27,10 @@
 #include "core/ViewManager/ViewManager.h"
 /*
 @brief Pushes a new application onto the view stack and makes it the current view.
-@param app A shared pointer to the application to be pushed onto the stack.
+@param app The uniquely owned application to be pushed onto the stack.
 */
-void ViewManager::push(std::shared_ptr<IApplication> app) {
-    if (!app) return;
+void ViewManager::push(etl::unique_ptr<IApplication> app) {
+    if (!app || m_viewStack.full()) return;
         m_isTransitioning = true;
 
         if (!m_viewStack.empty()) {
@@ -39,11 +39,12 @@ void ViewManager::push(std::shared_ptr<IApplication> app) {
             m_viewStack.top()->onPause(); // Pause the current top application
         }
 
-        m_viewStack.push(app);    // Push the new application onto the stack
-        m_ui.setDrawable(app);    // Grant app with drawable control
+        m_viewStack.push(etl::move(app));    // Push the new application onto the stack
+        IApplication* currentApp = m_viewStack.top().get();
+        m_ui.setDrawable(currentApp);    // Grant app with drawable control
         
         m_ui.clearFocusManager();
-        app->onEnter([this]() {this->pop();}); // Handle app with exit callback
+        currentApp->onEnter([this]() {this->pop();}); // Handle app with exit callback
         m_ui.markDirty();
 
         m_isTransitioning = false;
@@ -53,7 +54,6 @@ void ViewManager::push(std::shared_ptr<IApplication> app) {
 @brief Pops the current application from the view stack and resumes the previous application if available.
 */
 void ViewManager::pop() {
-    // std::lock_guard<std::mutex> lock(m_stackMutex);
 
     if (m_viewStack.empty()) return;
 
@@ -70,8 +70,8 @@ void ViewManager::pop() {
     m_ui.clearAllCoroutines();
     m_ui.clearAllAnimations();
     if (!m_viewStack.empty()) {
-        auto& previousApp = m_viewStack.top();
-        m_ui.setDrawable( previousApp ); // setting up new drawable
+        IApplication* previousApp = m_viewStack.top().get();
+        m_ui.setDrawable(previousApp); // setting up new drawable
         previousApp->onResume(); // resume the previous application
     }
     
@@ -79,7 +79,7 @@ void ViewManager::pop() {
     m_isTransitioning = false; // mark the end of the transition
 }
 
-std::shared_ptr<IApplication> ViewManager::getCurrentApp() const {
+IApplication* ViewManager::getCurrentApp() const {
     if (m_viewStack.empty()) return nullptr;
-    return m_viewStack.top();
+    return m_viewStack.top().get();
 }

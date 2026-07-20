@@ -24,7 +24,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <iostream>
 #include "u8g2_wrapper.h"
 
 #include <stdio.h>
@@ -48,7 +47,7 @@ PixelUI ui(display);
 MainWindow* g_mainWindow = nullptr;
 
 void threadDelay(uint32_t ms) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+    QThread::msleep(ms);
 }
 
 class EmulatorThread : public EmuWorker {
@@ -62,7 +61,7 @@ public:
 
     ui.begin();
     auto appView = AppLauncher::createAppLauncherView(ui, *ui.getViewManagerPtr());
-    ui.getViewManagerPtr()->push(appView);
+    ui.getViewManagerPtr()->push(etl::move(appView));
         while (running) {
         
             auto eventOpt = g_mainWindow->popInputEvent();
@@ -72,14 +71,14 @@ public:
 
             ui.renderer();
         
-            std::this_thread::sleep_for(std::chrono::milliseconds(16));
+            QThread::msleep(16);
         }
     }
 };
 
 
 int main(int argc, char *argv[]) {
-    std::cout << "<<<<<< U8G2 Emulator - Qt Windowed Mode >>>>>>" << std::endl;
+    puts("<<<<<< U8G2 Emulator - Qt Windowed Mode >>>>>>");
 
     QApplication app(argc, argv);
     display.init();
@@ -110,7 +109,7 @@ int main(int argc, char *argv[]) {
     //     emit worker_ptr->updateRequested();
     // });
 
-    std::function<void()> refreshEmulator = [worker_ptr]() {
+    VoidCallback refreshEmulator = [worker_ptr]() {
         emit worker_ptr->updateRequested();
     };
 

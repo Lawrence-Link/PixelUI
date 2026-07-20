@@ -150,14 +150,13 @@ bool Animation::update(uint32_t currentTime) {
 
 /*
 @brief Add a new animation to the manager.
-@param animation Shared pointer to the Animation object to be added.
+@param animation Uniquely owned Animation object to be added.
 */
-void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
-    // std::lock_guard<std::mutex> lock(_mutex);
+void AnimationManager::addAnimation(etl::unique_ptr<Animation> animation) {
     if (!animation || _animations.full()) {
         return;
     }
-    _animations.push_back(animation);
+    _animations.push_back(etl::move(animation));
 }
 
 /*
@@ -165,7 +164,6 @@ void AnimationManager::addAnimation(std::shared_ptr<Animation> animation) {
 @param currentTime Current time (milliseconds).
 */
 void AnimationManager::update(uint32_t currentTime) {
-    // std::lock_guard<std::mutex> lock(_mutex);
 
     if (_animations.empty()) {
         return;
@@ -175,7 +173,7 @@ void AnimationManager::update(uint32_t currentTime) {
     for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
         if ((*readPos)->update(currentTime)) {
             if (writePos != readPos) {
-                *writePos = std::move(*readPos);
+                *writePos = etl::move(*readPos);
             }
             ++writePos;
         } else {
@@ -193,7 +191,6 @@ void AnimationManager::update(uint32_t currentTime) {
 @brief clear all animations in the manager.
 */
 void AnimationManager::clear(){
-    // std::lock_guard<std::mutex> lock(_mutex);
     _animations.clear();
 }
 
@@ -201,8 +198,7 @@ void AnimationManager::clear(){
 @brief mark a animation as protected, preventing it from being cleared.
 @param animation the animation to be marked as protected.
 */
-void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
-    // std::lock_guard<std::mutex> lock(_mutex);
+void AnimationManager::markProtected(Animation* animation) {
     if (animation) {
         animation->setProtected(true);
     }
@@ -212,7 +208,6 @@ void AnimationManager::markProtected(std::shared_ptr<Animation> animation) {
 @brief clean all unprotected animations in the manager.
 */
 void AnimationManager::clearUnprotected() {
-    // std::lock_guard<std::mutex> lock(_mutex);
     if (_animations.empty()) {
         return;
     }
@@ -221,7 +216,7 @@ void AnimationManager::clearUnprotected() {
     for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
         if (readPos->get()->isProtected()) {
             if (writePos != readPos) {
-                *writePos = std::move(*readPos);
+                *writePos = etl::move(*readPos);
             }
             ++writePos;
         }
@@ -233,7 +228,6 @@ void AnimationManager::clearUnprotected() {
 @brief clean all protection marks from all animations.
 */
 void AnimationManager::clearAllProtectionMarks() {
-    // std::lock_guard<std::mutex> lock(_mutex);
     for (const auto& anim_ : _animations) {
         anim_->setProtected(false);
     }
@@ -244,6 +238,5 @@ void AnimationManager::clearAllProtectionMarks() {
 @return (size_t) number of current active count
 */
 size_t AnimationManager::activeCount() const {
-    // std::lock_guard<std::mutex> lock(_mutex);
     return _animations.size();
 }

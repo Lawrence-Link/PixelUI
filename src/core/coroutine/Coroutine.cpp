@@ -97,7 +97,7 @@ CoroutineScheduler::CoroutineScheduler(PixelUI& ui) : ui_(ui) {}
 /**
  * @brief Add a coroutine to the scheduler
  * * Adds a new coroutine to the list of scheduled items and immediately starts its execution.
- * @param coroutine A shared pointer to the Coroutine object to be added.
+ * @param coroutine A non-owning pointer to the Coroutine object to be added.
  */
 void CoroutineScheduler::addCoroutine(Coroutine* coroutine) { 
     // Check if the pointer is null
@@ -109,8 +109,8 @@ void CoroutineScheduler::addCoroutine(Coroutine* coroutine) {
 
 /**
  * @brief Remove a coroutine from the scheduler
- * * Removes the specified coroutine by comparing the shared pointers.
- * @param coroutine A shared pointer to the Coroutine object to be removed.
+ * * Removes the specified coroutine by comparing pointers.
+ * @param coroutine A non-owning pointer to the Coroutine object to be removed.
  */
 void CoroutineScheduler::removeCoroutine(Coroutine* coroutine) { 
     // Use the erase-remove idiom to safely remove the matching element from the vector.
@@ -128,7 +128,6 @@ void CoroutineScheduler::removeCoroutine(Coroutine* coroutine) {
  * used to determine if a coroutine's resume condition has been met.
  */
 void CoroutineScheduler::update(uint32_t currentTime) {
-    // std::lock_guard<std::mutex> lock(mutex_);
     // Remove finished coroutines
     // Use the erase-remove_if idiom to remove all coroutines for which isFinished() returns true.
     coroutines_.erase(

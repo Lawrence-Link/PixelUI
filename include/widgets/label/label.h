@@ -39,7 +39,7 @@ private:
     const char* src;
     int32_t anim_w = 0, anim_h = 0;
     int32_t anim_x = 0, anim_y = 0;
-    std::function<void()> m_callback;
+    VoidCallback m_callback;
     POS load_pos;
     uint8_t const* m_font;
 public:
@@ -50,7 +50,7 @@ public:
     bool onSelect() override ;
     void draw() override;
     void setLoadPos(POS pos) {load_pos = pos;};
-    void setCallback(std::function<void()> cb) {m_callback = cb;}
+    void setCallback(VoidCallback cb) {m_callback = cb;}
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y;
         setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));

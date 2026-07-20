@@ -34,13 +34,13 @@
 
 #include "ui/Popup/PopupValue4Digits.h"
 #include "PixelUI.h"
-#include <cstdio>
+#include <stdio.h>
 
 // Constructor
 PopupValue4Digits::PopupValue4Digits(PixelUI& ui, uint16_t width, uint16_t height, 
                                      int32_t& value,
                                      const char* title, uint16_t duration, uint8_t priority, 
-                                     std::function<void(int32_t value)> cb_function)
+                                     etl::inplace_function<void(int32_t value), CALLBACK_STORAGE_SIZE> cb_function)
     : PopupBase(ui, width, height, priority, duration),  // Base class constructor
       _value(value), _title(title), 
     num_thousands(ui, 0, 0, 0, 0),
