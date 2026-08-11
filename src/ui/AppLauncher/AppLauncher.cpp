@@ -28,9 +28,13 @@
 #include "ui/IconView/IconView.h"
 #include "core/app/app_system.h"
 
-etl::unique_ptr<IApplication> AppLauncher::createAppLauncherView(PixelUI& ui, ViewManager& viewManager) {
+ApplicationPtr AppLauncher::createAppLauncherView(PixelUI& ui, ViewManager& viewManager) {
     // Create an IconView instance.
-    etl::unique_ptr<IconView> iconView(new IconView(ui));
+    ApplicationPtr appView = viewManager.makeApplication<IconView>(ui);
+    if (!appView) {
+        return ApplicationPtr{};
+    }
+    IconView* iconView = static_cast<IconView*>(appView.get());
 
     // Configure the appearance and behavior of the IconView.
     iconView->setTitle("< Apps >");
@@ -51,17 +55,15 @@ etl::unique_ptr<IApplication> AppLauncher::createAppLauncherView(PixelUI& ui, Vi
 
     // Set the selection callback to launch the selected application.
     iconView->setSelectionCallback(
-        [&ui, &viewManager](int index, const IconItem& item) {
+        [&viewManager](int index, const IconItem& item) {
+            (void)index;
             const AppItem* appItem = static_cast<const AppItem*>(item.userData);
-            if (appItem && appItem->createApp) {
-                auto appInstance = appItem->createApp(ui, nullptr);
-                if (appInstance) {
-                    viewManager.push(etl::move(appInstance));
-                }
+            if (appItem != nullptr) {
+                viewManager.launch(*appItem);
             }
         }
     );
     
     // Return the fully configured view.
-    return etl::unique_ptr<IApplication>(etl::move(iconView));
+    return appView;
 }

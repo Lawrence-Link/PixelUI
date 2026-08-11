@@ -200,10 +200,4 @@ private:
 
 // ---------------- Application registration ----------------
 
-AppItem charging_anim{
-    .title = "Charging animation",
-    .bitmap = image_Icon_Charging_bits,
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new ChargeDemo(ui, parameter));
-    },
-};
+AppItem charging_anim = AppItem::make<ChargeDemo>("Charging animation", image_Icon_Charging_bits);

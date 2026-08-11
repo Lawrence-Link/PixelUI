@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <stddef.h>
+
 // Maximum number of concurrent animations allowed in the system
 constexpr int MAX_ANIMATION_COUNT = 35; 
 
@@ -37,6 +39,11 @@ constexpr int MAX_APP_NUM = 10;
 
 // Maximum number of applications held by the view stack
 constexpr int MAX_VIEW_DEPTH = 8;
+
+// Fixed application storage. Every concrete IApplication must fit one slot.
+constexpr size_t APPLICATION_POOL_SLOT_SIZE = 1536;
+constexpr size_t APPLICATION_POOL_SLOT_ALIGNMENT = 16;
+constexpr size_t APPLICATION_POOL_CAPACITY = MAX_VIEW_DEPTH;
 
 // Maximum number of items displayed by an IconView
 constexpr int MAX_ICONVIEW_ITEMS = MAX_APP_NUM;

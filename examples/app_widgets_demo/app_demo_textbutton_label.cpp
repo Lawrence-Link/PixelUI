@@ -164,11 +164,4 @@ public:
     }
 };
 
-AppItem button_demo_app{
-    .title = "Label / Button Demo",
-    .bitmap = image_icon_text_button_bits,
-    
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new App_Button_Demo(ui, parameter));
-    },
-};
+AppItem button_demo_app = AppItem::make<App_Button_Demo>("Label / Button Demo", image_icon_text_button_bits);

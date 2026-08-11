@@ -30,3 +30,5 @@ if(BUILD_SIMULATOR)
     message(STATUS "Building PixelUI simulator (PC Qt)")
     add_subdirectory(simulator)
 endif()
+
+target_compile_options(pixelui PUBLIC -fno-exceptions -fno-rtti)

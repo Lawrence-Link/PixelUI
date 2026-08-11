@@ -26,16 +26,23 @@
 
 #pragma once
 
-#include "core/app/IApplication.h"
+#include "core/app/app_system.h"
 #include <etl/stack.h>
-#include <etl/memory.h>
 #include <etl/atomic.h>
+#include <etl/utility.h>
 #include "ui/Popup/PopupManager.h"
 
 class ViewManager {
 public:
+    enum class LaunchResult {
+        Ok,
+        StackFull,
+        PoolFull,
+        ConstructionFailed,
+    };
+
     ViewManager(PixelUI &ui) : m_ui(ui) {
-        m_ui.setInputCallback ([&](InputEvent event) -> bool {
+        m_ui.setInputCallback ([this](InputEvent event) -> bool {
             // Prioritize pop-up input - check for an active pop-up
 
             auto popupManager = m_ui.getPopupManagerPtr();
@@ -51,13 +58,22 @@ public:
             return false;
         });
     }
-    void push(etl::unique_ptr<IApplication> app);
+    LaunchResult push(ApplicationPtr app);
+    LaunchResult launch(const AppItem& item, void* parameters = nullptr);
+
+    template <typename T, typename... Args>
+    ApplicationPtr makeApplication(Args&&... args) {
+        return m_applicationPool.make<T>(etl::forward<Args>(args)...);
+    }
+
     void pop();
     bool isTransitioning() const noexcept { return m_isTransitioning.load(etl::memory_order_relaxed); }
 
     IApplication* getCurrentApp() const;
 private:
     PixelUI &m_ui;
-    etl::stack<etl::unique_ptr<IApplication>, MAX_VIEW_DEPTH> m_viewStack;
+    // The pool must be declared before the stack so it is destroyed after every handle.
+    ApplicationPool m_applicationPool;
+    etl::stack<ApplicationPtr, MAX_VIEW_DEPTH> m_viewStack;
     etl::atomic<bool> m_isTransitioning{false};
 };

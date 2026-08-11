@@ -75,7 +75,7 @@ public:
      */
     bool handleInput(InputEvent event) override {
         if (event == InputEvent::BACK) {
-            requestExit(); // 请求退出
+            requestExit(); 
             return true;
         }
         return false;
@@ -95,12 +95,4 @@ public:
     }
 };
 
-AppItem bouncy_about_app{
-    .title = "About",
-    .bitmap = image_info_bits, // TODO: Add an icon bitmap here
-
-    // Provide a factory function to create application instance.
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new Dynamic_Info(ui, parameter));
-    },
-};
+AppItem bouncy_about_app = AppItem::make<Dynamic_Info>("About", image_info_bits);

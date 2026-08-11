@@ -69,7 +69,7 @@ public:
 AppItem ListViewDemo_app{
     .title = "ListView Test",
     .bitmap = image_LISTVIEW_bits,
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new ListViewDemo(ui, ItemList, 10));
+    .createApp = [](ApplicationPool& pool, PixelUI& ui, void*) -> ApplicationPtr {
+        return pool.make<ListViewDemo>(ui, ItemList, 10);
     },
 };

@@ -205,11 +205,4 @@ public:
     }
 };
 
-AppItem anim_demo_app{
-    .title = "Anim Demo",
-    .bitmap = image_Icon_Anim_Demo_bits,
-    
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new App_Anim_Demo(ui, parameter));
-    },
-};
+AppItem anim_demo_app = AppItem::make<App_Anim_Demo>("Anim Demo", image_Icon_Anim_Demo_bits);

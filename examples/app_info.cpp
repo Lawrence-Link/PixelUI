@@ -96,12 +96,4 @@ public:
     }
 };
 
-AppItem about_app{
-    .title = "App Info",
-    .bitmap = image_info_bits,
-
-    // Provide a factory function to create application instance.
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new AboutApp(ui, parameter));
-    },
-};
+AppItem about_app = AppItem::make<AboutApp>("App Info", image_info_bits);

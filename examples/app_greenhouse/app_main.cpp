@@ -135,11 +135,4 @@ void Greenhouse_App::draw()
     brace_plant.draw();
 }
 
-AppItem greenhouse_app{
-    .title = "Greenhouse",
-    .bitmap = image_icon_greenhouse_bits, // TODO: Add an icon bitmap here
-
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new Greenhouse_App(ui, parameter));
-    },
-};
+AppItem greenhouse_app = AppItem::make<Greenhouse_App>("Greenhouse", image_icon_greenhouse_bits);

@@ -26,9 +26,7 @@
 #pragma once
 #include <stdint.h>
 #include <etl/vector.h>
-#include <etl/inplace_function.h>
-#include <etl/memory.h>
-#include "IApplication.h"
+#include "ApplicationPool.h"
 #include "config.h"
 
 enum class MenuItemType {
@@ -36,13 +34,25 @@ enum class MenuItemType {
     App,
 };
 
+using AppFactory = ApplicationPtr (*)(ApplicationPool&, PixelUI&, void* parameters);
+
+template <typename T>
+ApplicationPtr defaultAppFactory(ApplicationPool& pool, PixelUI& ui, void* parameters) {
+    return pool.make<T>(ui, parameters);
+}
+
 struct AppItem {
     /* Name of the app */
     const char* title;
     /* Bitmap to the app icon */
     const uint8_t* bitmap;
     /* Factory function of the app */
-    etl::inplace_function<etl::unique_ptr<IApplication>(PixelUI&, void* parameters), CALLBACK_STORAGE_SIZE> createApp;
+    AppFactory createApp;
+
+    template <typename T>
+    static constexpr AppItem make(const char* title, const uint8_t* bitmap) {
+        return AppItem{title, bitmap, &defaultAppFactory<T>};
+    }
 };
 
 class AppManager {

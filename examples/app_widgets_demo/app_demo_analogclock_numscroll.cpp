@@ -147,11 +147,4 @@ public:
     }
 };
 
-AppItem time_setting_app{
-    .title = "TimeSetting Demo",
-    .bitmap = image_Icon_Clock_bits,
-    
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new TimeSetting(ui, parameter));
-    },
-};
+AppItem time_setting_app = AppItem::make<TimeSetting>("TimeSetting Demo", image_Icon_Clock_bits);

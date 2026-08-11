@@ -234,11 +234,4 @@ public:
     }
 };
 
-AppItem cube_demo_app{
-    .title = "Cube Demo",
-    .bitmap = image_sans2_bits,
-
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new CubeDemo(ui, parameter));
-    },
-};
+AppItem cube_demo_app = AppItem::make<CubeDemo>("Cube Demo", image_sans2_bits);

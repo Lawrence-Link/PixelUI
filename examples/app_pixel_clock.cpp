@@ -335,10 +335,4 @@ public:
     }
 };
 
-AppItem pixel_clock_app{
-    .title = "Clock",
-    .bitmap = image_clock_bits,
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new APP_PIXEL_CLOCK(ui, parameter));
-    },
-};
+AppItem pixel_clock_app = AppItem::make<APP_PIXEL_CLOCK>("Clock", image_clock_bits);

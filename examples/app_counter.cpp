@@ -341,11 +341,4 @@ public:
  * providing its title, icon bitmap, and a factory function for creation.
  */
 
-AppItem counter_app{
-    .title = "COUNTER",
-    .bitmap = image_counter_bits,
-
-    .createApp = [](PixelUI& ui, void* parameter) -> etl::unique_ptr<IApplication> {
-        return etl::unique_ptr<IApplication>(new APP_COUNTER(ui, parameter));
-    },
-};
+AppItem counter_app = AppItem::make<APP_COUNTER>("COUNTER", image_counter_bits);

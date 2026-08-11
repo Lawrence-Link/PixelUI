@@ -29,25 +29,42 @@
 @brief Pushes a new application onto the view stack and makes it the current view.
 @param app The uniquely owned application to be pushed onto the stack.
 */
-void ViewManager::push(etl::unique_ptr<IApplication> app) {
-    if (!app || m_viewStack.full()) return;
-        m_isTransitioning = true;
+ViewManager::LaunchResult ViewManager::push(ApplicationPtr app) {
+    if (!app) return LaunchResult::ConstructionFailed;
+    if (app.get_deleter().pool != &m_applicationPool) {
+        return LaunchResult::ConstructionFailed;
+    }
+    if (m_viewStack.full()) return LaunchResult::StackFull;
 
-        if (!m_viewStack.empty()) {
-            m_ui.clearAllCoroutines();
-            m_ui.clearAllAnimations();
-            m_viewStack.top()->onPause(); // Pause the current top application
-        }
+    m_isTransitioning = true;
 
-        m_viewStack.push(etl::move(app));    // Push the new application onto the stack
-        IApplication* currentApp = m_viewStack.top().get();
-        m_ui.setDrawable(currentApp);    // Grant app with drawable control
-        
-        m_ui.clearFocusManager();
-        currentApp->onEnter([this]() {this->pop();}); // Handle app with exit callback
-        m_ui.markDirty();
+    if (!m_viewStack.empty()) {
+        m_ui.clearAllCoroutines();
+        m_ui.clearAllAnimations();
+        m_viewStack.top()->onPause(); // Pause the current top application
+    }
 
-        m_isTransitioning = false;
+    m_viewStack.push(etl::move(app));    // Push the new application onto the stack
+    IApplication* currentApp = m_viewStack.top().get();
+    m_ui.setDrawable(currentApp);    // Grant app with drawable control
+
+    m_ui.clearFocusManager();
+    currentApp->onEnter([this]() {this->pop();}); // Handle app with exit callback
+    m_ui.markDirty();
+
+    m_isTransitioning = false;
+    return LaunchResult::Ok;
+}
+
+ViewManager::LaunchResult ViewManager::launch(const AppItem& item, void* parameters) {
+    if (m_viewStack.full()) return LaunchResult::StackFull;
+    if (m_applicationPool.full()) return LaunchResult::PoolFull;
+    if (item.createApp == nullptr) return LaunchResult::ConstructionFailed;
+
+    ApplicationPtr application = item.createApp(m_applicationPool, m_ui, parameters);
+    if (!application) return LaunchResult::ConstructionFailed;
+
+    return push(etl::move(application));
 }
 
 /*
@@ -60,15 +77,17 @@ void ViewManager::pop() {
     m_isTransitioning = true;
     m_ui.setDrawable(nullptr); 
     
-    m_viewStack.top()->onExit();  
+    m_viewStack.top()->onExit();
 
     m_ui.markFading();
 
-    m_viewStack.pop(); 
-
+    // These managers keep non-owning references into the current application.
     m_ui.clearFocusManager();
     m_ui.clearAllCoroutines();
     m_ui.clearAllAnimations();
+
+    m_viewStack.pop();
+
     if (!m_viewStack.empty()) {
         IApplication* previousApp = m_viewStack.top().get();
         m_ui.setDrawable(previousApp); // setting up new drawable
