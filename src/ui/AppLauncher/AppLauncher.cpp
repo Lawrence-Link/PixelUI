@@ -33,7 +33,9 @@ namespace {
 class AppLauncherView final : public IconView {
 public:
     AppLauncherView(PixelUI& ui, ViewManager& viewManager)
-        : IconView(ui) {
+        : IconView(ui), viewManager_(viewManager) {}
+
+    void onEnter(ExitCallback exitCallback) override {
         setTitle("< Apps >");
         enableProgressBar(true);
         enableStatusText(true);
@@ -46,14 +48,19 @@ public:
         }
         setItems(iconItems);
 
-        setSelectionCallback([&viewManager](int index, const IconItem& item) {
+        setSelectionCallback([this](int index, const IconItem& item) {
             (void)index;
             const AppItem* appItem = static_cast<const AppItem*>(item.userData);
             if (appItem != nullptr) {
-                viewManager.launch(*appItem);
+                viewManager_.launch(*appItem);
             }
         });
+
+        IconView::onEnter(exitCallback);
     }
+
+private:
+    ViewManager& viewManager_;
 };
 
 } // namespace

@@ -59,7 +59,7 @@ public:
     void onResume() override;
     void onPause() override;
 
-    // --- Configuration Methods ---
+    // Configuration only; external animation registration starts in onEnter().
     void setItems(const IconItemList& items);
     void setSelectionCallback(SelectionCallback callback);
     void setTitle(const char* title);

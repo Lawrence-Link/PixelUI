@@ -1,5 +1,6 @@
 #include "PixelUI.h"
 #include "core/ViewManager/ViewManager.h"
+#include "ui/IconView/IconView.h"
 #include "widgets/IWidget.h"
 
 #include <string.h>
@@ -148,18 +149,37 @@ int main() {
     {
         U8G2 display;
         PixelUI ui(display);
+        IconView iconView(ui);
+        IconItemList items;
+        items.emplace_back("Item", nullptr, nullptr);
+
+        iconView.setItems(items);
+        iconView.setSelectionCallback([](int, const IconItem&) {});
+        if ((ui.getAnimationManPtr()->activeCount() != 0U) ||
+            (ui.getActiveCoroutineCount() != 0U) ||
+            (ui.getFocusedWidgetCount() != 0U) ||
+            (ui.getPopupManagerPtr()->getPopupCounts() != 0U)) return 1;
+
+        iconView.onEnter(nullptr);
+        if (ui.getAnimationManPtr()->activeCount() == 0U) return 2;
+        ui.clearAllAnimations();
+    }
+
+    {
+        U8G2 display;
+        PixelUI ui(display);
         ViewManager& manager = *ui.getViewManagerPtr();
         EventLog log;
         LifecycleState first{&log, 1};
         LifecycleState second{&log, 2};
         AppItem item = AppItem::make<LifecycleApplication>("Lifecycle", nullptr);
 
-        if (manager.launch(item, &first) != ViewManager::LaunchResult::Ok) return 1;
-        if (manager.launch(item, &second) != ViewManager::LaunchResult::Ok) return 2;
-        if (!log.equals("EPE")) return 3;
-        if (!manager.pop() || !log.equals("EPEX2R")) return 4;
-        if (!manager.pop() || !log.equals("EPEX2RX1")) return 5;
-        if (manager.pop() || (manager.getCurrentApp() != nullptr) || (manager.getViewDepth() != 0U)) return 6;
+        if (manager.launch(item, &first) != ViewManager::LaunchResult::Ok) return 3;
+        if (manager.launch(item, &second) != ViewManager::LaunchResult::Ok) return 4;
+        if (!log.equals("EPE")) return 5;
+        if (!manager.pop() || !log.equals("EPEX2R")) return 6;
+        if (!manager.pop() || !log.equals("EPEX2RX1")) return 7;
+        if (manager.pop() || (manager.getCurrentApp() != nullptr) || (manager.getViewDepth() != 0U)) return 8;
     }
 
     {

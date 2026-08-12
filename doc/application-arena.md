@@ -68,6 +68,10 @@ pointer; there is no public owning application pointer.
 - Transition callbacks, constructors, and destructors may not navigate
   synchronously. Nested requests are rejected until the current transition
   finishes.
+- Constructors and configuration setters may initialize App-owned state, but
+  must not publish `this`, member pointers, widget pointers, callbacks, or
+  animation targets to PixelUI managers. Register those non-owning references
+  from `onEnter()` after the App has been committed to the stack.
 - Before a popped App is destroyed, `ViewManager` clears drawable, exit
   callback, animations, coroutines, focus references, and popups. Popups are
   included because value popups store references and callbacks that may point

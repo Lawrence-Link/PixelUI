@@ -46,11 +46,12 @@ IconView::IconView(PixelUI& ui, const uint8_t * font) : ui_(ui), font_title(font
  */
 void IconView::onEnter(ExitCallback exitCallback) {
     IApplication::onEnter(exitCallback);  // Store the exit callback.
+    scrollOffset_ = -128;
+
     // Start entry animations for visual transition.
     ui_.animate(animation_pixel_dots, 63, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     ui_.animate(animation_selector_length, selector_length, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-    scrollOffset_ = -128;
-    updateProgressBar();
+    scrollToIndex(currentIndex_);
     ui_.markDirty();  // Trigger initial redraw.
 }
 
@@ -113,7 +114,6 @@ void IconView::draw() {
 void IconView::setItems(const IconItemList& items) {
     items_ = items;
     currentIndex_ = 0;
-    scrollToIndex(0);
 }
 
 /**
