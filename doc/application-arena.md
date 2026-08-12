@@ -76,10 +76,8 @@ pointer; there is no public owning application pointer.
   framework shutdown, `PixelUI` destroys `ViewManager` before the other
   managers so App destructors cannot observe already-destroyed UI services.
 
-The production target uses `-fno-exceptions`; App constructors and lifecycle
-hooks therefore must not use exceptions to report failure. When exceptions are
-enabled in a host-only build, arena construction catches constructor failures
-and leaves both offset and depth unchanged.
+App constructors and lifecycle hooks must report recoverable failures through
+explicit return values or state established before construction.
 
 ## 64-bit simulator measurement
 

@@ -134,17 +134,8 @@ public:
             return layoutResult;
         }
 
-        T* constructed = nullptr;
-#if defined(__cpp_exceptions)
-        try {
-            constructed = ::new (arena_ + layout.alignedOffset) T(etl::forward<Args>(args)...);
-        } catch (...) {
-            application = nullptr;
-            return ApplicationStackResult::ConstructionFailed;
-        }
-#else
-        constructed = ::new (arena_ + layout.alignedOffset) T(etl::forward<Args>(args)...);
-#endif
+        T* constructed =
+            ::new (arena_ + layout.alignedOffset) T(etl::forward<Args>(args)...);
 
         commit(constructed, layout, &destroyConcrete<T>);
         application = constructed;

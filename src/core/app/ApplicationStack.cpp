@@ -59,16 +59,8 @@ ApplicationStackResult ApplicationStack::emplace(
         return layoutResult;
     }
 
-    IApplication* constructed = nullptr;
-#if defined(__cpp_exceptions)
-    try {
-        constructed = factory.construct_(arena_ + layout.alignedOffset, ui, parameters);
-    } catch (...) {
-        return ApplicationStackResult::ConstructionFailed;
-    }
-#else
-    constructed = factory.construct_(arena_ + layout.alignedOffset, ui, parameters);
-#endif
+    IApplication* constructed =
+        factory.construct_(arena_ + layout.alignedOffset, ui, parameters);
     if (constructed == nullptr) {
         return ApplicationStackResult::ConstructionFailed;
     }
