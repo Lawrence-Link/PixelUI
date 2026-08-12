@@ -25,80 +25,91 @@
  */
 
 #include "core/ViewManager/ViewManager.h"
-/*
-@brief Pushes a new application onto the view stack and makes it the current view.
-@param app The uniquely owned application to be pushed onto the stack.
-*/
-ViewManager::LaunchResult ViewManager::push(ApplicationPtr app) {
-    if (!app) return LaunchResult::ConstructionFailed;
-    if (app.get_deleter().pool != &m_applicationPool) {
-        return LaunchResult::ConstructionFailed;
+
+ViewManager::~ViewManager() {
+    m_isTransitioning.store(true, etl::memory_order_relaxed);
+    m_ui.setDrawable(nullptr);
+    m_ui.clearInputCallback();
+    clearNonOwningReferences();
+
+    while (!m_applicationStack.empty()) {
+        m_applicationStack.top()->clearExitCallback();
+        m_applicationStack.pop();
     }
-    if (m_viewStack.full()) return LaunchResult::StackFull;
-
-    m_isTransitioning = true;
-
-    if (!m_viewStack.empty()) {
-        m_ui.clearAllCoroutines();
-        m_ui.clearAllAnimations();
-        m_viewStack.top()->onPause(); // Pause the current top application
-    }
-
-    m_viewStack.push(etl::move(app));    // Push the new application onto the stack
-    IApplication* currentApp = m_viewStack.top().get();
-    m_ui.setDrawable(currentApp);    // Grant app with drawable control
-
-    m_ui.clearFocusManager();
-    currentApp->onEnter([this]() {this->pop();}); // Handle app with exit callback
-    m_ui.markDirty();
-
-    m_isTransitioning = false;
-    return LaunchResult::Ok;
 }
 
 ViewManager::LaunchResult ViewManager::launch(const AppItem& item, void* parameters) {
-    if (m_viewStack.full()) return LaunchResult::StackFull;
-    if (m_applicationPool.full()) return LaunchResult::PoolFull;
-    if (item.createApp == nullptr) return LaunchResult::ConstructionFailed;
+    TransitionGuard transition(*this);
+    if (!transition.acquired()) {
+        return LaunchResult::TransitionInProgress;
+    }
 
-    ApplicationPtr application = item.createApp(m_applicationPool, m_ui, parameters);
-    if (!application) return LaunchResult::ConstructionFailed;
+    IApplication* application = nullptr;
+    const ApplicationStackResult result =
+        m_applicationStack.emplace(item.factory, m_ui, parameters, application);
+    if (result != ApplicationStackResult::Ok) {
+        return toLaunchResult(result);
+    }
 
-    return push(etl::move(application));
+    activatePushedApplication(application);
+    return LaunchResult::Ok;
 }
 
-/*
-@brief Pops the current application from the view stack and resumes the previous application if available.
-*/
-void ViewManager::pop() {
+bool ViewManager::pop() {
+    TransitionGuard transition(*this);
+    if (!transition.acquired() || m_applicationStack.empty()) {
+        return false;
+    }
 
-    if (m_viewStack.empty()) return;
-
-    m_isTransitioning = true;
-    m_ui.setDrawable(nullptr); 
-    
-    m_viewStack.top()->onExit();
+    IApplication* application = m_applicationStack.top();
+    m_ui.setDrawable(nullptr);
+    application->onExit();
+    application->clearExitCallback();
 
     m_ui.markFading();
+    clearNonOwningReferences();
+    m_applicationStack.pop();
 
-    // These managers keep non-owning references into the current application.
-    m_ui.clearFocusManager();
-    m_ui.clearAllCoroutines();
-    m_ui.clearAllAnimations();
-
-    m_viewStack.pop();
-
-    if (!m_viewStack.empty()) {
-        IApplication* previousApp = m_viewStack.top().get();
-        m_ui.setDrawable(previousApp); // setting up new drawable
-        previousApp->onResume(); // resume the previous application
+    IApplication* previousApplication = m_applicationStack.top();
+    if (previousApplication != nullptr) {
+        m_ui.setDrawable(previousApplication);
+        previousApplication->onResume();
     }
-    
+
     m_ui.markDirty();
-    m_isTransitioning = false; // mark the end of the transition
+    return true;
 }
 
 IApplication* ViewManager::getCurrentApp() const {
-    if (m_viewStack.empty()) return nullptr;
-    return m_viewStack.top().get();
+    return m_applicationStack.top();
+}
+
+ViewManager::LaunchResult ViewManager::toLaunchResult(ApplicationStackResult result) {
+    switch (result) {
+        case ApplicationStackResult::Ok: return LaunchResult::Ok;
+        case ApplicationStackResult::StackFull: return LaunchResult::StackFull;
+        case ApplicationStackResult::ArenaFull: return LaunchResult::ArenaFull;
+        case ApplicationStackResult::ConstructionFailed: return LaunchResult::ConstructionFailed;
+        default: return LaunchResult::ConstructionFailed;
+    }
+}
+
+void ViewManager::activatePushedApplication(IApplication* application) {
+    IApplication* previousApplication = m_applicationStack.previous();
+    if (previousApplication != nullptr) {
+        clearNonOwningReferences();
+        previousApplication->onPause();
+    }
+
+    m_ui.setDrawable(application);
+    m_ui.clearFocusManager();
+    application->onEnter([this]() { pop(); });
+    m_ui.markDirty();
+}
+
+void ViewManager::clearNonOwningReferences() {
+    m_ui.clearAllAnimations();
+    m_ui.clearAllCoroutines();
+    m_ui.clearFocusManager();
+    m_ui.getPopupManagerPtr()->clearPopups();
 }

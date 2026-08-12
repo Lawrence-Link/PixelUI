@@ -53,24 +53,21 @@ void threadDelay(uint32_t ms) {
 class EmulatorThread : public EmuWorker {
 public:
     void grandLoop() override { 
-    ui.setDelayFunction(threadDelay);
+        ui.setDelayFunction(threadDelay);
 
-    #if (USE_STATIC_APP_REGISTER_ENABLED == 0) // If not using static app linking, register Apps manually
-    registerApps();
-    #endif
+        #if (USE_STATIC_APP_REGISTER_ENABLED == 0) // If not using static app linking, register Apps manually
+        registerApps();
+        #endif
 
-    ui.begin();
-    auto appView = AppLauncher::createAppLauncherView(ui, *ui.getViewManagerPtr());
-    ui.getViewManagerPtr()->push(etl::move(appView));
+        ui.begin();
+        AppLauncher::launch(ui, *ui.getViewManagerPtr());
         while (running) {
-        
             auto eventOpt = g_mainWindow->popInputEvent();
             if (eventOpt.has_value()) {
                 ui.handleInput(eventOpt.value());
             }
 
             ui.renderer();
-        
             QThread::msleep(16);
         }
     }

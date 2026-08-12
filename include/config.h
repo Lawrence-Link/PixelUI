@@ -40,10 +40,9 @@ constexpr int MAX_APP_NUM = 10;
 // Maximum number of applications held by the view stack
 constexpr int MAX_VIEW_DEPTH = 8;
 
-// Fixed application storage. Every concrete IApplication must fit one slot.
-constexpr size_t APPLICATION_POOL_SLOT_SIZE = 1536;
-constexpr size_t APPLICATION_POOL_SLOT_ALIGNMENT = 16;
-constexpr size_t APPLICATION_POOL_CAPACITY = MAX_VIEW_DEPTH;
+// Fixed LIFO storage shared by all live applications.
+constexpr size_t APPLICATION_ARENA_SIZE = 4096;
+constexpr size_t APPLICATION_ARENA_MAX_ALIGNMENT = 64;
 
 // Maximum number of items displayed by an IconView
 constexpr int MAX_ICONVIEW_ITEMS = MAX_APP_NUM;

@@ -28,42 +28,36 @@
 #include "ui/IconView/IconView.h"
 #include "core/app/app_system.h"
 
-ApplicationPtr AppLauncher::createAppLauncherView(PixelUI& ui, ViewManager& viewManager) {
-    // Create an IconView instance.
-    ApplicationPtr appView = viewManager.makeApplication<IconView>(ui);
-    if (!appView) {
-        return ApplicationPtr{};
-    }
-    IconView* iconView = static_cast<IconView*>(appView.get());
+namespace {
 
-    // Configure the appearance and behavior of the IconView.
-    iconView->setTitle("< Apps >");
-    iconView->enableProgressBar(true);
-    iconView->enableStatusText(true);
-    iconView->enableSelectedItemTitle(true);
+class AppLauncherView final : public IconView {
+public:
+    AppLauncherView(PixelUI& ui, ViewManager& viewManager)
+        : IconView(ui) {
+        setTitle("< Apps >");
+        enableProgressBar(true);
+        enableStatusText(true);
+        enableSelectedItemTitle(true);
 
-    // Get the app list from AppManager and convert it to IconItems.
-    auto& appManager = AppManager::getInstance();
-    const auto& apps = appManager.getAppVector();
-    IconItemList iconItems;
-    for (const auto& app : apps) {
-        // We use const_cast because AppItem* will be stored in a void*,
-        // but we guarantee it will not be modified.
-        iconItems.emplace_back(app.title, app.bitmap, const_cast<AppItem*>(&app));
-    }
-    iconView->setItems(iconItems);
+        const auto& apps = AppManager::getInstance().getAppVector();
+        IconItemList iconItems;
+        for (const auto& app : apps) {
+            iconItems.emplace_back(app.title, app.bitmap, const_cast<AppItem*>(&app));
+        }
+        setItems(iconItems);
 
-    // Set the selection callback to launch the selected application.
-    iconView->setSelectionCallback(
-        [&viewManager](int index, const IconItem& item) {
+        setSelectionCallback([&viewManager](int index, const IconItem& item) {
             (void)index;
             const AppItem* appItem = static_cast<const AppItem*>(item.userData);
             if (appItem != nullptr) {
                 viewManager.launch(*appItem);
             }
-        }
-    );
-    
-    // Return the fully configured view.
-    return appView;
+        });
+    }
+};
+
+} // namespace
+
+ViewManager::LaunchResult AppLauncher::launch(PixelUI& ui, ViewManager& viewManager) {
+    return viewManager.push<AppLauncherView>(ui, viewManager);
 }

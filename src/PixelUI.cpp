@@ -50,7 +50,10 @@ PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
     m_focusManagerPtr.reset(new FocusManager(*this));
 }
 
-PixelUI::~PixelUI() = default;
+PixelUI::~PixelUI() {
+    // Applications may reference every other manager, so destroy them first.
+    m_viewManagerPtr.reset();
+}
 
 /**
  * @brief Add a coroutine to the scheduler
@@ -141,6 +144,10 @@ void PixelUI::addWidgetToFocusManager(IWidget* w) {
 void PixelUI::clearFocusManager() {
     m_focusManagerPtr->m_Widgets.clear();
     m_focusManagerPtr->resetState();
+}
+
+size_t PixelUI::getFocusedWidgetCount() const {
+    return m_focusManagerPtr->m_Widgets.size();
 }
 /**
  * @brief Handle input event

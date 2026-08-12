@@ -31,6 +31,8 @@
 #include "config.h"
 
 class IApplication : public IDrawable, public IInputHandler {
+    friend class ViewManager;
+
 public:
 
     using ExitCallback = etl::inplace_function<void(), CALLBACK_STORAGE_SIZE>; // Exit callback function
@@ -53,5 +55,7 @@ protected:
     }
 
 private:
+    void clearExitCallback() { m_exitCallback = nullptr; }
+
     ExitCallback m_exitCallback;
 };

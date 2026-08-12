@@ -27,7 +27,6 @@
 #pragma once
 
 #include "core/app/app_system.h"
-#include <etl/stack.h>
 #include <etl/atomic.h>
 #include <etl/utility.h>
 #include "ui/Popup/PopupManager.h"
@@ -37,12 +36,17 @@ public:
     enum class LaunchResult {
         Ok,
         StackFull,
-        PoolFull,
+        ArenaFull,
         ConstructionFailed,
+        TransitionInProgress,
     };
 
     ViewManager(PixelUI &ui) : m_ui(ui) {
         m_ui.setInputCallback ([this](InputEvent event) -> bool {
+            if (isTransitioning()) {
+                return false;
+            }
+
             // Prioritize pop-up input - check for an active pop-up
 
             auto popupManager = m_ui.getPopupManagerPtr();
@@ -52,28 +56,75 @@ public:
             }
             
             // If the pop-up did not handle the input or there is no pop-up, pass the input to the application at the top of the stack
-            if (!m_viewStack.empty()) {
-                return m_viewStack.top()->handleInput(event);
+            IApplication* current = m_applicationStack.top();
+            if (current != nullptr) {
+                return current->handleInput(event);
             }
             return false;
         });
     }
-    LaunchResult push(ApplicationPtr app);
-    LaunchResult launch(const AppItem& item, void* parameters = nullptr);
+    ~ViewManager();
+
+    ViewManager(const ViewManager&) = delete;
+    ViewManager& operator=(const ViewManager&) = delete;
 
     template <typename T, typename... Args>
-    ApplicationPtr makeApplication(Args&&... args) {
-        return m_applicationPool.make<T>(etl::forward<Args>(args)...);
+    LaunchResult push(Args&&... args) {
+        TransitionGuard transition(*this);
+        if (!transition.acquired()) {
+            return LaunchResult::TransitionInProgress;
+        }
+
+        T* application = nullptr;
+        const ApplicationStackResult result =
+            m_applicationStack.emplace<T>(application, etl::forward<Args>(args)...);
+        if (result != ApplicationStackResult::Ok) {
+            return toLaunchResult(result);
+        }
+
+        activatePushedApplication(application);
+        return LaunchResult::Ok;
     }
 
-    void pop();
+    LaunchResult launch(const AppItem& item, void* parameters = nullptr);
+    bool pop();
     bool isTransitioning() const noexcept { return m_isTransitioning.load(etl::memory_order_relaxed); }
 
     IApplication* getCurrentApp() const;
+    size_t getViewDepth() const noexcept { return m_applicationStack.depth(); }
+    size_t getArenaUsed() const noexcept { return m_applicationStack.used(); }
+    static constexpr size_t getArenaCapacity() noexcept { return ApplicationStack::capacity(); }
+
 private:
+    class TransitionGuard {
+    public:
+        explicit TransitionGuard(ViewManager& manager) : manager_(manager) {
+            bool expected = false;
+            acquired_ = manager_.m_isTransitioning.compare_exchange_strong(
+                expected,
+                true,
+                etl::memory_order_acquire,
+                etl::memory_order_relaxed);
+        }
+
+        ~TransitionGuard() {
+            if (acquired_) {
+                manager_.m_isTransitioning.store(false, etl::memory_order_release);
+            }
+        }
+
+        bool acquired() const noexcept { return acquired_; }
+
+    private:
+        ViewManager& manager_;
+        bool acquired_ = false;
+    };
+
+    static LaunchResult toLaunchResult(ApplicationStackResult result);
+    void activatePushedApplication(IApplication* application);
+    void clearNonOwningReferences();
+
     PixelUI &m_ui;
-    // The pool must be declared before the stack so it is destroyed after every handle.
-    ApplicationPool m_applicationPool;
-    etl::stack<ApplicationPtr, MAX_VIEW_DEPTH> m_viewStack;
+    ApplicationStack m_applicationStack;
     etl::atomic<bool> m_isTransitioning{false};
 };

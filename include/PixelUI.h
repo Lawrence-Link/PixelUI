@@ -80,6 +80,7 @@ public:
     void clearAllCoroutines() { m_coroutineSchedulerPtr->clear(); }
     
     size_t getActiveCoroutineCount() { return m_coroutineSchedulerPtr->getActiveCount(); }
+    size_t getFocusedWidgetCount() const;
 
     /**
      * @brief Main update loop to be called periodically.
@@ -138,6 +139,7 @@ public:
     // setters
     void setRefreshCallback(VoidCallback function) { if (function) m_refresh_callback = function; }
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
+    void clearInputCallback() { inputCallback_ = nullptr; }
     void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
     void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
     

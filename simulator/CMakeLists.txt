@@ -30,26 +30,11 @@ file(GLOB U8G2_CPP_SOURCES "${U8G2_CPP_SRC_DIR}/*.cpp")
 file(GLOB U8G2_HEADERS "${U8G2_C_SRC_DIR}/*.h" "${U8G2_CPP_SRC_DIR}/*.h")
 
 # Debug 选项
-option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(ENABLE_DEBUG "Enable debug mode" ON)
 
 if(ENABLE_DEBUG)
     set(CMAKE_BUILD_TYPE Debug)
     add_definitions(-DDEBUG)
-endif()
-
-# AddressSanitizer 支持
-if(ENABLE_ASAN)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer -g -O1")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ASAN_FLAGS}")
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-        
-        message(STATUS "AddressSanitizer enabled")
-    else()
-        message(WARNING "AddressSanitizer not supported by this compiler")
-    endif()
 endif()
 
 # -------------------------------

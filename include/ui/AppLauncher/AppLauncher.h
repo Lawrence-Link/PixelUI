@@ -5,6 +5,5 @@
 
 class AppLauncher {
 public:
-    // Factory method: creates and returns a fully configured app launcher view.
-    static ApplicationPtr createAppLauncherView(PixelUI& ui, ViewManager& viewManager);
+    static ViewManager::LaunchResult launch(PixelUI& ui, ViewManager& viewManager);
 };

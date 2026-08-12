@@ -26,7 +26,7 @@
 #pragma once
 #include <stdint.h>
 #include <etl/vector.h>
-#include "ApplicationPool.h"
+#include "ApplicationStack.h"
 #include "config.h"
 
 enum class MenuItemType {
@@ -34,24 +34,25 @@ enum class MenuItemType {
     App,
 };
 
-using AppFactory = ApplicationPtr (*)(ApplicationPool&, PixelUI&, void* parameters);
-
-template <typename T>
-ApplicationPtr defaultAppFactory(ApplicationPool& pool, PixelUI& ui, void* parameters) {
-    return pool.make<T>(ui, parameters);
-}
-
 struct AppItem {
     /* Name of the app */
     const char* title;
     /* Bitmap to the app icon */
     const uint8_t* bitmap;
     /* Factory function of the app */
-    AppFactory createApp;
+    ApplicationFactory factory;
 
     template <typename T>
     static constexpr AppItem make(const char* title, const uint8_t* bitmap) {
-        return AppItem{title, bitmap, &defaultAppFactory<T>};
+        return AppItem{title, bitmap, ApplicationFactory::make<T>()};
+    }
+
+    template <typename T>
+    static constexpr AppItem make(
+        const char* title,
+        const uint8_t* bitmap,
+        ApplicationFactory::ConstructFunction customConstruct) {
+        return AppItem{title, bitmap, ApplicationFactory::makeCustom<T>(customConstruct)};
     }
 };
 

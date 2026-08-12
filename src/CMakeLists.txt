@@ -10,6 +10,7 @@ set(U8G2_CPP_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc")
 add_library(pixelui STATIC
     PixelUI.cpp
     core/app/app_system.cpp
+    core/app/ApplicationStack.cpp
     core/animation/animation.cpp
     core/ViewManager/ViewManager.cpp
     core/coroutine/Coroutine.cpp
@@ -51,3 +52,13 @@ target_include_directories(pixelui
         ${U8G2_CPP_SRC_DIR}
         ${U8G2_C_SRC_DIR}
 )
+
+target_compile_definitions(pixelui PRIVATE ETL_NO_STL)
+
+if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(
+        pixelui
+        PRIVATE
+            "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h>"
+    )
+endif()

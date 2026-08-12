@@ -66,10 +66,9 @@ public:
     void onSave() override {  } // will be called when requesting exit
 };
 
-AppItem ListViewDemo_app{
-    .title = "ListView Test",
-    .bitmap = image_LISTVIEW_bits,
-    .createApp = [](ApplicationPool& pool, PixelUI& ui, void*) -> ApplicationPtr {
-        return pool.make<ListViewDemo>(ui, ItemList, 10);
-    },
-};
+AppItem ListViewDemo_app = AppItem::make<ListViewDemo>(
+    "ListView Test",
+    image_LISTVIEW_bits,
+    [](void* storage, PixelUI& ui, void*) -> IApplication* {
+        return ::new (storage) ListViewDemo(ui, ItemList, 10);
+    });
