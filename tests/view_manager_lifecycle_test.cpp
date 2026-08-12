@@ -59,7 +59,7 @@ public:
     ~ReferencingApplication() override {
         cleanAtDestruction_ =
             (ui_.getActiveCoroutineCount() == 0U) &&
-            (ui_.getAnimationManPtr()->activeCount() == 0U) &&
+            (ui_.activeAnimationCount() == 0U) &&
             (ui_.getPopupManagerPtr()->getPopupCounts() == 0U) &&
             (ui_.getFocusedWidgetCount() == 0U);
     }
@@ -155,13 +155,13 @@ int main() {
 
         iconView.setItems(items);
         iconView.setSelectionCallback([](int, const IconItem&) {});
-        if ((ui.getAnimationManPtr()->activeCount() != 0U) ||
+        if ((ui.activeAnimationCount() != 0U) ||
             (ui.getActiveCoroutineCount() != 0U) ||
             (ui.getFocusedWidgetCount() != 0U) ||
             (ui.getPopupManagerPtr()->getPopupCounts() != 0U)) return 1;
 
         iconView.onEnter(nullptr);
-        if (ui.getAnimationManPtr()->activeCount() == 0U) return 2;
+        if (ui.activeAnimationCount() == 0U) return 2;
         ui.clearAllAnimations();
     }
 
@@ -190,12 +190,12 @@ int main() {
         bool cleanAtDestruction = false;
         if (manager.launch(referencing, &cleanAtDestruction) != ViewManager::LaunchResult::Ok) return 7;
         if ((ui.getActiveCoroutineCount() != 1U) ||
-            (ui.getAnimationManPtr()->activeCount() == 0U) ||
+            (ui.activeAnimationCount() == 0U) ||
             (ui.getPopupManagerPtr()->getPopupCounts() != 1U) ||
             (ui.getFocusedWidgetCount() != 1U)) return 8;
         if (!manager.pop()) return 9;
         if ((ui.getActiveCoroutineCount() != 0U) ||
-            (ui.getAnimationManPtr()->activeCount() != 0U) ||
+            (ui.activeAnimationCount() != 0U) ||
             (ui.getPopupManagerPtr()->getPopupCounts() != 0U) ||
             (ui.getFocusedWidgetCount() != 0U) || !cleanAtDestruction) return 10;
     }

@@ -88,16 +88,17 @@ void ListView::startLoadAnimation() {
             this->itemLoadAnimations_[i] = value;
             if (isLastAnimation && value >= FIXED_POINT_ONE) { 
                 this->isInitialLoad_ = false;
-                this->m_ui.getAnimationManPtr()->clearAllProtectionMarks();
+                this->m_ui.clearAnimationProtection();
             }
         };
 
-        etl::unique_ptr<Animation> animation(new CallbackAnimation(
-            0, FIXED_POINT_ONE, duration, EasingType::EASE_IN_OUT_CUBIC, callback
-        ));
-        
-        m_ui.getAnimationManPtr()->markProtected(animation.get());
-        m_ui.addAnimation(etl::move(animation));
+        m_ui.animateCallback(
+            0,
+            FIXED_POINT_ONE,
+            duration,
+            EasingType::EASE_IN_OUT_CUBIC,
+            callback,
+            PROTECTION::PROTECTED);
     }
 }
 
@@ -105,7 +106,7 @@ void ListView::startLoadAnimation() {
  * @brief Clears all unprotected animations.
  */
 void ListView::clearNonInitialAnimations() {
-    m_ui.getAnimationManPtr()->clearUnprotected();
+    m_ui.clearUnprotectedAnimations();
 }
 
 /**
@@ -201,7 +202,7 @@ void ListView::selectCurrent(){
     if (currentCursor == 0) { returnToPreviousContext(); return; }
 
     if (m_itemList[currentCursor].nextList){  
-        m_ui.getAnimationManPtr()->clear();
+        m_ui.clearAllAnimations();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
         // Guard against underflow if nextListLength is zero
         int32_t nextLen = m_itemList[currentCursor].nextListLength;
@@ -224,12 +225,13 @@ void ListView::selectCurrent(){
         switchAnimStates_[targetIndex].isAnimating = true;
 
         auto callback = [this, targetIndex](int32_t value) { switchAnimStates_[targetIndex].boxX = value; };
-        etl::unique_ptr<Animation> animation(new CallbackAnimation(
-            switchAnimStates_[targetIndex].boxX, endX, 200, EasingType::EASE_IN_OUT_CUBIC, callback
-        ));
-
-        m_ui.getAnimationManPtr()->markProtected(animation.get());
-        m_ui.addAnimation(etl::move(animation));
+        m_ui.animateCallback(
+            switchAnimStates_[targetIndex].boxX,
+            endX,
+            200,
+            EasingType::EASE_IN_OUT_CUBIC,
+            callback,
+            PROTECTION::PROTECTED);
 
         *switchValPtr = !currentState;
         // return;
@@ -248,7 +250,7 @@ void ListView::selectCurrent(){
  */
 void ListView::returnToPreviousContext() {
     if (!m_history_stack.empty()){
-        m_ui.getAnimationManPtr()->clear();
+        m_ui.clearAllAnimations();
         auto parent_state = m_history_stack.back();
         m_history_stack.pop_back();
         m_itemList = parent_state.first.first;
@@ -327,7 +329,7 @@ void ListView::drawCursor() {
  */
 void ListView::onResume() {
     isInitialLoad_ = false;
-    m_ui.getAnimationManPtr()->clearAllProtectionMarks();
+    m_ui.clearAnimationProtection();
 }
 
 /**

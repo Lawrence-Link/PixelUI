@@ -115,7 +115,7 @@ void FocusManager::moveNext() {
         return;
     }
 
-    m_ui.getAnimationManPtr()->clearUnprotected();
+    m_ui.clearUnprotectedAnimations();
     int old_index = index;
     index = (index == -1) ? 0 : (index + 1) % m_Widgets.size();
 
@@ -145,7 +145,7 @@ void FocusManager::movePrev() {
         return;
     }
 
-    m_ui.getAnimationManPtr()->clearUnprotected();
+    m_ui.clearUnprotectedAnimations();
     int old_index = index;
     index = (index == -1) ? m_Widgets.size() - 1 : (index - 1 + m_Widgets.size()) % m_Widgets.size();
 

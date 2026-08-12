@@ -98,7 +98,7 @@ public:
      * @param easing Easing function to use.
      * @param prot Protection status.
      */
-    void animate(int32_t& value, int32_t targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
+    bool animate(int32_t& value, int32_t targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
     
     /**
      * @brief Creates and starts a two-value animation.
@@ -110,29 +110,27 @@ public:
      * @param easing Easing function to use.
      * @param prot Protection status.
      */
-    void animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
+    bool animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
     
-    /**
-     * @brief Adds a custom animation to the manager.
-     * @param animation The animation to add.
-     */
-    void addAnimation(etl::unique_ptr<Animation> animation);
-    
-    /**
-     * @brief Marks an animation as protected, preventing it from being cleared.
-     * @param animation The animation to protect.
-     */
-    void markAnimationProtected(Animation* animation) { m_animationManagerPtr->markProtected(animation); }
+    bool animateCallback(
+        int32_t startValue,
+        int32_t endValue,
+        uint32_t duration,
+        EasingType easing,
+        ValueCallback callback,
+        PROTECTION protection = PROTECTION::NOT_PROTECTED);
     
     /**
      * @brief Clears all unprotected animations.
      */
-    void clearUnprotectedAnimations() { m_animationManagerPtr->clearUnprotected(); }
+    void clearUnprotectedAnimations() { m_animationManager.clearUnprotected(); }
     
     /**
      * @brief Clears all animations.
      */
-    void clearAllAnimations() { m_animationManagerPtr->clear(); }
+    void clearAllAnimations() { m_animationManager.clear(); }
+    void clearAnimationProtection() { m_animationManager.clearAllProtectionMarks(); }
+    size_t activeAnimationCount() const { return m_animationManager.activeCount(); }
 
     uint32_t getCurrentTime() const { return _currentTime; }
 
@@ -148,7 +146,6 @@ public:
 
     // getters
     U8G2& getU8G2() const { return u8g2_; }
-    AnimationManager* getAnimationManPtr() { return m_animationManagerPtr.get(); }
     PopupManager* getPopupManagerPtr() { return m_popupManagerPtr.get(); }
     ViewManager* getViewManagerPtr() const { return m_viewManagerPtr.get(); }
 
@@ -235,10 +232,9 @@ protected:
     bool isFading() const { return isFading_; }
 
 private:
-private:
     U8G2& u8g2_;
 
-    etl::unique_ptr<AnimationManager> m_animationManagerPtr;
+    AnimationManager m_animationManager;
     etl::unique_ptr<ViewManager> m_viewManagerPtr;
     etl::unique_ptr<PopupManager> m_popupManagerPtr;
     etl::unique_ptr<CoroutineScheduler> m_coroutineSchedulerPtr;
@@ -258,7 +254,6 @@ private:
 
     bool isContinousRefreshEnabled() const { return continousMode_; }
     void (*m_func_debug_print)(const char*) = nullptr;
-    uint32_t getActiveAnimationCount() const { return m_animationManagerPtr->activeCount(); }
     uint8_t m_fadeStep = 0;
     uint32_t m_lastFadeTime = 0;
 };

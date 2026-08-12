@@ -44,7 +44,6 @@
  */
 PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
     m_viewManagerPtr.reset(new ViewManager(*this));
-    m_animationManagerPtr.reset(new AnimationManager());
     m_popupManagerPtr.reset(new PopupManager(*this));
     m_coroutineSchedulerPtr.reset(new CoroutineScheduler(*this));
     m_focusManagerPtr.reset(new FocusManager(*this));
@@ -89,47 +88,53 @@ void PixelUI::Heartbeat(uint32_t ms) {
     update_symbol_.store(1);
 }
 
-/**
- * @brief Add and start an animation
- * @param animation Uniquely owned Animation object
- */
-void PixelUI::addAnimation(etl::unique_ptr<Animation> animation) {
-    if (!animation) return;
-    animation->start(_currentTime);
-    m_animationManagerPtr->addAnimation(etl::move(animation));
+bool PixelUI::animateCallback(
+    int32_t startValue,
+    int32_t endValue,
+    uint32_t duration,
+    EasingType easing,
+    ValueCallback callback,
+    PROTECTION protection) {
+    return m_animationManager.emplace(
+        startValue,
+        endValue,
+        duration,
+        easing,
+        etl::move(callback),
+        protection,
+        _currentTime);
 }
 
 /**
  * @brief Animate a single integer value with optional protection
  */
-void PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
+bool PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
                       EasingType easing, PROTECTION prot) {
 
-    etl::unique_ptr<Animation> animation(new CallbackAnimation(
-        value, targetValue, duration, easing,
-        [&value](int32_t currentValue) { value = currentValue; }
-    ));
-    Animation* animationPtr = animation.get();
-    if (prot == PROTECTION::PROTECTED) m_animationManagerPtr->markProtected(animationPtr);
-    addAnimation(etl::move(animation));
+    return animateCallback(
+        value,
+        targetValue,
+        duration,
+        easing,
+        [&value](int32_t currentValue) { value = currentValue; },
+        prot);
 }
 
 /**
  * @brief Animate two integer values simultaneously
  */
-void PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY,
+bool PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY,
                       uint32_t duration, EasingType easing, PROTECTION prot) {
 
-    etl::unique_ptr<Animation> animX(new CallbackAnimation(x, targetX, duration, easing, [&x](int32_t val) { x = val; }));
-    etl::unique_ptr<Animation> animY(new CallbackAnimation(y, targetY, duration, easing, [&y](int32_t val) { y = val; }));
-    Animation* animXPtr = animX.get();
-    Animation* animYPtr = animY.get();
-    if (prot == PROTECTION::PROTECTED) {
-        m_animationManagerPtr->markProtected(animXPtr);
-        m_animationManagerPtr->markProtected(animYPtr);
+    if (m_animationManager.available() < 2U) {
+        return false;
     }
-    addAnimation(etl::move(animX));
-    addAnimation(etl::move(animY));
+
+    const bool xAdded = animateCallback(
+        x, targetX, duration, easing, [&x](int32_t val) { x = val; }, prot);
+    const bool yAdded = animateCallback(
+        y, targetY, duration, easing, [&y](int32_t val) { y = val; }, prot);
+    return xAdded && yAdded;
 }
 /**
  * @brief Add a widget to the FocusManager
@@ -176,14 +181,14 @@ void PixelUI::renderer() {
         update_symbol_.store(0) ;
         m_popupManagerPtr->updatePopups(_currentTime);
         m_coroutineSchedulerPtr->update(_currentTime);
-        m_animationManagerPtr->update(_currentTime);
+        m_animationManager.update(_currentTime);
     }
 
     static uint8_t lastPopupCount = 0;
     uint8_t currentPopupCount = m_popupManagerPtr->getPopupCounts();
     if (currentPopupCount != lastPopupCount) { markDirty(); lastPopupCount = currentPopupCount; }
 
-    if (getActiveAnimationCount() || isContinousRefreshEnabled()) { markDirty(); }
+    if (activeAnimationCount() || isContinousRefreshEnabled()) { markDirty(); }
 
     if (!isFading_) {
         u8g2_.clearBuffer();

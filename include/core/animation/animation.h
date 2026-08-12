@@ -28,7 +28,6 @@
 #include <stddef.h>
 #include "etl/vector.h"
 #include "etl/inplace_function.h"
-#include "etl/memory.h"
 #include "config.h"
 #include "core/CommonTypes.h"
 
@@ -73,11 +72,11 @@ public:
         _duration(duration)     
     {}
     
-    virtual ~Animation() = default;
+    ~Animation() = default;
     
     void start(uint32_t currentTime);
     void stop();
-    virtual bool update(uint32_t currentTime);
+    bool update(uint32_t currentTime);
     bool isActive() const { return _isActive; }
     bool isProtected() const { return _isProtected; }
     void setProtected(bool prot) { _isProtected = prot; }
@@ -95,27 +94,6 @@ private:
 };
 
 /**
- * @class AnimationManager
- * @brief Manages multiple animations, updating and cleaning them up.
- */
-class AnimationManager {
-public:
-    ~AnimationManager() = default;
-    void addAnimation(etl::unique_ptr<Animation> animation);
-    void update(uint32_t currentTime);
-    void clear();
-    
-    // Protection mechanism
-    void markProtected(Animation* animation);
-    void clearUnprotected();
-    void clearAllProtectionMarks();
-    size_t activeCount() const;
-
-private:
-    etl::vector<etl::unique_ptr<Animation>, MAX_ANIMATION_COUNT> _animations;
-};
-
-/**
  * @class CallbackAnimation
  * @brief Animation that calls a callback with the current value on each update.
  */
@@ -128,7 +106,7 @@ public:
           _endVal(endVal),
           _updateCallback(updateCallback) {}
           
-    bool update(uint32_t currentTime) override {
+    bool update(uint32_t currentTime) {
         bool isRunning = Animation::update(currentTime);
         if (_updateCallback) { 
             int32_t delta = _endVal - _startVal;
@@ -142,4 +120,32 @@ private:
     int32_t _startVal;
     int32_t _endVal;
     etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE> _updateCallback;
+};
+
+/**
+ * @class AnimationManager
+ * @brief Owns callback animations in fixed-capacity inline storage.
+ */
+class AnimationManager {
+public:
+    using UpdateCallback = etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE>;
+
+    ~AnimationManager() = default;
+    bool emplace(
+        int32_t startValue,
+        int32_t endValue,
+        uint32_t duration,
+        EasingType easing,
+        UpdateCallback callback,
+        PROTECTION protection,
+        uint32_t currentTime);
+    void update(uint32_t currentTime);
+    void clear();
+    void clearUnprotected();
+    void clearAllProtectionMarks();
+    size_t activeCount() const;
+    size_t available() const { return _animations.available(); }
+
+private:
+    etl::vector<CallbackAnimation, MAX_ANIMATION_COUNT> _animations;
 };

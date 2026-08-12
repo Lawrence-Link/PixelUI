@@ -93,6 +93,8 @@ class APP_COUNTER: public IApplication {
 private:
     /** @brief Reference to the main UI context. */
     PixelUI& m_ui;
+    /** @brief Caller-owned chart storage sized for the expanded width. */
+    float histogramBuffer[76]{};
     /** @brief Widget for displaying historical data. */
     CurveChart histogram;
     /** @brief Widget for displaying a main, bracketed value. */
@@ -138,7 +140,16 @@ public:
     APP_COUNTER(PixelUI& ui, void* parameter = nullptr) :
     m_ui(ui),
     // Initialize all member widgets with the UI reference
-    histogram(ui, 69, 45, 56, 18, 76, 63, EXPAND_BASE::BOTTOM_RIGHT, "Curve"),
+    histogram(
+        ui,
+        69,
+        45,
+        56,
+        18,
+        histogramBuffer,
+        ChartExpandSize<76, 63>{},
+        EXPAND_BASE::BOTTOM_RIGHT,
+        "Curve"),
     brace(ui, 3, 45, 56, 18),
     icon_battery(ui, 14, 2, 10, 6),
     icon_alert(ui, 28, 1, 9, 7),

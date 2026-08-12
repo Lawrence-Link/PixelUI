@@ -177,7 +177,7 @@ void IconView::scrollToIndex(int newIndex) {
     if (totalItems == 0) return;
 
     // Clear any unprotected animation to avoid overlapping effects.
-    ui_.getAnimationManPtr()->clearUnprotected();
+    ui_.clearUnprotectedAnimations();
 
     // Determine target slot position for current index.
     int targetSlot;

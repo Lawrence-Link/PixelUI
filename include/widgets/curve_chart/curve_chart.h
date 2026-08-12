@@ -27,12 +27,39 @@
 #pragma once
 
 #include "../IWidget.h"
+#include "../ChartBuffer.h"
 #include <etl/limits.h>
-#include <etl/memory.h>
 
 class CurveChart : public IWidget {
 public:
-    CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp, uint16_t size_h_exp, EXPAND_BASE base, const char* label = nullptr);
+    template <size_t N, uint16_t ExpandedWidth, uint16_t ExpandedHeight>
+    CurveChart(
+        PixelUI& ui,
+        uint16_t pos_x,
+        uint16_t pos_y,
+        uint16_t size_w,
+        uint16_t size_h,
+        float (&buffer)[N],
+        ChartExpandSize<ExpandedWidth, ExpandedHeight>,
+        EXPAND_BASE base,
+        const char* label = nullptr)
+        : CurveChart(
+              ui,
+              pos_x,
+              pos_y,
+              size_w,
+              size_h,
+              buffer,
+              N,
+              ExpandedWidth,
+              ExpandedHeight,
+              base,
+              label) {
+        static_assert(N == ExpandedWidth,
+                      "CurveChart buffer size must equal the expanded chart width");
+        static_assert(N <= static_cast<size_t>(etl::numeric_limits<int>::max()),
+                      "CurveChart buffer capacity exceeds supported index range");
+    }
     ~CurveChart() = default;
 
     void onLoad() override;
@@ -75,7 +102,7 @@ private:
     EXPAND_BASE base_;
 
     // Internal data buffer for real-time data streaming
-    etl::unique_ptr<float[]> m_data_buffer;
+    float* m_data_buffer = nullptr;
     int m_buffer_size = 0;
     int m_write_index = 0;
     int m_data_count = 0;
@@ -104,6 +131,19 @@ private:
     int32_t anim_y = 0;
 
     const char* m_label = nullptr;
+
+    CurveChart(
+        PixelUI& ui,
+        uint16_t pos_x,
+        uint16_t pos_y,
+        uint16_t size_w,
+        uint16_t size_h,
+        float* buffer,
+        size_t buffer_size,
+        uint16_t size_w_exp,
+        uint16_t size_h_exp,
+        EXPAND_BASE base,
+        const char* label);
 
     void expandWidget();
     void contractWidget();

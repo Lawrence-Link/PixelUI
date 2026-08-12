@@ -148,15 +148,27 @@ bool Animation::update(uint32_t currentTime) {
     return true;
 }
 
-/*
-@brief Add a new animation to the manager.
-@param animation Uniquely owned Animation object to be added.
-*/
-void AnimationManager::addAnimation(etl::unique_ptr<Animation> animation) {
-    if (!animation || _animations.full()) {
-        return;
+bool AnimationManager::emplace(
+    int32_t startValue,
+    int32_t endValue,
+    uint32_t duration,
+    EasingType easing,
+    UpdateCallback callback,
+    PROTECTION protection,
+    uint32_t currentTime) {
+    if (_animations.full() || !callback) {
+        return false;
     }
-    _animations.push_back(etl::move(animation));
+
+    CallbackAnimation& animation = _animations.emplace_back(
+        startValue,
+        endValue,
+        duration,
+        easing,
+        etl::move(callback));
+    animation.setProtected(protection == PROTECTION::PROTECTED);
+    animation.start(currentTime);
+    return true;
 }
 
 /*
@@ -171,16 +183,16 @@ void AnimationManager::update(uint32_t currentTime) {
 
     auto writePos = _animations.begin();
     for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
-        if ((*readPos)->update(currentTime)) {
+        if (readPos->update(currentTime)) {
             if (writePos != readPos) {
                 *writePos = etl::move(*readPos);
             }
             ++writePos;
         } else {
             // If the animation is complete and not protected, remove it
-            if (!readPos->get()->isProtected()) {
+            if (!readPos->isProtected()) {
                 // Ensure the animation is unprotected after completion so it can be cleared next time
-                readPos->get()->setProtected(false);
+                readPos->setProtected(false);
             }
         }
     }
@@ -195,16 +207,6 @@ void AnimationManager::clear(){
 }
 
 /*
-@brief mark a animation as protected, preventing it from being cleared.
-@param animation the animation to be marked as protected.
-*/
-void AnimationManager::markProtected(Animation* animation) {
-    if (animation) {
-        animation->setProtected(true);
-    }
-}
-
-/*
 @brief clean all unprotected animations in the manager.
 */
 void AnimationManager::clearUnprotected() {
@@ -214,7 +216,7 @@ void AnimationManager::clearUnprotected() {
     
     auto writePos = _animations.begin();
     for (auto readPos = _animations.begin(); readPos != _animations.end(); ++readPos) {
-        if (readPos->get()->isProtected()) {
+        if (readPos->isProtected()) {
             if (writePos != readPos) {
                 *writePos = etl::move(*readPos);
             }
@@ -228,8 +230,8 @@ void AnimationManager::clearUnprotected() {
 @brief clean all protection marks from all animations.
 */
 void AnimationManager::clearAllProtectionMarks() {
-    for (const auto& anim_ : _animations) {
-        anim_->setProtected(false);
+    for (auto& animation : _animations) {
+        animation.setProtected(false);
     }
 }
 

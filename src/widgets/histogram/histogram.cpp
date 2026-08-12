@@ -42,14 +42,16 @@
  * @param base Expansion anchor base.
  */
 Histogram::Histogram(
-    PixelUI& ui, 
-    uint16_t pos_x, 
-    uint16_t pos_y, 
-    uint16_t size_w, 
-    uint16_t size_h, 
-    uint16_t size_w_exp = 0, 
-    uint16_t size_h_exp = 0, 
-    EXPAND_BASE base = EXPAND_BASE::TOP_LEFT,
+    PixelUI& ui,
+    uint16_t pos_x,
+    uint16_t pos_y,
+    uint16_t size_w,
+    uint16_t size_h,
+    float* buffer,
+    size_t buffer_size,
+    uint16_t size_w_exp,
+    uint16_t size_h_exp,
+    EXPAND_BASE base,
     const char* label
 ) : 
     m_ui(ui), 
@@ -60,6 +62,8 @@ Histogram::Histogram(
     exp_w(size_w_exp),
     exp_h(size_h_exp),
     base_(base),
+    m_data_buffer(buffer),
+    m_buffer_size(static_cast<int>(buffer_size)),
     m_label(label)
 {
     // pos_x_ and pos_y_ now represent the top-left anchor point.
@@ -103,10 +107,6 @@ void Histogram::onLoad() {
  * @brief Initialize the circular data buffer and statistics.
  */
 void Histogram::initializeDataBuffer() {
-    // Allocate buffer based on expanded width or default size
-    m_buffer_size = (exp_w > size_w_) ? exp_w : 200;
-    m_data_buffer.reset(new float[m_buffer_size]);
-
     // Clear buffer
     for (int i = 0; i < m_buffer_size; ++i) {
         m_data_buffer[i] = 0.0f;
@@ -144,10 +144,6 @@ void Histogram::onOffload() {
  * @param value The new float value to add.
  */
 void Histogram::addData(float value) {
-    if (!m_data_buffer) {
-        initializeDataBuffer();
-    }
-    
     // Store the old value at current position for statistics update
     float old_value = m_data_buffer[m_write_index];
     bool replacing_valid_data = (m_data_count >= m_buffer_size);
@@ -289,10 +285,8 @@ float Histogram::getMinValueInHistory() const {
  * @brief Clear all data in the histogram buffer and reset statistics.
  */
 void Histogram::clearData() {
-    if (m_data_buffer) {
-        for (int i = 0; i < m_buffer_size; ++i) {
-            m_data_buffer[i] = 0.0f;
-        }
+    for (int i = 0; i < m_buffer_size; ++i) {
+        m_data_buffer[i] = 0.0f;
     }
     m_write_index = 0;
     m_data_count = 0;
@@ -480,7 +474,7 @@ void Histogram::draw() {
  * @param u8g2 Reference to U8G2 for drawing.
  */
 void Histogram::drawHistogramData(int tl_x, int tl_y, int width, int height, U8G2& u8g2) {
-    if (!m_data_buffer || m_data_count == 0) {
+    if (m_data_count == 0) {
         return;
     }
 

@@ -119,6 +119,6 @@ private:
     (ctx).state = CoroutineState::SUSPENDED; \
     return; \
     case line: \
-    if ((ui).getActiveAnimationCount() > 0) return; \
+    if ((ui).activeAnimationCount() > 0) return; \
     (ctx).state = CoroutineState::RUNNING; \
 } while(0)

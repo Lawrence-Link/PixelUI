@@ -102,5 +102,6 @@ uses 1976 bytes; launcher, `ListViewDemo`, and `AboutApp` use 2040 bytes.
 Re-run `tests/memory_metrics` for every target compiler and ABI.
 
 The arena removes heap use only for application objects. Existing animations,
-popups, PixelUI manager instances, and some widget buffers still use heap
-allocation and are outside this refactor.
+popups, PixelUI manager instances, and unrelated widget storage may still use
+heap allocation and are outside this refactor. `Histogram` and `CurveChart`
+sample buffers are caller-provided fixed arrays.

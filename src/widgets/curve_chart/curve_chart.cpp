@@ -36,7 +36,18 @@
  * @param pos_x X coordinate of the widget's top-left corner (new anchor).
  * @param pos_y Y coordinate of the widget's top-left corner (new anchor).
  */
-CurveChart::CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h, uint16_t size_w_exp = 0, uint16_t size_h_exp = 0, EXPAND_BASE base = EXPAND_BASE::TOP_LEFT, const char* label) :
+CurveChart::CurveChart(
+    PixelUI& ui,
+    uint16_t pos_x,
+    uint16_t pos_y,
+    uint16_t size_w,
+    uint16_t size_h,
+    float* buffer,
+    size_t buffer_size,
+    uint16_t size_w_exp,
+    uint16_t size_h_exp,
+    EXPAND_BASE base,
+    const char* label) :
     m_ui(ui), 
     pos_x_(pos_x), 
     pos_y_(pos_y),
@@ -45,6 +56,8 @@ CurveChart::CurveChart(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t siz
     exp_w(size_w_exp),
     exp_h(size_h_exp),
     base_(base),
+    m_data_buffer(buffer),
+    m_buffer_size(static_cast<int>(buffer_size)),
     m_label(label)
 {
     // pos_x_ and pos_y_ now represent the top-left anchor point.
@@ -82,10 +95,6 @@ void CurveChart::onLoad() {
 }
 
 void CurveChart::initializeDataBuffer() {
-    // Initialize buffer with expanded width size
-    m_buffer_size = (exp_w > size_w_) ? exp_w : 200; // Default to 200 if exp_w not set
-    m_data_buffer.reset(new float[m_buffer_size]); // acquisition for buffer memory
-    
     // Initialize buffer with zeros
     for (int i = 0; i < m_buffer_size; ++i) {
         m_data_buffer[i] = 0.0f;
@@ -116,10 +125,6 @@ void CurveChart::onOffload() {
 }
 
 void CurveChart::addData(float value) {
-    if (!m_data_buffer) {
-        initializeDataBuffer();
-    }
-    
     // Store the old value at current position for statistics update
     float old_value = m_data_buffer[m_write_index];
     bool replacing_valid_data = (m_data_count >= m_buffer_size);
@@ -260,10 +265,8 @@ float CurveChart::getMinValueInHistory() const {
 }
 
 void CurveChart::clearData() {
-    if (m_data_buffer) {
-        for (int i = 0; i < m_buffer_size; ++i) {
-            m_data_buffer[i] = 0.0f;
-        }
+    for (int i = 0; i < m_buffer_size; ++i) {
+        m_data_buffer[i] = 0.0f;
     }
     
     // Reset window statistics
@@ -447,7 +450,7 @@ void CurveChart::draw() {
  */
 void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, U8G2& u8g2) {
     // Return early if there's no data or the buffer is invalid
-    if (!m_data_buffer || m_data_count == 0) {
+    if (m_data_count == 0) {
         return;
     }
     
