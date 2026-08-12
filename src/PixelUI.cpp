@@ -42,9 +42,9 @@
  *
  * Initializes core subsystems: ViewManager, AnimationManager, PopupManager, and CoroutineScheduler.
  */
-PixelUI::PixelUI(U8G2& u8g2) : u8g2_(u8g2), _currentTime(0) {
+PixelUI::PixelUI(U8G2& u8g2)
+    : u8g2_(u8g2), m_popupManager(*this), _currentTime(0) {
     m_viewManagerPtr.reset(new ViewManager(*this));
-    m_popupManagerPtr.reset(new PopupManager(*this));
     m_coroutineSchedulerPtr.reset(new CoroutineScheduler(*this));
     m_focusManagerPtr.reset(new FocusManager(*this));
 }
@@ -179,13 +179,13 @@ void PixelUI::renderer() {
 
     if (update_symbol_.load()) { // check for update before rendering context
         update_symbol_.store(0) ;
-        m_popupManagerPtr->updatePopups(_currentTime);
+        m_popupManager.updatePopups(_currentTime);
         m_coroutineSchedulerPtr->update(_currentTime);
         m_animationManager.update(_currentTime);
     }
 
     static uint8_t lastPopupCount = 0;
-    uint8_t currentPopupCount = m_popupManagerPtr->getPopupCounts();
+    uint8_t currentPopupCount = static_cast<uint8_t>(m_popupManager.getPopupCounts());
     if (currentPopupCount != lastPopupCount) { markDirty(); lastPopupCount = currentPopupCount; }
 
     if (activeAnimationCount() || isContinousRefreshEnabled()) { markDirty(); }
@@ -193,7 +193,7 @@ void PixelUI::renderer() {
     if (!isFading_) {
         u8g2_.clearBuffer();
         if (currentDrawable_) currentDrawable_->draw();
-        m_popupManagerPtr->drawPopups();
+        m_popupManager.drawPopups();
         m_focusManagerPtr->draw();
         u8g2_.sendBuffer();
         if (m_refresh_callback) m_refresh_callback();
@@ -202,7 +202,7 @@ void PixelUI::renderer() {
         if (m_fadeStep == 0) {
             u8g2_.clearBuffer();
             if (currentDrawable_) currentDrawable_->draw();
-            m_popupManagerPtr->drawPopups();
+            m_popupManager.drawPopups();
             u8g2_.sendBuffer();
             if (m_refresh_callback) m_refresh_callback();
             m_fadeStep = 1;
@@ -232,11 +232,11 @@ void PixelUI::renderer() {
 /**
  * @brief Show a progress popup
  */
-void PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue,
+bool PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue,
                                 const char* title, uint16_t width, uint16_t height,
-                                uint16_t duration, uint8_t priority,
-                                ValueCallback update_cb, bool use_apparent_val) {
-    if (minValue >= maxValue) return;
+                                uint16_t duration, ValueCallback update_cb,
+                                bool use_apparent_val) {
+    if (minValue >= maxValue) return false;
     if (width < 50) width = 50; 
     if (width > 120) width = 120;
     if (height < 30) height = 30; 
@@ -244,33 +244,35 @@ void PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxVal
     if (duration > 30000) duration = 30000; 
     if (duration < 1000) duration = 1000;
 
-    etl::unique_ptr<IPopup> popup(new PopupProgress(*this, width, height, value,
-                                                    minValue, maxValue, title,
-                                                    duration, priority, update_cb, use_apparent_val));
-    m_popupManagerPtr->addPopup(etl::move(popup));
-    markDirty();
+    if (m_popupManager.enqueueProgress(
+            width, height, value, minValue, maxValue, title,
+            duration, etl::move(update_cb), use_apparent_val)) {
+        markDirty();
+        return true;
+    }
+    return false;
 }
 
 /**
  * @brief Show an informational popup
  */
-void PixelUI::showPopupInfo(const char* text, const char* title,
+bool PixelUI::showPopupInfo(const char* text, const char* title,
                             uint16_t width, uint16_t height,
-                            uint16_t duration, uint8_t priority) {
-    if (!text) return;
-    etl::unique_ptr<IPopup> popup(new PopupInfo(*this, width, height, text, title,
-                                                duration, priority));
-    m_popupManagerPtr->addPopup(etl::move(popup));
-    markDirty();
+                            uint16_t duration) {
+    if (!text) return false;
+    if (m_popupManager.enqueueInfo(width, height, text, title, duration)) {
+        markDirty();
+        return true;
+    }
+    return false;
 }
 
 /**
  * @brief Show a 4-digit value popup
  */
-void PixelUI::showPopupValue4Digits(int32_t& value, const char* title,
+bool PixelUI::showPopupValue4Digits(int32_t& value, const char* title,
                                     uint16_t width, uint16_t height,
-                                    uint16_t duration, uint8_t priority,
-                                    ValueCallback update_cb) {
+                                    uint16_t duration, ValueCallback update_cb) {
     if (width < 50) width = 50; 
     if (width > 120) width = 120;
     if (height < 30) height = 30; 
@@ -278,11 +280,12 @@ void PixelUI::showPopupValue4Digits(int32_t& value, const char* title,
     if (duration > 30000) duration = 30000; 
     if (duration < 1000) duration = 1000;
 
-    etl::unique_ptr<IPopup> popup(new PopupValue4Digits(*this, width, height, value,
-                                                        title, duration, priority,
-                                                        update_cb));
-    m_popupManagerPtr->addPopup(etl::move(popup));
-    markDirty();
+    if (m_popupManager.enqueueValue4Digits(
+            width, height, value, title, duration, etl::move(update_cb))) {
+        markDirty();
+        return true;
+    }
+    return false;
 }
 
 /**

@@ -68,7 +68,7 @@ constexpr int MAX_LISTVIEW_DEPTH = 6;
 // Stack size for callback animations (for internal coroutine/animation safety)
 constexpr int CALLBACK_ANIMATION_STACK_SIZE = 2;
 
-// Maximum number of popups that can appear simultaneously
+// Maximum number of active plus pending Popup requests
 constexpr int MAX_POPUP_NUM = 3;
 
 // Maximum number of widgets displayed on screen at the same time

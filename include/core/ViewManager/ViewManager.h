@@ -29,7 +29,6 @@
 #include "core/app/app_system.h"
 #include <etl/atomic.h>
 #include <etl/utility.h>
-#include "ui/Popup/PopupManager.h"
 
 class ViewManager {
 public:
@@ -49,10 +48,9 @@ public:
 
             // Prioritize pop-up input - check for an active pop-up
 
-            auto popupManager = m_ui.getPopupManagerPtr();
-            if (popupManager->getPopupCounts() > 0) {
-                // Get the highest priority pop-up to handle input
-                return popupManager->handleTopPopupInput(event);
+            if (m_ui.popupCount() > 0U) {
+                // The active Popup always gets the first chance to handle input.
+                return m_ui.m_popupManager.handleTopPopupInput(event);
             }
             
             // If the pop-up did not handle the input or there is no pop-up, pass the input to the application at the top of the stack

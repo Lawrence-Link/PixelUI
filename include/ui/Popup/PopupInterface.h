@@ -51,6 +51,5 @@ public:
     virtual bool update(uint32_t currentTime) = 0;
     virtual void draw() = 0;
     virtual bool handleInput(InputEvent event) = 0;
-    virtual uint8_t getPriority() const = 0;
     virtual uint16_t getDuration() const = 0;
 };

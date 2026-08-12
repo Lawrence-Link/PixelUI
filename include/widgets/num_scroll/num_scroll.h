@@ -27,7 +27,6 @@
 #pragma once
 
 #include "../IWidget.h"
-#include "PixelUI.h"
 
 /**
  * @class NumScroll

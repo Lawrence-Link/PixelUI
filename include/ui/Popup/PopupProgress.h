@@ -27,11 +27,11 @@ private:
 public:
     PopupProgress(PixelUI& ui, uint16_t width, uint16_t height, 
                   int32_t& value, int32_t minValue, int32_t maxValue,
-                  const char* title = "", uint16_t duration = 3000, uint8_t priority = 0,
+                  const char* title = "", uint16_t duration = 3000,
                   etl::inplace_function<void(int32_t value), CALLBACK_STORAGE_SIZE> cb_function = nullptr,
                   bool UseApparentVal = false);
     ~PopupProgress() = default;
 
-    void drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) override;
-    bool handleInput(InputEvent event) override;
+    void drawContent(const PopupContentBounds& bounds) override;
+    bool handleContentInput(InputEvent event) override;
 };

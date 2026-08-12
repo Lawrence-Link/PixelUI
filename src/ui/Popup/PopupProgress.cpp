@@ -39,17 +39,16 @@
  * @param maxValue Maximum allowable value
  * @param title Optional title string
  * @param duration Display duration in ms
- * @param priority Popup priority for stacking order
  * @param cb_function Optional callback invoked when value changes
  *
  * Initializes a progress popup and links it to a value reference.
  */
 PopupProgress::PopupProgress(PixelUI& ui, uint16_t width, uint16_t height, 
                             int32_t& value, int32_t minValue, int32_t maxValue,
-                            const char* title, uint16_t duration, uint8_t priority,
+                            const char* title, uint16_t duration,
                             etl::inplace_function<void(int32_t value), CALLBACK_STORAGE_SIZE> cb_function,
                             bool UseApparentVal)
-    : PopupBase(ui, width, height, priority, duration), 
+    : PopupBase(ui, width, height, duration),
       _value(value), _minValue(minValue), _maxValue(maxValue), _title(title), m_cb(cb_function), use_apparent_val(UseApparentVal)
 {
 }
@@ -99,21 +98,21 @@ void PopupProgress::formatValueAsPercentage(char* buffer, size_t bufferSize) con
  * Uses U8G2 to render a horizontal progress bar and optional title.
  * Fills the progress proportionally and displays numeric percentage below.
  */
-void PopupProgress::drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) {
-    U8G2& u8g2 = m_ui.getU8G2();
+void PopupProgress::drawContent(const PopupContentBounds& bounds) {
+    U8G2& u8g2 = ui().getU8G2();
     
     // draw title centered above the bar
     if (_title && strlen(_title) > 0) {
         u8g2.setFont(u8g2_font_wqy12_t_gb2312);
         int16_t titleWidth = u8g2.getUTF8Width(_title);
-        u8g2.drawUTF8(centerX - titleWidth / 2, centerY - 7, _title);
+        u8g2.drawUTF8(bounds.centerX - titleWidth / 2, bounds.centerY - 7, _title);
     }
     
     // configure progress bar dimensions
-    int16_t barWidth = currentWidth - 20;
+    int16_t barWidth = bounds.width - 20;
     int16_t barHeight = 8;
-    int16_t barX = centerX - barWidth / 2;
-    int16_t barY = centerY - 3;
+    int16_t barX = bounds.centerX - barWidth / 2;
+    int16_t barY = bounds.centerY - 3;
     
     // draw the bar frame
     u8g2.drawFrame(barX, barY, barWidth, barHeight);
@@ -138,7 +137,7 @@ void PopupProgress::drawContent(int16_t centerX, int16_t centerY, int16_t curren
         snprintf(percentBuffer, sizeof(percentBuffer), "%" PRId32, _value);
     }
     int16_t percentWidth = u8g2.getStrWidth(percentBuffer);
-    u8g2.drawStr(centerX - percentWidth / 2, centerY + 17, percentBuffer);
+    u8g2.drawStr(bounds.centerX - percentWidth / 2, bounds.centerY + 17, percentBuffer);
 }
 
 /**
@@ -150,19 +149,14 @@ void PopupProgress::drawContent(int16_t centerX, int16_t centerY, int16_t curren
  * SELECT triggers the closing animation.
  * Resets the auto-close timer whenever value changes.
  */
-bool PopupProgress::handleInput(InputEvent event) {
-    if (_state == PopupState::CLOSING) {
-        // consume input but do nothing while closing
-        return true;
-    }
-
+bool PopupProgress::handleContentInput(InputEvent event) {
     switch (event) {
         case InputEvent::RIGHT:
             if (_value < _maxValue) {
                 _value++;
                 if (m_cb) m_cb(_value);
-                _startTime = m_ui.getCurrentTime(); // reset auto-close timer
-                m_ui.markDirty();                   // mark for redraw
+                resetAutoCloseTimer();
+                ui().markDirty();
             }
             return true;
 
@@ -170,16 +164,16 @@ bool PopupProgress::handleInput(InputEvent event) {
             if (_value > _minValue) {
                 _value--;
                 if (m_cb) m_cb(_value);
-                _startTime = m_ui.getCurrentTime();
-                m_ui.markDirty();
+                resetAutoCloseTimer();
+                ui().markDirty();
             }
             return true;
 
         case InputEvent::SELECT:
-            startClosingAnimation(); // close popup
+            requestClose();
             return true;
 
         default:
-            return PopupBase::handleInput(event); // fallback to base
+            return false;
     }
 }

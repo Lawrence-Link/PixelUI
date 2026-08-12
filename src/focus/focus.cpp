@@ -25,6 +25,7 @@
  */
 
 #include "focus/focus.h"
+#include "PixelUI.h"
 
 /**
  * @brief Clear the currently active widget, if any, and restore focus state.

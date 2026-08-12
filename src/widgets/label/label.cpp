@@ -25,6 +25,7 @@
  */
 
 #include "widgets/label/label.h"
+#include "PixelUI.h"
 
 /**
  * @brief Constructor for Label widget.

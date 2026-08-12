@@ -111,5 +111,5 @@ void ViewManager::clearNonOwningReferences() {
     m_ui.clearAllAnimations();
     m_ui.clearAllCoroutines();
     m_ui.clearFocusManager();
-    m_ui.getPopupManagerPtr()->clearPopups();
+    m_ui.clearPopups();
 }

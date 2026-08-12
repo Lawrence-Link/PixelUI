@@ -1,128 +1,162 @@
 /*
  * Copyright (C) 2025 Lawrence Link
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "ui/Popup/PopupManager.h"
-#include <etl/algorithm.h>
+#include "PixelUI.h"
 
-/**
- * @brief Add a popup to the manager
- * @param popup Uniquely owned IPopup
- *
- * Maintains the _popups container in ascending priority order
- * (low priority first, high priority last). If the container is full,
- * removes the lowest priority popup to make room for the new one.
- */
-void PopupManager::addPopup(etl::unique_ptr<IPopup> popup) {
-    if (!popup) return;
+PopupManager::~PopupManager() {
+    clearPopups();
+}
 
-    if (_popups.size() >= _popups.max_size()) {
-        if (!_popups.empty()) {
-            auto minPriorityIt = _popups.begin();
-            for (auto it = _popups.begin(); it != _popups.end(); ++it) {
-                if ((*it)->getPriority() < (*minPriorityIt)->getPriority()) {
-                    minPriorityIt = it;
-                }
-            }
-            _popups.erase(minPriorityIt);
-        }
+bool PopupManager::enqueue(Request&& request) {
+    if (dispatching_ || (getPopupCounts() >= MAX_POPUP_NUM)) {
+        return false;
     }
 
-    auto insertPos = _popups.begin();
-    for (; insertPos != _popups.end(); ++insertPos) {
-        if ((*insertPos)->getPriority() > popup->getPriority()) {
+    requests_.push(etl::move(request));
+    if (active_ == nullptr) {
+        activateNext();
+    }
+    return active_ != nullptr;
+}
+
+bool PopupManager::enqueueInfo(uint16_t width, uint16_t height,
+                               const char* text, const char* title,
+                               uint16_t duration, const uint8_t* font) {
+    if (text == nullptr) {
+        return false;
+    }
+
+    Request request;
+    request.type = RequestType::Info;
+    request.width = width;
+    request.height = height;
+    request.duration = duration;
+    request.text = text;
+    request.title = title;
+    request.font = font;
+    return enqueue(etl::move(request));
+}
+
+bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
+                                   int32_t& value, int32_t minValue,
+                                   int32_t maxValue, const char* title,
+                                   uint16_t duration, ValueCallback callback,
+                                   bool useApparentValue) {
+    Request request;
+    request.type = RequestType::Progress;
+    request.width = width;
+    request.height = height;
+    request.duration = duration;
+    request.title = title;
+    request.value = &value;
+    request.minValue = minValue;
+    request.maxValue = maxValue;
+    request.callback = etl::move(callback);
+    request.useApparentValue = useApparentValue;
+    return enqueue(etl::move(request));
+}
+
+bool PopupManager::enqueueValue4Digits(uint16_t width, uint16_t height,
+                                       int32_t& value, const char* title,
+                                       uint16_t duration,
+                                       ValueCallback callback) {
+    Request request;
+    request.type = RequestType::Value4Digits;
+    request.width = width;
+    request.height = height;
+    request.duration = duration;
+    request.title = title;
+    request.value = &value;
+    request.callback = etl::move(callback);
+    return enqueue(etl::move(request));
+}
+
+void PopupManager::activateNext() {
+    if ((active_ != nullptr) || requests_.empty()) {
+        return;
+    }
+
+    Request request = etl::move(requests_.front());
+    requests_.pop();
+
+    dispatching_ = true;
+    switch (request.type) {
+        case RequestType::Info:
+            active_ = activePool_.create<PopupInfo>(
+                ui_, request.width, request.height, request.text,
+                request.title, request.duration, request.font);
             break;
-        }
+        case RequestType::Progress:
+            active_ = activePool_.create<PopupProgress>(
+                ui_, request.width, request.height, *request.value,
+                request.minValue, request.maxValue, request.title,
+                request.duration, etl::move(request.callback),
+                request.useApparentValue);
+            break;
+        case RequestType::Value4Digits:
+            active_ = activePool_.create<PopupValue4Digits>(
+                ui_, request.width, request.height, *request.value,
+                request.title, request.duration, etl::move(request.callback));
+            break;
     }
-    _popups.insert(insertPos, etl::move(popup));
+    dispatching_ = false;
 }
 
-/**
- * @brief Remove a specific popup from the manager
- * @param popup Non-owning pointer to the popup to remove
- *
- * Finds the popup in the container and erases it.
- */
-void PopupManager::removePopup(IPopup* popup) {
-    auto it = etl::find_if(_popups.begin(), _popups.end(),
-                           [popup](const etl::unique_ptr<IPopup>& item) { return item.get() == popup; });
-    if (it != _popups.end()) {
-        _popups.erase(it);
+void PopupManager::destroyActive() {
+    if (active_ == nullptr) {
+        return;
     }
+
+    IPopup* popup = active_;
+    active_ = nullptr;
+    dispatching_ = true;
+    activePool_.destroy<IPopup>(popup);
+    dispatching_ = false;
 }
 
-/**
- * @brief Clear all popups from the manager
- */
 void PopupManager::clearPopups() {
-    _popups.clear();
+    if (dispatching_) {
+        return;
+    }
+
+    requests_.clear();
+    destroyActive();
 }
 
-/**
- * @brief Draw all popups in order
- *
- * Lower priority popups are drawn first, higher priority popups
- * are drawn on top.
- */
 void PopupManager::drawPopups() {
-    for (auto& popup : _popups) {
-        popup->draw();
+    if (active_ == nullptr) {
+        return;
     }
+
+    dispatching_ = true;
+    active_->draw();
+    dispatching_ = false;
 }
 
-/**
- * @brief Update all popups with the current time
- * @param currentTime Current system time in milliseconds
- *
- * Calls each popup's update() method. Removes popups that
- * return false (finished animation or expired).
- */
 void PopupManager::updatePopups(uint32_t currentTime) {
-    auto it = _popups.begin();
-    while (it != _popups.end()) {
-        if (!(*it)->update(currentTime)) {
-            it = _popups.erase(it);  // remove finished popup
-        } else {
-            ++it;
-        }
+    if (active_ == nullptr) {
+        activateNext();
+        return;
+    }
+
+    dispatching_ = true;
+    const bool active = active_->update(currentTime);
+    dispatching_ = false;
+    if (!active) {
+        destroyActive();
+        activateNext();
     }
 }
 
-/**
- * @brief Handle input for the topmost popup first
- * @param event Input event
- * @return true if any popup consumed the event, false otherwise
- *
- * Iterates from highest priority to lowest, giving topmost popup
- * the first chance to consume the input.
- */
 bool PopupManager::handleTopPopupInput(InputEvent event) {
-    for (auto it = _popups.rbegin(); it != _popups.rend(); ++it) {
-        if ((*it)->handleInput(event)) {
-            return true; 
-        }
+    if (active_ == nullptr) {
+        return false;
     }
-    return false;
+
+    dispatching_ = true;
+    const bool handled = active_->handleInput(event);
+    dispatching_ = false;
+    return handled;
 }

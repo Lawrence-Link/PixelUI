@@ -28,8 +28,10 @@
 
 #include "U8g2lib.h"
 #include "core/animation/animation.h"
+#include "core/Callbacks.h"
 #include "core/coroutine/Coroutine.h"
 #include "ui/IDrawable.h"
+#include "ui/Popup/PopupManager.h"
 #include "core/CommonTypes.h"
 #include "config.h"
 #include <etl/atomic.h>
@@ -46,13 +48,7 @@ public:
     virtual ~IInputHandler() = default;
 };
 
-using InputCallback = etl::inplace_function<bool(InputEvent), CALLBACK_STORAGE_SIZE>;
-using VoidCallback = etl::inplace_function<void(), CALLBACK_STORAGE_SIZE>;
-using ValueCallback = etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE>;
-using DelayFunction = void (*)(uint32_t);
-
 class ViewManager;
-class PopupManager;
 class CoroutineScheduler;
 class FocusManager;
 class IWidget;
@@ -146,8 +142,10 @@ public:
 
     // getters
     U8G2& getU8G2() const { return u8g2_; }
-    PopupManager* getPopupManagerPtr() { return m_popupManagerPtr.get(); }
     ViewManager* getViewManagerPtr() const { return m_viewManagerPtr.get(); }
+
+    size_t popupCount() const { return m_popupManager.getPopupCounts(); }
+    void clearPopups() { m_popupManager.clearPopups(); }
 
     // popup related functions
 
@@ -158,9 +156,10 @@ public:
      * @param width Popup width.
      * @param height Popup height.
      * @param duration Display duration.
-     * @param priority Popup priority.
+     * @return true if the request was accepted.
      */
-    void showPopupInfo(const char* text, const char* title = "", uint16_t width = 80, uint16_t height = 30, uint16_t duration = 3000, uint8_t priority = 0);
+    bool showPopupInfo(const char* text, const char* title = "", uint16_t width = 80,
+                       uint16_t height = 30, uint16_t duration = 3000);
 
     /**
      * @brief Shows an popup contain 4 digits.
@@ -169,16 +168,15 @@ public:
      * @param width Popup width.
      * @param height Popup height.
      * @param duration Display duration.
-     * @param priority Popup priority.
      * @param update_cb function callback when value changed.
+     * @return true if the request was accepted.
      */
-    void showPopupValue4Digits(
+    bool showPopupValue4Digits(
         int32_t& value,
         const char* title = "", 
         uint16_t width = 80, 
         uint16_t height = 30, 
-        uint16_t duration = 3000, 
-        uint8_t priority = 0, 
+        uint16_t duration = 3000,
         ValueCallback update_cb = nullptr);
     
     /**
@@ -190,18 +188,17 @@ public:
      * @param width Popup width.
      * @param height Popup height.
      * @param duration Display duration.
-     * @param priority Popup priority.
      * @param update_cb function callback when value changed.
      * @param use_apparent_val Don't display the "%"
+     * @return true if the request was accepted.
      */
-    void showPopupProgress(int32_t& value, 
+    bool showPopupProgress(int32_t& value,
         int32_t minValue, 
         int32_t maxValue, 
         const char* title, 
         uint16_t width = 100, 
         uint16_t height = 40, 
-        uint16_t duration = 3000, 
-        uint8_t priority = 0, 
+        uint16_t duration = 3000,
         ValueCallback update_cb = nullptr, bool use_apparent_val = false);
 
     /**
@@ -235,8 +232,8 @@ private:
     U8G2& u8g2_;
 
     AnimationManager m_animationManager;
+    PopupManager m_popupManager;
     etl::unique_ptr<ViewManager> m_viewManagerPtr;
-    etl::unique_ptr<PopupManager> m_popupManagerPtr;
     etl::unique_ptr<CoroutineScheduler> m_coroutineSchedulerPtr;
     etl::unique_ptr<FocusManager> m_focusManagerPtr;
 

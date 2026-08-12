@@ -25,6 +25,7 @@
  */
 
 #include "widgets/brace/brace.h"
+#include "PixelUI.h"
 
 /**
  * @brief Construct a new Brace object

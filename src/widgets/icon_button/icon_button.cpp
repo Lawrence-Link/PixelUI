@@ -25,6 +25,7 @@
  */
 
 #include "widgets/icon_button/icon_button.h"
+#include "PixelUI.h"
 
 /**
  * @brief Constructor for IconButton widget.

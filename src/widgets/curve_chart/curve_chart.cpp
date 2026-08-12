@@ -25,6 +25,7 @@
  */
 
 #include "widgets/curve_chart/curve_chart.h"
+#include "PixelUI.h"
 #include "calc/TextAlignHelper/TextAlignHelper.h"
 #include <math.h>
 #include <etl/algorithm.h>

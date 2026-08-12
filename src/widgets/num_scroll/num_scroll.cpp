@@ -25,6 +25,7 @@
  */
 
 #include "widgets/num_scroll/num_scroll.h"
+#include "PixelUI.h"
 #include <stdio.h>
 #include "config.h"
 #include <etl/string.h>

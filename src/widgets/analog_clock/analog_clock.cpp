@@ -25,6 +25,7 @@
  */
 
 #include "widgets/analog_clock/analog_clock.h"
+#include "PixelUI.h"
 #include <math.h>
 
 /**

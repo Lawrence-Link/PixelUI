@@ -25,6 +25,7 @@
  */
 
 #include "widgets/text_button/text_button.h"
+#include "PixelUI.h"
 
 /**
  * @brief Initialize the widget with animation from the center.

@@ -26,8 +26,12 @@
 
 #pragma once
 
-#include "PixelUI.h"
+#include <stdint.h>
+#include "U8g2lib.h"
+#include "core/Callbacks.h"
 #include "core/CommonTypes.h"
+
+class PixelUI;
 
 class IWidget{
 private:
