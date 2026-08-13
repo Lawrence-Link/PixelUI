@@ -38,10 +38,9 @@
  * Initializes the popup state to APPEARING and calculates the target box size.
  */
 PopupBase::PopupBase(PixelUI& ui, uint16_t width, uint16_t height, uint8_t priority, uint16_t duration)
-    : m_ui(ui), _width(width), _height(height), _priority(priority), _duration(duration),
-      _startTime(0), _currentBoxSize(0), _state(PopupState::APPEARING)
+    : m_ui(ui), m_width(width), m_height(height), m_priority(priority), m_duration(duration)
 {
-    _targetBoxSize = _width << 12;  // store as fixed-point for animation
+    m_targetBoxSize = static_cast<int32_t>(m_width) << SHIFT_BITS;
 }
 
 /**
@@ -53,17 +52,23 @@ PopupBase::PopupBase(PixelUI& ui, uint16_t width, uint16_t height, uint8_t prior
  *
  * Draws outer frame, inner frame, and fills the inner area.
  */
-void PopupBase::drawPopupBox(int16_t rectX, int16_t rectY, int16_t currentWidth, int16_t currentHeight) {
+void PopupBase::drawPopupBox(const PopupContentBounds& bounds) {
     U8G2& u8g2 = m_ui.getU8G2();
-    
+
     u8g2.setDrawColor(1);
-    u8g2.drawFrame(rectX + BORDER_OFFSET, rectY + BORDER_OFFSET, currentWidth - 2 * BORDER_OFFSET, currentHeight - 2 * BORDER_OFFSET);
-    u8g2.drawFrame(rectX, rectY, currentWidth, currentHeight);
+
+    if ( 4 > (bounds.width - 2 * BORDER_OFFSET) / 2 || 4 > (bounds.height - 2 * BORDER_OFFSET) / 2) 
+        return ; // as a temporary fix to the problem addressed in PR#2802 in u8g2
     
+    u8g2.drawRFrame(bounds.x + BORDER_OFFSET, bounds.y + BORDER_OFFSET,
+                     bounds.width - 2 * BORDER_OFFSET, bounds.height - 2 * BORDER_OFFSET, 4);
+
+    u8g2.drawRFrame(bounds.x, bounds.y, bounds.width, bounds.height, 4);
+
     u8g2.setDrawColor(0);
-    u8g2.drawBox(rectX + BORDER_WIDTH, rectY + BORDER_WIDTH, 
-                 currentWidth - 2 * BORDER_WIDTH, currentHeight - 2 * BORDER_WIDTH);
-    
+    u8g2.drawRBox(bounds.x + BORDER_WIDTH, bounds.y + BORDER_WIDTH,
+                   bounds.width - 2 * BORDER_WIDTH, bounds.height - 2 * BORDER_WIDTH, 4);
+
     u8g2.setDrawColor(1);
 }
 
@@ -74,9 +79,10 @@ void PopupBase::drawPopupBox(int16_t rectX, int16_t rectY, int16_t currentWidth,
  * @param currentWidth Current width of the popup
  * @param currentHeight Current height of the popup
  */
-void PopupBase::setupClipWindow(int16_t rectX, int16_t rectY, int16_t currentWidth, int16_t currentHeight) {
+void PopupBase::setContentClip(const PopupContentBounds& bounds) {
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setClipWindow(rectX, rectY, rectX + currentWidth, rectY + currentHeight);
+    u8g2.setClipWindow(bounds.x, bounds.y,
+                       bounds.x + bounds.width, bounds.y + bounds.height);
 }
 
 /**
@@ -93,54 +99,64 @@ void PopupBase::resetClipWindow() {
  * @param currentTime Current system time in milliseconds
  * @return true if the popup is still active, false if it has finished closing
  *
- * Manages APPEARING -> SHOWING -> CLOSING transitions and triggers animations
- * using PixelUI's animation system.
+ * Manages APPEARING -> SHOWING -> CLOSING transitions internally.
  */
-bool PopupBase::updateState(uint32_t currentTime) {
-    if (_startTime == 0) {
-        _startTime = currentTime;
-        // Animate the box size from 0 to target with cubic easing, PROTECTED to prevent clearing
-        m_ui.animate(_currentBoxSize, _targetBoxSize, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+void PopupBase::beginAppearing(uint32_t currentTime) {
+    m_started = true;
+    m_transitionStartTime = currentTime;
+    m_transitionStartSize = 0;
+    m_currentBoxSize = 0;
+}
+
+bool PopupBase::updateAppearing(uint32_t currentTime) {
+    const uint32_t elapsed = currentTime - m_transitionStartTime;
+    if (elapsed >= TRANSITION_DURATION) {
+        m_currentBoxSize = m_targetBoxSize;
+        m_state = PopupState::SHOWING;
+        m_stateStartTime = currentTime;
+        onShown();
+        return true;
     }
-    
-    switch (_state) {
-        case PopupState::APPEARING: {
-            if (_currentBoxSize >= _targetBoxSize) {
-                _currentBoxSize = _targetBoxSize;
-                _state = PopupState::SHOWING;
-                _startTime = currentTime;
-            }
-            break;
-        }
-        case PopupState::SHOWING: {
-            if (_duration > 0 && currentTime - _startTime >= _duration) {
-                startClosingAnimation();
-            }
-            break;
-        }
-        case PopupState::CLOSING: {
-            m_ui.markDirty();  // request redraw
-            if (_currentBoxSize <= 0) {
-                _currentBoxSize = 0;
-                return false;  // popup finished
-            }
-            break;
-        }
+
+    const int32_t timeProgress = static_cast<int32_t>(
+        (static_cast<int64_t>(elapsed) * FIXED_POINT_ONE) / TRANSITION_DURATION);
+    const int32_t eased = EasingCalculator::calculate(EasingType::EASE_OUT_CUBIC, timeProgress);
+    m_currentBoxSize = static_cast<int32_t>(
+        (static_cast<int64_t>(m_targetBoxSize) * eased) / FIXED_POINT_ONE);
+    return true;
+}
+
+bool PopupBase::updateClosing(uint32_t currentTime) {
+    const uint32_t elapsed = currentTime - m_transitionStartTime;
+    if (elapsed >= TRANSITION_DURATION) {
+        m_currentBoxSize = 0;
+        return false;
     }
-    
+
+    const int32_t timeProgress = static_cast<int32_t>(
+        (static_cast<int64_t>(elapsed) * FIXED_POINT_ONE) / TRANSITION_DURATION);
+    const int32_t eased = EasingCalculator::calculate(EasingType::EASE_IN_CUBIC, timeProgress);
+    m_currentBoxSize = m_transitionStartSize - static_cast<int32_t>(
+        (static_cast<int64_t>(m_transitionStartSize) * eased) / FIXED_POINT_ONE);
     return true;
 }
 
 /**
- * @brief Start closing animation
- *
- * Transitions state to CLOSING and animates _currentBoxSize to 0
- * using EASE_IN_CUBIC easing.
+ * @brief Start the internal closing transition.
  */
-void PopupBase::startClosingAnimation() {
-    if (_state != PopupState::CLOSING) {
-        _state = PopupState::CLOSING;
-        m_ui.animate(_currentBoxSize, 0, 300, EasingType::EASE_IN_CUBIC);
+void PopupBase::requestClose() {
+    if (m_state != PopupState::CLOSING) {
+        m_state = PopupState::CLOSING;
+        m_transitionStartTime = m_ui.getCurrentTime();
+        m_transitionStartSize = m_currentBoxSize;
+        onClosing();
+        m_ui.markDirty();
+    }
+}
+
+void PopupBase::resetAutoCloseTimer() {
+    if (m_state == PopupState::SHOWING) {
+        m_stateStartTime = m_ui.getCurrentTime();
     }
 }
 
@@ -149,10 +165,32 @@ void PopupBase::startClosingAnimation() {
  * @param currentTime Current system time in milliseconds
  * @return true if still active
  *
- * Wrapper around updateState.
+ * Advances the internal transition and auto-close state machine.
  */
 bool PopupBase::update(uint32_t currentTime) {
-    return updateState(currentTime);
+    if (!m_started) {
+        beginAppearing(currentTime);
+    }
+
+    bool active = true;
+    switch (m_state) {
+        case PopupState::APPEARING:
+            active = updateAppearing(currentTime);
+            break;
+        case PopupState::SHOWING:
+            if (m_duration > 0U && currentTime - m_stateStartTime >= m_duration) {
+                requestClose();
+            }
+            break;
+        case PopupState::CLOSING:
+            active = updateClosing(currentTime);
+            break;
+    }
+
+    if (active && m_state != PopupState::SHOWING) {
+        m_ui.markDirty();
+    }
+    return active;
 }
 
 /**
@@ -163,9 +201,17 @@ bool PopupBase::update(uint32_t currentTime) {
  * Currently closes popup on any input while showing.
  */
 bool PopupBase::handleInput(InputEvent event) {
-    if (_state == PopupState::SHOWING) {
-        startClosingAnimation();
+    if (m_state == PopupState::CLOSING) {
         return true;
+    }
+
+    resetAutoCloseTimer();
+    if (handleContentInput(event)) {
+        return true;
+    }
+
+    if (m_state == PopupState::SHOWING) {
+        requestClose();
     }
     return true;
 }
@@ -184,16 +230,19 @@ void PopupBase::draw() {
     int16_t centerX = screenWidth / 2;
     int16_t centerY = screenHeight / 2;
     
-    int16_t currentWidth = _currentBoxSize >> 12; // fixed-point -> pixel
+    int16_t currentWidth = m_currentBoxSize >> SHIFT_BITS;
     if (currentWidth <= 0) return;
     
-    int16_t currentHeight = (_width > 0) ? (currentWidth * _height) / _width : 0;
+    int16_t currentHeight = (m_width > 0) ? (currentWidth * m_height) / m_width : 0;
+    if (currentHeight <= 0) return;
     
     int16_t rectX = centerX - currentWidth / 2;
     int16_t rectY = centerY - currentHeight / 2;
     
-    setupClipWindow(rectX, rectY, currentWidth, currentHeight);
-    drawPopupBox(rectX, rectY, currentWidth, currentHeight);
-    drawContent(centerX, centerY, currentWidth, currentHeight);
+    const PopupContentBounds bounds{
+        rectX, rectY, currentWidth, currentHeight, centerX, centerY};
+    setContentClip(bounds);
+    drawPopupBox(bounds);
+    drawContent(bounds);
     resetClipWindow();
 }

@@ -36,5 +36,5 @@ public:
               const char* text, const char* title = "", uint16_t duration = 3000, uint8_t priority = 0, const uint8_t * font = u8g2_font_wqy12_t_gb2312);
     ~PopupInfo() = default;
     
-    void drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) override;
+    void drawContent(const PopupContentBounds& bounds) override;
 };

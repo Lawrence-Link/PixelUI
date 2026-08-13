@@ -40,8 +40,7 @@
  * @param priority Display priority
  *
  * Initializes the base popup, splits the text into lines for rendering,
- * and calculates the actual height required. Updates _height and _targetBoxSize
- * if content exceeds initial popup size.
+ * and calculates the actual height required.
  */
 PopupInfo::PopupInfo(PixelUI& ui, uint16_t width, uint16_t height, 
                      const char* text, const char* title, uint16_t duration, uint8_t priority, const uint8_t * font)
@@ -49,16 +48,15 @@ PopupInfo::PopupInfo(PixelUI& ui, uint16_t width, uint16_t height,
 {
     if (_text) {
         // Split the text into lines based on available width
-        _lineCount = splitTextIntoLines(_text, _width - 2 * TEXT_MARGIN);
+        _lineCount = splitTextIntoLines(_text, popupWidth() - 2 * TEXT_MARGIN);
         _actualHeight = _lineCount * LINE_HEIGHT + 2 * TEXT_MARGIN;
 
         // Adjust height if content exceeds initial height
-        if (_actualHeight > _height) {
-            _height = _actualHeight;
-            _targetBoxSize = _width << 12;  // fixed-point for animation
+        if (_actualHeight > popupHeight()) {
+            setContentHeight(_actualHeight);
         }
     } else {
-        _actualHeight = _height;
+        _actualHeight = popupHeight();
     }
 }
 
@@ -75,7 +73,7 @@ PopupInfo::PopupInfo(PixelUI& ui, uint16_t width, uint16_t height,
 uint16_t PopupInfo::splitTextIntoLines(const char* text, uint16_t maxWidth) {
     if (!text) return 0;
 
-    U8G2& u8g2 = m_ui.getU8G2();
+    U8G2& u8g2 = ui().getU8G2();
     u8g2.setFont(m_font);
 
     const char* current = text;
@@ -127,14 +125,14 @@ uint16_t PopupInfo::splitTextIntoLines(const char* text, uint16_t maxWidth) {
  * Copies each line to a temporary buffer before drawing with U8G2.
  * Uses fixed LINE_HEIGHT to calculate vertical positions.
  */
-void PopupInfo::drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) {
+void PopupInfo::drawContent(const PopupContentBounds& bounds) {
     if (_text && _lineCount > 0) {
-        U8G2& u8g2 = m_ui.getU8G2();
+        U8G2& u8g2 = ui().getU8G2();
         u8g2.setFont(m_font);
 
         LINE_HEIGHT = u8g2.getFontAscent() - u8g2.getFontDescent();
         int16_t textAreaHeight = _lineCount * LINE_HEIGHT;
-        int16_t textStartY = centerY - textAreaHeight / 2 + LINE_HEIGHT - 2;  // vertical centering
+        int16_t textStartY = bounds.centerY - textAreaHeight / 2 + LINE_HEIGHT - 2;
 
         for (uint16_t i = 0; i < _lineCount; i++) {
             if (_textLines[i].length > 0) {
@@ -145,7 +143,7 @@ void PopupInfo::drawContent(int16_t centerX, int16_t centerY, int16_t currentWid
                 lineBuffer[copyLength] = '\0';
 
                 int16_t lineWidth = u8g2.getUTF8Width(lineBuffer);
-                int16_t lineX = centerX - lineWidth / 2;  // horizontal centering
+                int16_t lineX = bounds.centerX - lineWidth / 2;
                 int16_t lineY = textStartY + i * LINE_HEIGHT;
 
                 u8g2.drawUTF8(lineX, lineY, lineBuffer);

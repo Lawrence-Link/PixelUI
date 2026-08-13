@@ -32,6 +32,6 @@ public:
                   bool UseApparentVal = false);
     ~PopupProgress() = default;
 
-    void drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) override;
-    bool handleInput(InputEvent event) override;
+    void drawContent(const PopupContentBounds& bounds) override;
+    bool handleContentInput(InputEvent event) override;
 };

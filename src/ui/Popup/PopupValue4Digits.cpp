@@ -50,8 +50,7 @@ PopupValue4Digits::PopupValue4Digits(PixelUI& ui, uint16_t width, uint16_t heigh
     m_focusMan(ui),  // FocusManager handles focus switching
     m_cb(cb_function) // Optional callback function
 {
-    m_ui.setContinousDraw(true); // Continuous drawing to avoid flicker
-    U8G2& u8g2 = m_ui.getU8G2();
+    U8G2& u8g2 = this->ui().getU8G2();
     
     // Calculate screen center
     int center_x = u8g2.getDisplayWidth() / 2;
@@ -96,29 +95,26 @@ PopupValue4Digits::PopupValue4Digits(PixelUI& ui, uint16_t width, uint16_t heigh
 }
 
 // Draw popup content
-void PopupValue4Digits::drawContent(int16_t centerX, int16_t centerY, int16_t currentWidth, int16_t currentHeight) {
-    U8G2& u8g2 = m_ui.getU8G2();
+void PopupValue4Digits::drawContent(const PopupContentBounds& bounds) {
+    U8G2& u8g2 = ui().getU8G2();
     
     // Draw title
     if (_title && strlen(_title) > 0) {
         u8g2.setFont(u8g2_font_wqy12_t_gb2312);
         int16_t titleWidth = u8g2.getUTF8Width(_title);
-        u8g2.drawUTF8(centerX - titleWidth / 2, centerY - 7, _title);
+        u8g2.drawUTF8(bounds.centerX - titleWidth / 2, bounds.centerY - 7, _title);
     }
 
-    int16_t rectX = centerX - currentWidth / 2;
-    int16_t rectY = centerY - currentHeight / 2;
-
     // Draw the four numeric widgets
-    setupClipWindow(rectX, rectY, currentWidth, currentHeight);
+    setContentClip(bounds);
     num_thousands.draw();
-    setupClipWindow(rectX, rectY, currentWidth, currentHeight);
+    setContentClip(bounds);
     num_hundreds.draw();
-    setupClipWindow(rectX, rectY, currentWidth, currentHeight);
+    setContentClip(bounds);
     num_tens.draw();
-    setupClipWindow(rectX, rectY, currentWidth, currentHeight);
+    setContentClip(bounds);
     num_ones.draw();
-    setupClipWindow(rectX, rectY, currentWidth, currentHeight);
+    setContentClip(bounds);
 
     // Draw focus highlight via FocusManager
     m_focusMan.draw();
@@ -130,15 +126,7 @@ void PopupValue4Digits::drawContent(int16_t centerX, int16_t centerY, int16_t cu
 }
 
 // Handle input events
-bool PopupValue4Digits::handleInput(InputEvent event) {
-    // Consume events during closing
-    if (_state == PopupState::CLOSING) {
-        return true;
-    }
-
-    // Reset auto-close timer
-    _startTime = m_ui.getCurrentTime();
-
+bool PopupValue4Digits::handleContentInput(InputEvent event) {
     // ---------- Priority: pass input to the currently active widget ----------
     IWidget* activeWidget = m_focusMan.getActiveWidget();
     if (activeWidget) {
@@ -157,7 +145,7 @@ bool PopupValue4Digits::handleInput(InputEvent event) {
 
     // ---------- If no widget is active, use FocusManager for navigation ----------
     if (event == InputEvent::BACK) {
-        startClosingAnimation(); // Back key closes popup
+        requestClose();
     } else if (event == InputEvent::RIGHT) {
         m_focusMan.moveNext(); // Move focus to the right digit
     } else if (event == InputEvent::LEFT) {
