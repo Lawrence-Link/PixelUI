@@ -44,13 +44,13 @@ public:
     void onLoad() override;
     void onLoadNoAnim();
     void onOffload() override;
-    void draw() override;
     bool handleEvent(InputEvent event) override;
     bool onSelect() override;
     uint32_t getTimeout() const override { return TIMEOUT_MS; }
 
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y; 
+        setWidgetBounds({m_x, m_y, m_w, m_h});
         setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
     }
 
@@ -61,11 +61,11 @@ public:
     void setFixedIntDigits(uint8_t digits) { m_fixed_digits = digits; }
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h; 
+        setWidgetBounds({m_x, m_y, m_w, m_h});
         setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
     }
 
 private:
-    private:
     PixelUI& m_ui;
 
     uint16_t m_x = 0;
@@ -85,6 +85,9 @@ private:
     int32_t anim_h = 0;
 
     static constexpr uint32_t TIMEOUT_MS = 5000;
+
+    void drawSelf(const WidgetRenderContext& context) override;
+    U8G2& display() override;
 
     void incrementValue();
     void decrementValue();

@@ -140,19 +140,18 @@ bool PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY,
  * @brief Add a widget to the FocusManager
  * @param w Pointer to the widget to add
  */
-void PixelUI::addWidgetToFocusManager(IWidget* w) {
-    m_focusManagerPtr->addWidget(w);
+bool PixelUI::addWidgetToFocusManager(IWidget* w) {
+    return m_focusManagerPtr->addWidget(w);
 }
 /**
  * @brief Clear all widgets from the FocusManager
  */
 void PixelUI::clearFocusManager() {
-    m_focusManagerPtr->m_Widgets.clear();
-    m_focusManagerPtr->resetState();
+    m_focusManagerPtr->clear();
 }
 
 size_t PixelUI::getFocusedWidgetCount() const {
-    return m_focusManagerPtr->m_Widgets.size();
+    return m_focusManagerPtr->widgetCount();
 }
 /**
  * @brief Handle input event

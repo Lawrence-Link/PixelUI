@@ -210,7 +210,7 @@ public:
      */
     void markFading();
 
-    void addWidgetToFocusManager(IWidget* w);
+    bool addWidgetToFocusManager(IWidget* w);
 
     void handleInput(InputEvent event);
 

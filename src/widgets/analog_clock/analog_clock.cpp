@@ -40,6 +40,7 @@ Clock::Clock(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t radius) :
     m_radius(radius)
 {
     setFocusable(false); /**< Clock is display-only, cannot be focused */
+    setWidgetBounds({m_x - m_radius, m_y - m_radius, 2 * m_radius + 1, 2 * m_radius + 1});
 }
 
 /**
@@ -86,7 +87,11 @@ bool Clock::handleEvent(InputEvent event) { return false; }
 /**
  * @brief Draw the clock widget
  */
-void Clock::draw() {
+U8G2& Clock::display() { return m_ui.getU8G2(); }
+
+void Clock::drawSelf(const WidgetRenderContext& context) {
+    draw_origin_x_ = context.originX;
+    draw_origin_y_ = context.originY;
     /**< Check if the initial animations are complete */
     if (m_anim_state == AnimState::EXPANDING &&
         m_dial_progress >= 360 && m_marks_progress >= 12) {
@@ -106,7 +111,7 @@ void Clock::drawDial() {
     U8G2& u8g2 = m_ui.getU8G2();
 
     if (m_dial_progress >= 360) {
-        u8g2.drawCircle(m_x, m_y, m_radius); /**< Full dial */
+        u8g2.drawCircle(draw_origin_x_ + m_x, draw_origin_y_ + m_y, m_radius); /**< Full dial */
     } else if (m_dial_progress > 0) {
         const uint8_t TOP = 64; /**< Starting angle */
         uint8_t len = (uint8_t)((m_dial_progress * 256UL) / 360UL);
@@ -116,10 +121,10 @@ void Clock::drawDial() {
 
         if (arcEnd < arcStart) {
             /**< Split arc if wrapping around */
-            u8g2.drawArc(m_x, m_y, m_radius, arcStart, 255);
-            u8g2.drawArc(m_x, m_y, m_radius, 0, arcEnd);
+            u8g2.drawArc(draw_origin_x_ + m_x, draw_origin_y_ + m_y, m_radius, arcStart, 255);
+            u8g2.drawArc(draw_origin_x_ + m_x, draw_origin_y_ + m_y, m_radius, 0, arcEnd);
         } else {
-            u8g2.drawArc(m_x, m_y, m_radius, arcStart, arcEnd);
+            u8g2.drawArc(draw_origin_x_ + m_x, draw_origin_y_ + m_y, m_radius, arcStart, arcEnd);
         }
     }
 }
@@ -153,22 +158,22 @@ void Clock::drawHands() {
     int hour_angle = (m_hour % 12) * 30 + (m_minute * 30) / 60 - 90;
     int hour_x, hour_y;
     getPointOnCircle(hour_angle, m_length_hand_h, hour_x, hour_y);
-    u8g2.drawLine(m_x, m_y, hour_x, hour_y);
+    u8g2.drawLine(draw_origin_x_ + m_x, draw_origin_y_ + m_y, hour_x, hour_y);
 
     /**< Minute hand */
     int minute_angle = m_minute * 6 - 90;
     int minute_x, minute_y;
     getPointOnCircle(minute_angle, m_length_hand_m, minute_x, minute_y);
-    u8g2.drawLine(m_x, m_y, minute_x, minute_y);
+    u8g2.drawLine(draw_origin_x_ + m_x, draw_origin_y_ + m_y, minute_x, minute_y);
 
     /**< Second hand */
     int second_angle = m_second * 6 - 90;
     int second_x, second_y;
     getPointOnCircle(second_angle, m_length_hand_s, second_x, second_y);
-    u8g2.drawLine(m_x, m_y, second_x, second_y);
+    u8g2.drawLine(draw_origin_x_ + m_x, draw_origin_y_ + m_y, second_x, second_y);
 
     /**< Draw center dot */
-    u8g2.drawDisc(m_x, m_y, 2);
+    u8g2.drawDisc(draw_origin_x_ + m_x, draw_origin_y_ + m_y, 2);
 }
 
 /**
@@ -190,6 +195,6 @@ float Clock::angleToRadians(int angle) const {
  */
 void Clock::getPointOnCircle(int angle, uint16_t radius, int& x, int& y) const {
     float rad = angleToRadians(angle);
-    x = m_x + (int)(cos(rad) * radius);
-    y = m_y + (int)(sin(rad) * radius);
+    x = draw_origin_x_ + m_x + (int)(cos(rad) * radius);
+    y = draw_origin_y_ + m_y + (int)(sin(rad) * radius);
 }

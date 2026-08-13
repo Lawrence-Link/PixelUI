@@ -45,9 +45,18 @@ private:
 class TestWidget : public IWidget {
 public:
     TestWidget() { setFocusable(true); }
-    void draw() override {}
     void onLoad() override {}
     void onOffload() override {}
+
+private:
+    void drawSelf(const WidgetRenderContext&) override {}
+    U8G2& display() override { return *display_; }
+
+public:
+    void attach(U8G2& display) { display_ = &display; }
+
+private:
+    U8G2* display_ = nullptr;
 };
 
 class ReferencingApplication : public IApplication {
@@ -68,6 +77,7 @@ public:
     bool handleInput(InputEvent) override { return false; }
     void onEnter(ExitCallback callback) override {
         IApplication::onEnter(callback);
+        widget_.attach(ui_.getU8G2());
         ui_.addWidgetToFocusManager(&widget_);
         ui_.addCoroutine(&coroutine_);
         ui_.animate(value_, 10, 100);

@@ -32,82 +32,106 @@
 #include "core/CommonTypes.h"
 
 class PixelUI;
+class FocusManager;
+class IWidget;
 
-class IWidget{
+class IWidgetTreeObserver {
+public:
+    virtual ~IWidgetTreeObserver() = default;
+    virtual void onWidgetSubtreeDetaching(IWidget& subtree) = 0;
+    virtual void onWidgetDestroyed(IWidget& widget) = 0;
+};
+
+struct WidgetRenderContext {
+    int32_t originX = 0;
+    int32_t originY = 0;
+    FocusBox clip = {0, 0, 0, 0};
+};
+
+class IWidget {
+    friend class FocusManager;
 private:
-    bool focusable = false;
-    bool Selected = false;
-    FocusBox focus;
+    bool focusable_ = false;
+    bool visible_ = true;
+    bool enabled_ = true;
+    bool clipChildren_ = true;
+    FocusBox focus_ = {0, 0, 0, 0};
+    FocusBox bounds_ = {0, 0, 0, 0};
+
+    IWidget* parent_ = nullptr;
+    IWidget* firstChild_ = nullptr;
+    IWidget* lastChild_ = nullptr;
+    IWidget* previousSibling_ = nullptr;
+    IWidget* nextSibling_ = nullptr;
+    IWidgetTreeObserver* treeObserver_ = nullptr;
+
+    bool isAncestorOf(const IWidget& widget) const;
+    void setTreeObserver(IWidgetTreeObserver* observer);
+    void drawTree(const WidgetRenderContext& parentContext);
+
 protected:
-    // activation related
     bool m_is_active = false;
     uint32_t m_last_interaction_time = 0;
-    void setFocusBox(const FocusBox& pos) {focus = pos;}
+
+    void setFocusBox(const FocusBox& box) { focus_ = box; }
+    void setWidgetBounds(const FocusBox& bounds) { bounds_ = bounds; }
+    virtual void drawSelf(const WidgetRenderContext& context) = 0;
+    virtual U8G2& display() = 0;
+
+    void setClipWindow(const WidgetRenderContext& context, const FocusBox& localClip);
+    void restoreClipWindow(const WidgetRenderContext& context);
+
 public:
-    virtual ~IWidget() = default;
-    virtual void draw() = 0;
+    IWidget() = default;
+    virtual ~IWidget();
 
-    /**
-     * @brief Handles an input event.
-     * @param event The event code.
-     * @return true if the widget has completed its input handling and wants to return control to the FocusManager.
-     */
-    virtual bool handleEvent(InputEvent event) { return false; }
+    IWidget(const IWidget&) = delete;
+    IWidget& operator=(const IWidget&) = delete;
+    IWidget(IWidget&&) = delete;
+    IWidget& operator=(IWidget&&) = delete;
 
+    void draw();
+
+    bool addChild(IWidget& child);
+    bool removeChild(IWidget& child);
+    bool setParent(IWidget* parent);
+    void removeFromParent();
+    void removeAllChildren();
+
+    IWidget* parent() const { return parent_; }
+    IWidget* firstChild() const { return firstChild_; }
+    IWidget* lastChild() const { return lastChild_; }
+    IWidget* previousSibling() const { return previousSibling_; }
+    IWidget* nextSibling() const { return nextSibling_; }
+    bool contains(const IWidget* widget) const;
+
+    virtual bool handleEvent(InputEvent) { return false; }
     virtual void onLoad() = 0;
     virtual void onOffload() = 0;
-
-    /**
-     * @brief Triggers the onSelect action.
-     * @return true if the widget wants to take over input control, false otherwise.
-     */
     virtual bool onSelect() { return false; }
-
-    /**
-     * @brief Gets the timeout duration in milliseconds.
-     * @return Timeout duration. Return 0 to disable timeout.
-     */
     virtual uint32_t getTimeout() const { return 0; }
 
-    /**
-     * @brief Called when the widget becomes active (takes over input control).
-     */
     virtual void onActivate(uint32_t currentTime) {
         m_is_active = true;
         m_last_interaction_time = currentTime;
     }
 
-    /**
-     * @brief Called when the widget is deactivated (returns control to FocusManager).
-     */
-    virtual void onDeactivate() {
-        m_is_active = false;
-    }
+    virtual void onDeactivate() { m_is_active = false; }
 
-    /**
-     * @brief Updates the last interaction time.
-     */
-    void updateInteractionTime(uint32_t currentTime) {
-        m_last_interaction_time = currentTime;
-    }
-
-    /**
-     * @brief Gets the last interaction time.
-     */
-    uint32_t getLastInteractionTime() const {
-        return m_last_interaction_time;
-    }
-
-    /**
-     * @brief Checks if the widget is currently active.
-     */
+    void updateInteractionTime(uint32_t currentTime) { m_last_interaction_time = currentTime; }
+    uint32_t getLastInteractionTime() const { return m_last_interaction_time; }
     bool isActive() const { return m_is_active; }
 
-    /**
-     * @brief Checks if the widget is focusable
-     */
-    bool isFocusable() { return focusable; }
-    void setFocusable(bool state) { focusable = state; }
+    bool isFocusable() const { return focusable_; }
+    void setFocusable(bool state) { focusable_ = state; }
+    bool isVisible() const { return visible_; }
+    void setVisible(bool visible) { visible_ = visible; }
+    bool isEnabled() const { return enabled_; }
+    void setEnabled(bool enabled) { enabled_ = enabled; }
+    bool clipsChildren() const { return clipChildren_; }
+    void setClipChildren(bool clip) { clipChildren_ = clip; }
 
-    FocusBox getFocusBox() { return focus; }
+    FocusBox getLocalBounds() const { return bounds_; }
+    FocusBox getScreenBounds() const;
+    FocusBox getFocusBox() const;
 };

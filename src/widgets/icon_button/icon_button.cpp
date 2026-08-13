@@ -40,6 +40,7 @@ IconButton::IconButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t
     src(source)
 {
     setFocusable(true);
+    setWidgetBounds({pos_x, pos_y, m_w, m_h});
     IWidget::setFocusBox(FocusBox(pos_x - 1, pos_y - 1, m_w + 2, m_h + 2));
 }
 
@@ -64,7 +65,9 @@ void IconButton::onOffload() {
 /**
  * @brief Render the icon button on the screen.
  */
-void IconButton::draw() {
+U8G2& IconButton::display() { return m_ui.getU8G2(); }
+
+void IconButton::drawSelf(const WidgetRenderContext& context) {
     if (!src) {
         return; // No image source, nothing to draw
     }
@@ -72,7 +75,7 @@ void IconButton::draw() {
     U8G2& u8g2 = m_ui.getU8G2();
 
     // Draw XBM bitmap at current animated position
-    u8g2.drawXBM(pos_x, pos_y, m_w, m_h, src);
+    u8g2.drawXBM(context.originX + pos_x, context.originY + pos_y, m_w, m_h, src);
 }
 
 /**

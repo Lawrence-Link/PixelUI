@@ -43,12 +43,17 @@ public:
 
     void onLoad() override;
     void onOffload() override;
-    void draw() override;
     bool handleEvent(InputEvent event) override;
     bool onSelect() override;
 
-    void setPosition(uint16_t x, uint16_t y) { m_x =x; m_y = y; }
-    void setRadius(uint16_t radius) { m_radius = radius; }
+    void setPosition(uint16_t x, uint16_t y) {
+        m_x = x; m_y = y;
+        setWidgetBounds({m_x - m_radius, m_y - m_radius, 2 * m_radius + 1, 2 * m_radius + 1});
+    }
+    void setRadius(uint16_t radius) {
+        m_radius = radius;
+        setWidgetBounds({m_x - m_radius, m_y - m_radius, 2 * m_radius + 1, 2 * m_radius + 1});
+    }
     
     // API functions
     void setHour(uint8_t hour) { m_hour = hour % 12; }
@@ -85,6 +90,11 @@ private:
     void drawDial();
     void drawHourMarks();
     void drawHands();
+    void drawSelf(const WidgetRenderContext& context) override;
+    U8G2& display() override;
+
+    int32_t draw_origin_x_ = 0;
+    int32_t draw_origin_y_ = 0;
     
     // Helper functions for angle calculations
     float angleToRadians(int angle) const;

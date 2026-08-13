@@ -4,23 +4,13 @@
 #include <etl/vector.h>
 #include "config.h"
 
-/**
- * @class FocusManager
- * @brief Manages the focus state and animated transitions between UI widgets.
- *
- * This class uses a state machine to handle the different phases of focus:
- * idle, moving, stable, and shrinking. It also manages the list of widgets
- * that can receive focus and handles timeout for active widgets.
- */
-class FocusManager {
+class FocusManager : private IWidgetTreeObserver {
 private:
-    int index = -1;
     PixelUI& m_ui;
-
     uint32_t last_focus_change_time = 0;
-    FocusBox m_target_focus_box;
-    FocusBox m_current_focus_box = {0,64,0,0};
-    
+    FocusBox m_target_focus_box = {0, 0, 0, 0};
+    FocusBox m_current_focus_box = {0, 64, 0, 0};
+    IWidget* m_currentWidget = nullptr;
     IWidget* m_activeWidget = nullptr;
 
     enum class State {
@@ -30,34 +20,42 @@ private:
         ANIMATING_SHRINK
     } m_state = State::IDLE;
 
+    etl::vector<IWidget*, MAX_ONSCREEN_WIDGET_NUM> roots_;
+
     void enterIdle(bool clearSelection);
-    void beginFocusAnimation(int nextIndex);
+    void beginFocusAnimation(IWidget* widget);
     void enterFocused(bool synchronizeBox);
     void beginShrinkAnimation();
-
-    /**
-     * @brief Checks if the active widget has timed out and handles deactivation.
-     */
     void checkActiveWidgetTimeout();
 
-public:
-    FocusManager(PixelUI& ui) : m_ui(ui) {};
-    ~FocusManager() {clearActiveWidget();};
+    bool isRegisteredRoot(const IWidget* widget) const;
+    bool hasRegisteredAncestor(const IWidget* widget) const;
+    bool isNavigable(const IWidget* widget) const;
+    IWidget* firstTreeNode() const;
+    IWidget* lastTreeNode() const;
+    IWidget* nextTreeNode(IWidget* widget) const;
+    IWidget* previousTreeNode(IWidget* widget) const;
+    IWidget* nextFocusable(IWidget* widget) const;
+    IWidget* previousFocusable(IWidget* widget) const;
+    size_t focusableCount() const;
+    void onWidgetSubtreeDetaching(IWidget& subtree) override;
+    void onWidgetDestroyed(IWidget& widget) override;
 
-    etl::vector<IWidget*, MAX_ONSCREEN_WIDGET_NUM> m_Widgets;
-    
+public:
+    explicit FocusManager(PixelUI& ui) : m_ui(ui) {}
+    ~FocusManager() { clear(); }
+
     void resetState();
+    void clear();
+    size_t widgetCount() const { return focusableCount(); }
 
     IWidget* getActiveWidget() const { return m_activeWidget; }
     void clearActiveWidget();
-    
     void moveNext();
     void movePrev();
     void draw();
-
     bool handleInput(InputEvent event);
-
-    void addWidget(IWidget* w);
-    void removeWidget(IWidget* w);
+    bool addWidget(IWidget* widget);
+    void removeWidget(IWidget* widget);
     void selectCurrent();
 };

@@ -184,6 +184,9 @@ public:
         // Alarm Icon
         icon_alarm.setSource(image_BELL_bits);
 
+        brace.setFocusable(true);
+        histogram.setFocusable(true);
+
         // --- FOCUS MANAGEMENT SETUP ---
         // Add interactive widgets to the focus manager
         m_ui.addWidgetToFocusManager(&brace);

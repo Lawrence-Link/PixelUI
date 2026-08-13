@@ -67,6 +67,7 @@ Histogram::Histogram(
     m_buffer_size(static_cast<int>(buffer_size)),
     m_label(label)
 {
+    setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
     // pos_x_ and pos_y_ now represent the top-left anchor point.
     int32_t start_anim_x = (size_w_ / 2);
     int32_t start_anim_y = (size_h_ / 2);
@@ -400,12 +401,14 @@ void Histogram::calculateExpandPosition(int32_t& target_x, int32_t& target_y) {
 /**
  * @brief Render the histogram widget on the screen.
  */
-void Histogram::draw() {
+U8G2& Histogram::display() { return m_ui.getU8G2(); }
+
+void Histogram::drawSelf(const WidgetRenderContext& context) {
     U8G2& u8g2 = m_ui.getU8G2();
     
     // tl_x and tl_y are the animated top-left corner coordinates
-    int tl_x = pos_x_ + anim_x; 
-    int tl_y = pos_y_ + anim_y; 
+    int tl_x = context.originX + pos_x_ + anim_x;
+    int tl_y = context.originY + pos_y_ + anim_y;
     int current_w = anim_w;
     int current_h = anim_h;
 

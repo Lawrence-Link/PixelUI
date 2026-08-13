@@ -42,22 +42,25 @@ private:
     VoidCallback m_callback;
     POS load_pos;
     uint8_t const* m_font;
+    void drawSelf(const WidgetRenderContext& context) override;
+    U8G2& display() override;
 public:
     Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM, const uint8_t* font = u8g2_font_wqy12_t_gb2312);
     ~Label() = default;
     void onLoad() override;
     void onOffload() override;
     bool onSelect() override ;
-    void draw() override;
     void setLoadPos(POS pos) {load_pos = pos;};
     void setCallback(VoidCallback cb) {m_callback = cb;}
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y;
+        setWidgetBounds({m_x, m_y, m_w, m_h});
         setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
     };
 
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h;
+        setWidgetBounds({m_x, m_y, m_w, m_h});
         setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
     }
     

@@ -64,16 +64,17 @@ public:
 
     void onLoad() override;
     void onOffload() override;
-    void draw() override;
     bool onSelect() override;
     bool handleEvent(InputEvent event) override;
 
     void setSize(uint16_t mar_w, uint16_t mar_h) { 
         size_w_ = mar_w; size_h_ = mar_h; 
+        setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
         setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
     }
     void setPosition(uint16_t pos_x, uint16_t pos_y) { 
         pos_x_ = pos_x; pos_y_ = pos_y; 
+        setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
         setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
     }
 
@@ -152,6 +153,8 @@ private:
     void updateStatistics(float new_value, float old_value, bool replacing_data);
     void recalculateExtremes();
     void drawCuveData(int center_x, int center_y, int half_width, int half_height, U8G2& u8g2);
+    void drawSelf(const WidgetRenderContext& context) override;
+    U8G2& display() override;
 
     bool is_expanded = false;
 };

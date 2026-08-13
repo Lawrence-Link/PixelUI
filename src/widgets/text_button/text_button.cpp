@@ -56,17 +56,19 @@ void TextButton::onOffload() { }
 /**
  * @brief Render the text button.
  */
-void TextButton::draw() {
+U8G2& TextButton::display() { return m_ui.getU8G2(); }
+
+void TextButton::drawSelf(const WidgetRenderContext& context) {
     if (!src) return;
 
     U8G2& u8g2 = m_ui.getU8G2();
 
     // Compute animated drawing position (centered)
-    int32_t draw_x = m_x + (m_w - anim_w) / 2;
-    int32_t draw_y = m_y + (m_h - anim_h) / 2;
+    int32_t draw_x = context.originX + m_x + (m_w - anim_w) / 2;
+    int32_t draw_y = context.originY + m_y + (m_h - anim_h) / 2;
 
     // Clip drawing area to widget bounds
-    u8g2.setClipWindow(draw_x, draw_y, draw_x + anim_w, draw_y + anim_h);
+    setClipWindow(context, {draw_x - context.originX, draw_y - context.originY, anim_w, anim_h});
 
     // Draw rounded frame with radius 2
     u8g2.drawRFrame(draw_x, draw_y, anim_w, anim_h, 2);
@@ -89,7 +91,7 @@ void TextButton::draw() {
     u8g2.drawUTF8(text_x, text_y + 2, (const char*)src);
 
     // Reset clip window
-    u8g2.setMaxClipWindow();
+    restoreClipWindow(context);
 }
 
 /**

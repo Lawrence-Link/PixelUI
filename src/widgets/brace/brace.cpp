@@ -39,6 +39,7 @@ Brace::Brace(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint1
     size_w_(size_w),
     size_h_(size_h) 
 {
+    setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
     int32_t start_anim_x = (size_w_ / 2);
     int32_t start_anim_y = (size_h_ / 2);
     
@@ -81,21 +82,23 @@ void Brace::onOffload() {
 /**
  * @brief Draw the brace with corners and optional content inside
  */
-void Brace::draw() {
+U8G2& Brace::display() { return m_ui.getU8G2(); }
+
+void Brace::drawSelf(const WidgetRenderContext& context) {
     U8G2& u8g2 = m_ui.getU8G2();
 
-    int tl_x = pos_x_ + anim_x;
-    int tl_y = pos_y_ + anim_y;
+    int tl_x = context.originX + pos_x_ + anim_x;
+    int tl_y = context.originY + pos_y_ + anim_y;
     int current_w = anim_w;
     int current_h = anim_h;
 
     /**< Set the clipping window to restrict drawing inside the brace, based on top-left */
-    u8g2.setClipWindow(
-        tl_x, 
-        tl_y, 
-        tl_x + current_w,   /**< bottom-right X */
-        tl_y + current_h    /**< bottom-right Y */
-    );
+    setClipWindow(context, {
+        tl_x - context.originX,
+        tl_y - context.originY,
+        current_w,
+        current_h
+    });
 
     /**< Draw the user-provided content inside the brace, if any */
     if (contentWithinBrace) {
@@ -103,7 +106,7 @@ void Brace::draw() {
     }
 
     /**< Reset clipping to full screen */
-    u8g2.setMaxClipWindow();
+    restoreClipWindow(context);
 
     /**< Draw corner lines for the brace */
     

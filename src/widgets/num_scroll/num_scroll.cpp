@@ -42,6 +42,7 @@ NumScroll::NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h
     m_h(h)
  {
     setFocusable(true);
+    setWidgetBounds({m_x, m_y, m_w, m_h});
     setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
 }
 
@@ -150,12 +151,14 @@ bool NumScroll::handleEvent(InputEvent event) {
 /**
  * @brief Render the scrollable number widget.
  */
-void NumScroll::draw() {
+U8G2& NumScroll::display() { return m_ui.getU8G2(); }
+
+void NumScroll::drawSelf(const WidgetRenderContext& context) {
     U8G2& u8g2 = m_ui.getU8G2();
 
     // Compute animated drawing area (centered)
-    int32_t draw_x = m_x + (m_w - anim_w) / 2;
-    int32_t draw_y = m_y + (m_h - anim_h) / 2;
+    int32_t draw_x = context.originX + m_x + (m_w - anim_w) / 2;
+    int32_t draw_y = context.originY + m_y + (m_h - anim_h) / 2;
     int center_x = draw_x + anim_w / 2;
     int center_y = draw_y + anim_h / 2;
 
@@ -173,9 +176,12 @@ void NumScroll::draw() {
     }
 
     // Clip drawing area inside the widget
-    u8g2.setClipWindow(draw_x + 3, draw_y + 3,
-                       draw_x + anim_w - 3,
-                       draw_y + anim_h - 3);
+    setClipWindow(context, {
+        draw_x + 3 - context.originX,
+        draw_y + 3 - context.originY,
+        anim_w - 6,
+        anim_h - 6
+    });
 
     u8g2.setFont(u8g2_font_tenfatguys_tn);
 
@@ -198,7 +204,7 @@ void NumScroll::draw() {
         u8g2.drawStr(center_x - text_width / 2, y_pos + 5, buffer);
     }
 
-    u8g2.setMaxClipWindow();
+    restoreClipWindow(context);
     u8g2.setDrawColor(1);
 }
 

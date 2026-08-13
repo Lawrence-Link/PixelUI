@@ -6,6 +6,7 @@
 #include "ui/Popup/PopupManager.h"
 #include "ui/Popup/PopupProgress.h"
 #include "ui/Popup/PopupValue4Digits.h"
+#include "focus/focus.h"
 
 #include <stdio.h>
 
@@ -15,6 +16,10 @@ int main() {
     printf("sizeof(ViewManager)=%zu\n", sizeof(ViewManager));
     printf("sizeof(IApplication)=%zu alignof(IApplication)=%zu\n",
            sizeof(IApplication), alignof(IApplication));
+    printf("sizeof(IWidget)=%zu alignof(IWidget)=%zu\n",
+           sizeof(IWidget), alignof(IWidget));
+    printf("sizeof(FocusManager)=%zu alignof(FocusManager)=%zu\n",
+           sizeof(FocusManager), alignof(FocusManager));
     printf("sizeof(IconView)=%zu alignof(IconView)=%zu\n",
            sizeof(IconView), alignof(IconView));
     printf("sizeof(ListView)=%zu alignof(ListView)=%zu\n",

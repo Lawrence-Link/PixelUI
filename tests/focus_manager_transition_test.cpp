@@ -9,7 +9,6 @@ public:
         setFocusBox({10, 12, 20, 8});
     }
 
-    void draw() override {}
     void onLoad() override {}
     void onOffload() override {}
 
@@ -37,6 +36,16 @@ public:
     int inputCount = 0;
     int activateCount = 0;
     int deactivateCount = 0;
+
+private:
+    void drawSelf(const WidgetRenderContext&) override {}
+    U8G2& display() override { return ui_->getU8G2(); }
+
+public:
+    void attach(PixelUI& ui) { ui_ = &ui; }
+
+private:
+    PixelUI* ui_ = nullptr;
 };
 
 } // namespace
@@ -47,6 +56,7 @@ int main() {
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
     TestWidget widget;
+    widget.attach(ui);
     ui.addWidgetToFocusManager(&widget);
 
     ui.handleInput(InputEvent::RIGHT);

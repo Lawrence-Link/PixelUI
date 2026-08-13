@@ -26,6 +26,7 @@ add_library(pixelui STATIC
     ui/IconView/IconView.cpp
     
     widgets/histogram/histogram.cpp
+    widgets/IWidget.cpp
     widgets/brace/brace.cpp
     widgets/icon_button/icon_button.cpp
     widgets/text_button/text_button.cpp

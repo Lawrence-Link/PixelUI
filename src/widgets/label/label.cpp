@@ -39,6 +39,7 @@ Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, 
     : m_ui(ui), m_x(x), m_y(y), src(content), load_pos(pos), m_font(font)
 {
     setFocusable(true);
+    setWidgetBounds({m_x, m_y, m_w, m_h});
     setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
 }
 
@@ -88,7 +89,9 @@ void Label::onOffload() {
 /**
  * @brief Render the label text on screen with clipping to avoid overflow.
  */
-void Label::draw() {
+U8G2& Label::display() { return m_ui.getU8G2(); }
+
+void Label::drawSelf(const WidgetRenderContext& context) {
     if (!src) return;
 
     U8G2& u8g2 = m_ui.getU8G2();
@@ -103,13 +106,13 @@ void Label::draw() {
     int32_t text_width = u8g2.getUTF8Width((const char*)src);
 
     // Clip drawing area to label rectangle
-    u8g2.setClipWindow(m_x, m_y - font_height, m_x + text_width, m_y + 1);
+    setClipWindow(context, {m_x, m_y - font_height, text_width, font_height + 1});
 
     // Draw text at animated position
-    u8g2.drawUTF8(anim_x, anim_y, (const char*)src);
+    u8g2.drawUTF8(context.originX + anim_x, context.originY + anim_y, (const char*)src);
 
     // Reset clipping
-    u8g2.setMaxClipWindow();
+    restoreClipWindow(context);
 }
 
 /**
