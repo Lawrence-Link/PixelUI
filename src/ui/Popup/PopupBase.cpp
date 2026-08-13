@@ -53,16 +53,25 @@ PopupBase::PopupBase(PixelUI& ui, uint16_t width, uint16_t height, uint16_t dura
  */
 void PopupBase::drawPopupBox(const PopupContentBounds& bounds) {
     U8G2& u8g2 = m_ui.getU8G2();
-    
+
     u8g2.setDrawColor(1);
-    u8g2.drawFrame(bounds.x + BORDER_OFFSET, bounds.y + BORDER_OFFSET,
-                   bounds.width - 2 * BORDER_OFFSET, bounds.height - 2 * BORDER_OFFSET);
-    u8g2.drawFrame(bounds.x, bounds.y, bounds.width, bounds.height);
-    
+
+    // Avoid invalid rounded boxes while the appearing/closing animation is tiny.
+    if (4 > (bounds.width - 2 * BORDER_OFFSET) / 2 ||
+        4 > (bounds.height - 2 * BORDER_OFFSET) / 2) {
+        return;
+    }
+
+    u8g2.drawRFrame(bounds.x + BORDER_OFFSET, bounds.y + BORDER_OFFSET,
+                    bounds.width - 2 * BORDER_OFFSET,
+                    bounds.height - 2 * BORDER_OFFSET, 4);
+    u8g2.drawRFrame(bounds.x, bounds.y, bounds.width, bounds.height, 4);
+
     u8g2.setDrawColor(0);
-    u8g2.drawBox(bounds.x + BORDER_WIDTH, bounds.y + BORDER_WIDTH,
-                 bounds.width - 2 * BORDER_WIDTH, bounds.height - 2 * BORDER_WIDTH);
-    
+    u8g2.drawRBox(bounds.x + BORDER_WIDTH, bounds.y + BORDER_WIDTH,
+                  bounds.width - 2 * BORDER_WIDTH,
+                  bounds.height - 2 * BORDER_WIDTH, 4);
+
     u8g2.setDrawColor(1);
 }
 
@@ -228,6 +237,7 @@ void PopupBase::draw() {
     if (currentWidth <= 0) return;
     
     int16_t currentHeight = (m_width > 0) ? (currentWidth * m_height) / m_width : 0;
+    if (currentHeight <= 0) return;
     
     int16_t rectX = centerX - currentWidth / 2;
     int16_t rectY = centerY - currentHeight / 2;

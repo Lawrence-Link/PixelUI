@@ -31,6 +31,8 @@ protected:
 
 int main() {
     U8G2 display;
+    u8g2_Setup_ssd1306_128x64_noname_f(
+        display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
     TestPopup popup(ui, 1000);
 
@@ -63,6 +65,22 @@ int main() {
     if (inputClosedPopup.closingCount != 1) return 13;
     ui.Heartbeat(300);
     if (inputClosedPopup.update(ui.getCurrentTime())) return 14;
+
+    TestPopup drawingPopup(ui, 0);
+    if (!drawingPopup.update(ui.getCurrentTime())) return 15;
+    for (uint16_t elapsed = 1; elapsed <= 300; ++elapsed) {
+        ui.Heartbeat(1);
+        if (!drawingPopup.update(ui.getCurrentTime())) return 16;
+        drawingPopup.draw();
+    }
+    if (!drawingPopup.handleInput(InputEvent::BACK)) return 17;
+    for (uint16_t elapsed = 1; elapsed < 300; ++elapsed) {
+        ui.Heartbeat(1);
+        if (!drawingPopup.update(ui.getCurrentTime())) return 18;
+        drawingPopup.draw();
+    }
+    ui.Heartbeat(1);
+    if (drawingPopup.update(ui.getCurrentTime())) return 19;
 
     return 0;
 }
