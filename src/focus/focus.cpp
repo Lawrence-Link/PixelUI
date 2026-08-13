@@ -27,6 +27,55 @@
 #include "focus/focus.h"
 #include "PixelUI.h"
 
+void FocusManager::enterIdle(bool clearSelection) {
+    m_state = State::IDLE;
+    if (clearSelection) {
+        index = -1;
+    }
+}
+
+void FocusManager::beginFocusAnimation(int nextIndex) {
+    index = nextIndex;
+    m_state = State::ANIMATING;
+    last_focus_change_time = m_ui.getCurrentTime();
+    m_target_focus_box = m_Widgets[index]->getFocusBox();
+
+    m_ui.animate(m_current_focus_box.x, m_target_focus_box.x, 100, EasingType::EASE_OUT_QUAD);
+    m_ui.animate(m_current_focus_box.y, m_target_focus_box.y, 100, EasingType::EASE_OUT_QUAD);
+    m_ui.animate(m_current_focus_box.w, m_target_focus_box.w, 100, EasingType::EASE_OUT_QUAD);
+    m_ui.animate(m_current_focus_box.h, m_target_focus_box.h, 100, EasingType::EASE_OUT_QUAD);
+}
+
+void FocusManager::enterFocused(bool synchronizeBox) {
+    m_state = State::FOCUSED;
+    if (synchronizeBox && index >= 0 && index < static_cast<int>(m_Widgets.size())) {
+        last_focus_change_time = m_ui.getCurrentTime();
+        m_current_focus_box = m_Widgets[index]->getFocusBox();
+        m_target_focus_box = m_current_focus_box;
+    }
+}
+
+void FocusManager::beginShrinkAnimation() {
+    m_state = State::ANIMATING_SHRINK;
+
+    const int32_t center_x = m_current_focus_box.x + m_current_focus_box.w / 2;
+    const int32_t center_y = m_current_focus_box.y + m_current_focus_box.h / 2;
+    m_ui.animate(m_current_focus_box.w, 0, 100, EasingType::EASE_IN_QUAD);
+    m_ui.animate(m_current_focus_box.h, 0, 100, EasingType::EASE_IN_QUAD);
+    m_ui.animate(m_current_focus_box.x, center_x, 100, EasingType::EASE_IN_QUAD);
+    m_ui.animate(m_current_focus_box.y, center_y, 100, EasingType::EASE_IN_QUAD);
+}
+
+void FocusManager::resetState() {
+    if (m_activeWidget) {
+        m_activeWidget->onDeactivate();
+    }
+    m_activeWidget = nullptr;
+    m_current_focus_box = {0, 64, 0, 0};
+    m_target_focus_box = m_current_focus_box;
+    enterIdle(true);
+}
+
 /**
  * @brief Clear the currently active widget, if any, and restore focus state.
  *
@@ -39,14 +88,9 @@ void FocusManager::clearActiveWidget() {
         
         // Restore focus display state
         if (index >= 0 && index < (int)m_Widgets.size()) {
-            m_state = State::FOCUSED;
-            last_focus_change_time = m_ui.getCurrentTime();
-            
-            // Sync focus box to current widget
-            m_current_focus_box = m_Widgets[index]->getFocusBox();
-            m_target_focus_box = m_current_focus_box;
+            enterFocused(true);
         } else {
-            m_state = State::IDLE;
+            enterIdle(true);
         }
     }
 }
@@ -111,26 +155,16 @@ void FocusManager::checkActiveWidgetTimeout() {
  */
 void FocusManager::moveNext() {
     if (m_Widgets.empty()) {
-        index = -1;
-        m_state = State::IDLE;
+        enterIdle(true);
         return;
     }
 
     m_ui.clearUnprotectedAnimations();
-    int old_index = index;
-    index = (index == -1) ? 0 : (index + 1) % m_Widgets.size();
+    const int old_index = index;
+    const int next_index = (index == -1) ? 0 : (index + 1) % m_Widgets.size();
 
-    if (index != old_index) {
-        m_state = State::ANIMATING;
-        last_focus_change_time = m_ui.getCurrentTime();
-
-        FocusBox target = m_Widgets[index]->getFocusBox();
-
-        // Animate focus box from current to target
-        m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.y, target.y, 100, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.w, target.w, 100, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.h, target.h, 100, EasingType::EASE_OUT_QUAD);
+    if (next_index != old_index) {
+        beginFocusAnimation(next_index);
     }
 }
 
@@ -141,26 +175,18 @@ void FocusManager::moveNext() {
  */
 void FocusManager::movePrev() {
     if (m_Widgets.empty()) {
-        index = -1;
-        m_state = State::IDLE;
+        enterIdle(true);
         return;
     }
 
     m_ui.clearUnprotectedAnimations();
-    int old_index = index;
-    index = (index == -1) ? m_Widgets.size() - 1 : (index - 1 + m_Widgets.size()) % m_Widgets.size();
+    const int old_index = index;
+    const int next_index = (index == -1)
+        ? static_cast<int>(m_Widgets.size()) - 1
+        : (index - 1 + m_Widgets.size()) % m_Widgets.size();
 
-    if (index != old_index) {
-        m_state = State::ANIMATING;
-        last_focus_change_time = m_ui.getCurrentTime();
-
-        FocusBox target = m_Widgets[index]->getFocusBox();
-
-        // Animate focus box from current to target
-        m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.y, target.y, 100, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.w, target.w, 100, EasingType::EASE_OUT_QUAD);
-        m_ui.animate(m_current_focus_box.h, target.h, 100, EasingType::EASE_OUT_QUAD);
+    if (next_index != old_index) {
+        beginFocusAnimation(next_index);
     }
 }
 
@@ -172,16 +198,18 @@ void FocusManager::movePrev() {
 void FocusManager::selectCurrent() {
     last_focus_change_time = m_ui.getCurrentTime();
 
-    if (index >= 0 && index < (int)m_Widgets.size()) {
-        IWidget* selectedWidget = m_Widgets[index];
-        if (selectedWidget->onSelect()) {
-            m_activeWidget = selectedWidget;
-            m_activeWidget->onActivate(m_ui.getCurrentTime());
-            m_state = State::IDLE;
-        }
+    if (index < 0 || index >= static_cast<int>(m_Widgets.size())) {
+        return;
     }
-    
-    FocusBox target = m_Widgets[index]->getFocusBox();
+
+    IWidget* selectedWidget = m_Widgets[index];
+    if (selectedWidget->onSelect()) {
+        m_activeWidget = selectedWidget;
+        m_activeWidget->onActivate(m_ui.getCurrentTime());
+        enterIdle(false);
+    }
+
+    const FocusBox target = selectedWidget->getFocusBox();
     m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
     m_ui.animate(m_current_focus_box.y, target.y, 100, EasingType::EASE_OUT_QUAD);
     m_ui.animate(m_current_focus_box.w, target.w, 100, EasingType::EASE_OUT_QUAD);
@@ -201,24 +229,14 @@ void FocusManager::draw() {
     // Handle focus box shrink animation after inactivity
     if (m_state != State::IDLE && m_ui.getCurrentTime() - last_focus_change_time > 2500) {
         if (m_state != State::ANIMATING_SHRINK) {
-            m_state = State::ANIMATING_SHRINK;
-
-            int32_t center_x = m_current_focus_box.x + m_current_focus_box.w / 2;
-            int32_t center_y = m_current_focus_box.y + m_current_focus_box.h / 2;
-
-            // Animate shrink to center
-            m_ui.animate(m_current_focus_box.w, 0, 100, EasingType::EASE_IN_QUAD);
-            m_ui.animate(m_current_focus_box.h, 0, 100, EasingType::EASE_IN_QUAD);
-            m_ui.animate(m_current_focus_box.x, center_x, 100, EasingType::EASE_IN_QUAD);
-            m_ui.animate(m_current_focus_box.y, center_y, 100, EasingType::EASE_IN_QUAD);
+            beginShrinkAnimation();
         }
     }
 
     if (m_state != State::IDLE) {
         if (m_state == State::ANIMATING_SHRINK && m_current_focus_box.w <= 1 && m_current_focus_box.h <= 1) {
             // Shrink complete
-            m_state = State::IDLE;
-            index = -1;
+            enterIdle(true);
             return;
         }
 
@@ -230,7 +248,7 @@ void FocusManager::draw() {
         }
 
         if (m_state == State::ANIMATING && m_current_focus_box == m_target_focus_box) {
-            m_state = State::FOCUSED;
+            enterFocused(false);
         }
 
         switch (m_state) {
@@ -267,10 +285,9 @@ void FocusManager::removeWidget(IWidget* w) {
     }
 
     if (m_Widgets.empty()) {
-        index = -1;
-        m_state = State::IDLE;
+        enterIdle(true);
     } else if (index >= (int)m_Widgets.size()) {
         index = m_Widgets.size() - 1;
-        m_state = State::FOCUSED;
+        enterFocused(true);
     }
 }

@@ -30,6 +30,11 @@ private:
         ANIMATING_SHRINK
     } m_state = State::IDLE;
 
+    void enterIdle(bool clearSelection);
+    void beginFocusAnimation(int nextIndex);
+    void enterFocused(bool synchronizeBox);
+    void beginShrinkAnimation();
+
     /**
      * @brief Checks if the active widget has timed out and handles deactivation.
      */
@@ -41,12 +46,7 @@ public:
 
     etl::vector<IWidget*, MAX_ONSCREEN_WIDGET_NUM> m_Widgets;
     
-    void resetState() {
-        index = -1;
-        m_activeWidget = nullptr;
-        m_state = State::IDLE;
-        m_current_focus_box = {0,64,0,0};
-    }
+    void resetState();
 
     IWidget* getActiveWidget() const { return m_activeWidget; }
     void clearActiveWidget();
