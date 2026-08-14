@@ -115,10 +115,12 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
+
         m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
 
         button_onload.onLoad();
+
         button_top.onLoad();
         button_bottom.onLoad();
         button_left.onLoad();

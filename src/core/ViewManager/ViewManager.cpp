@@ -103,7 +103,22 @@ void ViewManager::activatePushedApplication(IApplication* application) {
 
     m_ui.setDrawable(application);
     m_ui.clearFocusManager();
+    if (previousApplication != nullptr && m_ui.isFading()) {
+        m_pendingEnter = application;
+    } else {
+        application->onEnter([this]() { pop(); });
+    }
+    m_ui.markDirty();
+}
+
+void ViewManager::completePendingEnter() {
+    if (m_pendingEnter == nullptr) {
+        return;
+    }
+
+    IApplication* application = m_pendingEnter;
     application->onEnter([this]() { pop(); });
+    m_pendingEnter = nullptr;
     m_ui.markDirty();
 }
 

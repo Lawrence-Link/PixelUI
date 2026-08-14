@@ -174,7 +174,7 @@ void PixelUI::handleInput(InputEvent event) {
  * Handles optional fading effects and calls the refresh callback if set.
  */
 void PixelUI::renderer() {
-    if (m_viewManagerPtr->isTransitioning()) return;
+    if (m_viewManagerPtr->isTransitionCommitInProgress()) return;
 
     if (update_symbol_.load()) { // check for update before rendering context
         update_symbol_.store(0) ;
@@ -223,7 +223,11 @@ void PixelUI::renderer() {
             if (m_refresh_callback) m_refresh_callback();
             m_lastFadeTime = getCurrentTime();
             m_fadeStep++;
-            if (m_fadeStep > 4) { isFading_ = false; m_fadeStep = 0; }
+            if (m_fadeStep > 4) {
+                isFading_ = false;
+                m_fadeStep = 0;
+                m_viewManagerPtr->completePendingEnter();
+            }
         }
     }
 }

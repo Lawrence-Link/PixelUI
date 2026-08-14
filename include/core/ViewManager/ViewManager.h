@@ -86,7 +86,10 @@ public:
 
     LaunchResult launch(const AppItem& item, void* parameters = nullptr);
     bool pop();
-    bool isTransitioning() const noexcept { return m_isTransitioning.load(etl::memory_order_relaxed); }
+    bool isTransitioning() const noexcept {
+        return m_pendingEnter != nullptr ||
+               m_isTransitioning.load(etl::memory_order_relaxed);
+    }
 
     IApplication* getCurrentApp() const;
     size_t getViewDepth() const noexcept { return m_applicationStack.depth(); }
@@ -97,6 +100,9 @@ private:
     class TransitionGuard {
     public:
         explicit TransitionGuard(ViewManager& manager) : manager_(manager) {
+            if (manager_.m_pendingEnter != nullptr) {
+                return;
+            }
             bool expected = false;
             acquired_ = manager_.m_isTransitioning.compare_exchange_strong(
                 expected,
@@ -120,9 +126,16 @@ private:
 
     static LaunchResult toLaunchResult(ApplicationStackResult result);
     void activatePushedApplication(IApplication* application);
+    void completePendingEnter();
     void clearNonOwningReferences();
+    bool isTransitionCommitInProgress() const noexcept {
+        return m_isTransitioning.load(etl::memory_order_relaxed);
+    }
+
+    friend class PixelUI;
 
     PixelUI &m_ui;
     ApplicationStack m_applicationStack;
+    IApplication* m_pendingEnter = nullptr;
     etl::atomic<bool> m_isTransitioning{false};
 };

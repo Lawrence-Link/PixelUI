@@ -149,6 +149,20 @@ private:
     uint8_t payload_[APPLICATION_ARENA_SIZE - 64U]{};
 };
 
+class FadeOnPauseApplication : public LifecycleApplication {
+public:
+    FadeOnPauseApplication(PixelUI& ui, void* parameters)
+        : LifecycleApplication(ui, parameters), ui_(ui) {}
+
+    void onPause() override {
+        LifecycleApplication::onPause();
+        ui_.markFading();
+    }
+
+private:
+    PixelUI& ui_;
+};
+
 IApplication* failConstruction(void*, PixelUI&, void*) {
     return nullptr;
 }
@@ -190,6 +204,33 @@ int main() {
         if (!manager.pop() || !log.equals("EPEX2R")) return 6;
         if (!manager.pop() || !log.equals("EPEX2RX1")) return 7;
         if (manager.pop() || (manager.getCurrentApp() != nullptr) || (manager.getViewDepth() != 0U)) return 8;
+    }
+
+    {
+        EventLog log;
+        LifecycleState first{&log, 1};
+        LifecycleState second{&log, 2};
+        U8G2 display;
+        u8g2_Setup_ssd1306_128x64_noname_f(
+            display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
+        PixelUI ui(display);
+        ViewManager& manager = *ui.getViewManagerPtr();
+        AppItem fading = AppItem::make<FadeOnPauseApplication>("Fade", nullptr);
+        AppItem next = AppItem::make<LifecycleApplication>("Next", nullptr);
+
+        if (manager.launch(fading, &first) != ViewManager::LaunchResult::Ok) return 30;
+        if (manager.launch(next, &second) != ViewManager::LaunchResult::Ok) return 31;
+        if (!log.equals("EP") || !manager.isTransitioning()) return 32;
+        if (manager.launch(next, &second) != ViewManager::LaunchResult::TransitionInProgress) return 33;
+
+        for (int step = 0; step < 3; ++step) {
+            ui.Heartbeat(40);
+            ui.renderer();
+            if (!log.equals("EP")) return 34;
+        }
+        ui.Heartbeat(40);
+        ui.renderer();
+        if (!log.equals("EPE") || manager.isTransitioning()) return 35;
     }
 
     {

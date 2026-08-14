@@ -41,6 +41,7 @@ void registerApps() {
     app_man.registerApp(anim_demo_app);
     app_man.registerApp(greenhouse_app);
     app_man.registerApp(pixel_clock_app);
+    app_man.registerApp(parent_child_demo_app);
 }
 
 #endif

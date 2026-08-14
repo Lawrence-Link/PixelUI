@@ -35,7 +35,7 @@ constexpr int MAX_ANIMATION_COUNT = 35;
 constexpr int MAX_TEXT_LENGTH = 30;
 
 // Maximum number of apps that can be registered
-constexpr int MAX_APP_NUM = 10;
+constexpr int MAX_APP_NUM = 11;
 
 // Maximum number of applications held by the view stack
 constexpr int MAX_VIEW_DEPTH = 8;
