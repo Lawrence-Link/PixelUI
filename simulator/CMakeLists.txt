@@ -47,7 +47,6 @@ set(SIM_SOURCES
     MainWindow.cpp
     EmuWorker.cpp
     ../examples/app_info.cpp
-    ../examples/app_dynamic_info.cpp
     ../examples/app_cube_demo.cpp
     ../examples/charging_animation.cpp
     ../examples/app_counter/app_main.cpp

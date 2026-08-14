@@ -194,14 +194,21 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
+        m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
     }
 
+    void onPause() override {
+        m_ui.setContinousDraw(false);
+    }
+
     void onResume() override {
+        m_ui.setContinousDraw(true);
     }
 
     void onExit() override {
         m_ui.clearAllAnimations();
+        m_ui.setContinousDraw(false);
     }
 };
 

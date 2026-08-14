@@ -38,7 +38,6 @@
  */
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
-    m_ui.setContinousDraw(true);
 
     Canvas& canvas = m_ui.getCanvas();
     canvas.setFont(PIXELUI_FONT_TEXT);
@@ -360,7 +359,6 @@ void ListView::onPause() {
  */
 void ListView::onExit() {
     onSave();
-    m_ui.setContinousDraw(false);
 }
 
 /**
