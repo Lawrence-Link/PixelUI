@@ -45,7 +45,8 @@ void ListView::onEnter(ExitCallback exitCallback){
     FontHeight = u8g2.getFontAscent() - u8g2.getFontDescent();
     
     topVisibleIndex_ = 0;
-    scrollOffset_ = 0;
+    m_ui.getCanvas().camera().setContentHeight(m_ui.getDisplayHeight());
+    m_ui.scrollCanvasTo(0);
     currentCursor = 0;
     isInitialLoad_ = true;
     
@@ -115,7 +116,13 @@ void ListView::clearNonInitialAnimations() {
  * @return True if scrolling is needed, false otherwise.
  */
 bool ListView::shouldScroll(int newCursor) {
-    return (newCursor < topVisibleIndex_ || newCursor >= topVisibleIndex_ + visibleItemCount_);
+    if (newCursor < 0 || FontHeight == 0) return false;
+    const int32_t rowHeight = FontHeight + spacing_;
+    const int32_t itemTop = topMargin_ + newCursor * rowHeight;
+    const int32_t itemBottom = itemTop + FontHeight + 3;
+    const CanvasCamera& camera = m_ui.getCanvas().camera();
+    return itemTop < camera.storedY() ||
+           itemBottom > camera.storedY() + camera.viewportHeight();
 }
 
 /**
@@ -127,19 +134,19 @@ bool ListView::shouldScroll(int newCursor) {
 void ListView::updateScrollPosition() {
     if (!shouldScroll(currentCursor)) return;
 
-    int newTopIndex = topVisibleIndex_;
-    if (currentCursor < topVisibleIndex_) newTopIndex = currentCursor;
-    else if (currentCursor >= topVisibleIndex_ + visibleItemCount_)
-        newTopIndex = currentCursor - visibleItemCount_ + 1;
-    
-    int maxTopIndex = etl::max((int32_t)0, m_itemLength + 1 - visibleItemCount_);
-    newTopIndex = etl::max(0, etl::min(newTopIndex, maxTopIndex));
-    
-    if (newTopIndex != topVisibleIndex_) {
-        int32_t targetScrollOffset = -newTopIndex * (FontHeight + spacing_);
-        m_ui.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
-        topVisibleIndex_ = newTopIndex;
-    }
+    const int32_t rowHeight = FontHeight + spacing_;
+    const int32_t itemTop = topMargin_ + currentCursor * rowHeight;
+    const int32_t itemBottom = itemTop + FontHeight + 3;
+    CanvasCamera& camera = m_ui.getCanvas().camera();
+    int32_t target = camera.storedY();
+    if (itemTop < target) target = itemTop;
+    else if (itemBottom > target + camera.viewportHeight())
+        target = itemBottom - camera.viewportHeight();
+
+    target = etl::max(0, etl::min(target, camera.maxY()));
+    topVisibleIndex_ = target / rowHeight;
+    m_ui.animateCanvasTo(target, 350, EasingType::EASE_OUT_CUBIC,
+                         PROTECTION::PROTECTED);
 }
 
 /**
@@ -149,8 +156,7 @@ void ListView::updateScrollPosition() {
  */
 int32_t ListView::calculateItemY(int itemIndex) {
     U8G2& u8g2 = m_ui.getU8G2();
-    int32_t baseY = topMargin_ + itemIndex * (FontHeight + spacing_) + u8g2.getFontAscent();
-    return baseY + scrollOffset_;
+    return topMargin_ + itemIndex * (FontHeight + spacing_) + u8g2.getFontAscent();
 }
 
 /**
@@ -158,11 +164,18 @@ int32_t ListView::calculateItemY(int itemIndex) {
  * @param target Target item index.
  */
 void ListView::scrollToTarget(){
+    if (m_itemLength < 0 || currentCursor < 0 || currentCursor > m_itemLength) {
+        m_ui.scrollCanvasTo(0);
+        return;
+    }
+
+    const int32_t contentHeight = topMargin_ +
+        (m_itemLength + 1) * (FontHeight + spacing_);
+    m_ui.getCanvas().camera().setContentHeight(contentHeight);
     updateScrollPosition();
     
     U8G2& u8g2 = m_ui.getU8G2();
-    int screenCursorIndex = currentCursor - topVisibleIndex_;
-    int32_t targetCursorY = topMargin_ + screenCursorIndex * (FontHeight + spacing_) - 1;
+    int32_t targetCursorY = topMargin_ + currentCursor * (FontHeight + spacing_) - 1;
     
     m_ui.animate(CursorY, targetCursorY, 150, EasingType::EASE_IN_OUT_CUBIC);
     m_ui.animate(CursorWidth, u8g2.getUTF8Width(m_itemList[currentCursor].title) + 6, 500, EasingType::EASE_OUT_CUBIC);
@@ -210,6 +223,7 @@ void ListView::selectCurrent(){
         m_itemLength = nextLen - 1;
         m_itemList = m_itemList[currentCursor].nextList;
         currentCursor = 0;
+        m_ui.scrollCanvasTo(0);
         m_ui.markFading();
         startLoadAnimation();
         scrollToTarget();
@@ -258,6 +272,7 @@ void ListView::returnToPreviousContext() {
         currentCursor = parent_state.second;
 
         m_ui.markFading();
+        m_ui.scrollCanvasTo(0);
         startLoadAnimation();
         scrollToTarget();
         return;
@@ -313,15 +328,18 @@ bool ListView::handleInput(InputEvent event) {
  * @brief Draw the cursor rectangle and navigation hints.
  */
 void ListView::drawCursor() {
+    Canvas& canvas = m_ui.getCanvas();
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setDrawColor(2);
-    u8g2.drawRBox(CursorX, CursorY - 2, CursorWidth, FontHeight + 3, 0);
-    u8g2.setDrawColor(1);
+    canvas.setDrawColor(2);
+    canvas.drawRBox(CursorX, CursorY - 2, CursorWidth, FontHeight + 3, 0);
+    canvas.setDrawColor(1);
 
     if (!currentCursor)
-        u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width("<") - 5, u8g2.getDisplayHeight(), "<");
+        u8g2.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width("<") - 5,
+                     m_ui.getDisplayHeight(), "<");
     else
-        u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(">") - 5, u8g2.getDisplayHeight(), ">");
+        u8g2.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(">") - 5,
+                     m_ui.getDisplayHeight(), ">");
 }
 
 /**
@@ -352,15 +370,21 @@ void ListView::onExit() {
  * @brief Draw all visible items and UI elements.
  */
 void ListView::draw() {
+    Canvas& canvas = m_ui.getCanvas();
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(PIXELUI_FONT_TEXT);
+    canvas.setFont(PIXELUI_FONT_TEXT);
+    const int32_t rowHeight = FontHeight + spacing_;
+    const int32_t cameraY = canvas.camera().storedY();
+    topVisibleIndex_ = (rowHeight > 0) ? cameraY / rowHeight : 0;
     int startIndex = etl::max((int32_t)0, topVisibleIndex_ - 2);
     int endIndex = etl::min(m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
+    canvas.setContentHeight(topMargin_ + (m_itemLength + 1) * rowHeight);
     
     for (int itemIndex = startIndex; itemIndex <= endIndex; itemIndex++) {
         int32_t itemY = calculateItemY(itemIndex);
         
-        if (itemY >= -FontHeight && itemY <= u8g2.getDisplayHeight() + FontHeight) {
+        const int32_t screenY = itemY - cameraY;
+        if (screenY >= -FontHeight && screenY <= m_ui.getDisplayHeight() + FontHeight) {
             int32_t drawX = 4;
             if (isInitialLoad_) {
                 int animIndex = itemIndex - topVisibleIndex_;
@@ -369,32 +393,32 @@ void ListView::draw() {
                     drawX = 4 + (FIXED_POINT_ONE - loadProgress) * 30 / FIXED_POINT_ONE;
                 }
             }
-            u8g2.drawUTF8(drawX, itemY, m_itemList[itemIndex].title);
+            canvas.drawUTF8(drawX, itemY, m_itemList[itemIndex].title);
             
             // Draw switch box if present
             if (m_itemList[itemIndex].extra.switchValue) {
-                u8g2.drawRFrame(u8g2.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
+                canvas.drawRFrame(m_ui.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
                 int32_t currentSwitchBoxX = switchAnimStates_.count(itemIndex) ? switchAnimStates_[itemIndex].boxX : (*m_itemList[itemIndex].extra.switchValue ? 7 : 0);
-                u8g2.drawRBox(u8g2.getDisplayWidth() - 42 + currentSwitchBoxX, itemY - 9, 7, 8, 2);
-                u8g2.drawUTF8(u8g2.getDisplayWidth() - 25, itemY - 1, *m_itemList[itemIndex].extra.switchValue ? "ON" : "OFF");
+                canvas.drawRBox(m_ui.getDisplayWidth() - 42 + currentSwitchBoxX, itemY - 9, 7, 8, 2);
+                canvas.drawUTF8(m_ui.getDisplayWidth() - 25, itemY - 1, *m_itemList[itemIndex].extra.switchValue ? "ON" : "OFF");
             }
 
             if (m_itemList[itemIndex].extra.text) {
-                u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(m_itemList[itemIndex].extra.text) - 4, itemY, m_itemList[itemIndex].extra.text);
+                canvas.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(m_itemList[itemIndex].extra.text) - 4, itemY, m_itemList[itemIndex].extra.text);
             }
 
             // Draw integer value if present
             if (m_itemList[itemIndex].extra.intValue) {
                 char buf[16] = {0};
                 snprintf(buf, sizeof(buf), "%" PRId32, *m_itemList[itemIndex].extra.intValue);
-                u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(buf) - 8, itemY, buf);
+                canvas.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(buf) - 8, itemY, buf);
             }
 
             // Draw float value if present
             if (m_itemList[itemIndex].extra.float_dot1f_Value) {
                 char buf[16] = {0};
                 snprintf(buf, sizeof(buf), "%.1f", *m_itemList[itemIndex].extra.float_dot1f_Value);
-                u8g2.drawStr(u8g2.getDisplayWidth() - u8g2.getUTF8Width(buf) - 8, itemY, buf);
+                canvas.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(buf) - 8, itemY, buf);
             }
         }
     }

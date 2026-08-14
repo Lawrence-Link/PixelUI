@@ -37,17 +37,18 @@ using Framebuffer = etl::array<FramebufferRow, FRAMEBUFFER_HEIGHT>;
 
 class U8G2Wrapper : public U8G2 {
 public:
-    U8G2Wrapper(){}
+    U8G2Wrapper();
     U8G2Wrapper(int _width, int _height) : width(_width), height(_height) {};
     ~U8G2Wrapper() = default;
 
     void init();
     void drawTestString(const char* str);
-    int getWidth()   { return this->U8G2::getDisplayWidth();}
-    int getHeight()  { return this->U8G2::getDisplayHeight(); }
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
     Framebuffer getFramebufferPixels();
 
 private:
     int width = 128;  // default width
     int height = 64;  // default height
+    size_t bufferSize = 0;
 };

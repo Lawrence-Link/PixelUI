@@ -59,7 +59,8 @@ public:
     // Constructor to initialize the list view with a UI handler and a list of items.
     // NOTE: length is an int (signed) to match internal usage of indices and avoid
     // signed/unsigned comparison warnings.
-    ListView(PixelUI& ui, ListItem *itemList, int length) : m_ui(ui), m_itemList(itemList), m_itemLength(length - 1) {}
+    ListView(PixelUI& ui, ListItem *itemList, int length)
+        : IApplication(true), m_ui(ui), m_itemList(itemList), m_itemLength(length - 1) {}
     ~ListView() = default;
 
     // --- Application Lifecycle and Input Handlers ---
@@ -102,7 +103,6 @@ private:
     int32_t CursorWidth = 0;
     
     // --- Scroll Variables ---
-    int32_t scrollOffset_ = 0;          // The current vertical scroll position.
     int32_t topVisibleIndex_ = 0;           // Index of the first item visible on screen.
     int32_t visibleItemCount_ = LISTVIEW_ITEMS_PER_PAGE; // Number of items that can be displayed at once.
     

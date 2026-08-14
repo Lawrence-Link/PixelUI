@@ -11,6 +11,7 @@ add_library(pixelui STATIC
     PixelUI.cpp
     core/app/app_system.cpp
     core/app/ApplicationStack.cpp
+    core/canvas/Canvas.cpp
     core/animation/animation.cpp
     core/ViewManager/ViewManager.cpp
     core/coroutine/Coroutine.cpp

@@ -244,10 +244,8 @@ bool PopupBase::handleInput(InputEvent event) {
  * Sets clipping, draws popup frame, and calls drawContent() for derived classes.
  */
 void PopupBase::draw() {
-    U8G2& u8g2 = m_ui.getU8G2();
-    
-    int16_t screenWidth = u8g2.getDisplayWidth();
-    int16_t screenHeight = u8g2.getDisplayHeight();
+    int16_t screenWidth = m_ui.getDisplayWidth();
+    int16_t screenHeight = m_ui.getDisplayHeight();
     int16_t centerX = screenWidth / 2;
     int16_t centerY = screenHeight / 2;
     

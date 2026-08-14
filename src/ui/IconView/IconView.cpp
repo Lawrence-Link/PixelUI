@@ -212,7 +212,7 @@ void IconView::scrollToIndex(int newIndex) {
 void IconView::updateProgressBar() {
     if (progressBarEnabled_ && !items_.empty()) {
         float progress = (static_cast<float>(currentIndex_ + 1)) / items_.size();
-        ui_.animate(animation_scroll_bar, progress * ui_.getU8G2().getWidth(), 300, EasingType::EASE_OUT_QUAD);
+        ui_.animate(animation_scroll_bar, progress * ui_.getDisplayWidth(), 300, EasingType::EASE_OUT_QUAD);
     }
 }
 
@@ -227,7 +227,7 @@ void IconView::drawTitle() {
     U8G2& display = ui_.getU8G2();
     display.setFont(PIXELUI_FONT_SMALL);
     int titleWidth = display.getStrWidth(title_.c_str());
-    display.drawStr((display.getWidth() - titleWidth) / 2, titleY_, title_.c_str());
+    display.drawStr((ui_.getDisplayWidth() - titleWidth) / 2, titleY_, title_.c_str());
 }
 
 /**
@@ -262,7 +262,7 @@ void IconView::drawSelectedItemTitle() {
     const auto& currentItem = items_[currentIndex_];
     display.setFont(font_title);
     int titleWidth = display.getUTF8Width(currentItem.title);
-    display.drawUTF8((display.getWidth() - titleWidth) / 2, animation_item_title_Y, currentItem.title);
+    display.drawUTF8((ui_.getDisplayWidth() - titleWidth) / 2, animation_item_title_Y, currentItem.title);
 }
 
 /**
@@ -310,7 +310,7 @@ void IconView::drawIcon(const IconItem& item, int x, int y) {
  * @brief Precompute X-coordinates for icon slots based on display width.
  */
 void IconView::initializeSlotPositions() {
-    iconSpacing_ = (ui_.getU8G2().getWidth() - 3 * iconWidth_) * 0.25f;
+    iconSpacing_ = (ui_.getDisplayWidth() - 3 * iconWidth_) * 0.25f;
     float firstSlotX = centerX_ - 1.5f * iconWidth_ - iconSpacing_;
     slotPositionsX_.clear();
     slotPositionsX_.push_back(firstSlotX);

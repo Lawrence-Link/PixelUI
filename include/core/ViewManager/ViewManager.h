@@ -111,12 +111,18 @@ private:
     void activatePushedApplication(IApplication* application);
     void completePendingEnter();
     void clearNonOwningReferences();
+    void restoreCurrentCameraState();
     bool isTransitionCommitInProgress() const noexcept {
         return m_isTransitioning.load(etl::memory_order_relaxed);
     }
 
     PixelUI &m_ui;
     ApplicationStack m_applicationStack;
+    struct CameraState {
+        int32_t y = 0;
+        int32_t contentHeight = 0;
+    };
+    CameraState m_cameraStates[MAX_VIEW_DEPTH]{};
     IApplication* m_pendingEnter = nullptr;
     etl::atomic<bool> m_isTransitioning{false};
 };

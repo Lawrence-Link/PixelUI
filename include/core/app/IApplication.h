@@ -31,6 +31,7 @@
 #include "ui/IDrawable.h"
 #include <etl/inplace_function.h>
 #include "config.h"
+#include <stdint.h>
 
 class PixelUI;
 
@@ -40,7 +41,14 @@ class IApplication : public IDrawable, public IInputHandler {
 public:
 
     using ExitCallback = etl::inplace_function<void(), CALLBACK_STORAGE_SIZE>; // Exit callback function
+    explicit IApplication(bool useVerticalScroll = false)
+        : useVerticalScroll(useVerticalScroll) {}
     virtual ~IApplication() = default;
+
+    // Enable the global canvas camera for this application. Unhandled UP/DOWN
+    // input scrolls by one viewport; an app may consume it and position the
+    // camera itself (ListView does this to keep its selection visible).
+    bool useVerticalScroll = false;
 
     // Called when the app is pushed to the top of the stack
     virtual void onEnter(ExitCallback exitCallback) { m_exitCallback = exitCallback; }

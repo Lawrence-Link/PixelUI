@@ -33,6 +33,7 @@
 #include "core/ViewManager/ViewManager.h"
 #include "ui/IDrawable.h"
 #include "core/CommonTypes.h"
+#include "core/canvas/Canvas.h"
 #include <etl/atomic.h>
 #include <etl/inplace_function.h>
 
@@ -212,6 +213,18 @@ public:
 
     // getters
     U8G2& getU8G2() const { return u8g2_; }
+    uint16_t getDisplayWidth() const { return displayWidth_; }
+    uint16_t getDisplayHeight() const { return displayHeight_; }
+    uint16_t getDisplayBufferSize() const { return displayBufferSize_; }
+    Canvas& getCanvas() { return canvas_; }
+    const Canvas& getCanvas() const { return canvas_; }
+
+    bool scrollCanvasBy(int32_t deltaY);
+    bool scrollCanvasTo(int32_t y);
+    bool ensureCanvasVisible(int32_t top, int32_t bottom);
+    bool animateCanvasTo(int32_t y, uint32_t duration,
+                         EasingType easing = EasingType::EASE_OUT_CUBIC,
+                         PROTECTION protection = PROTECTION::NOT_PROTECTED);
     ViewManager* getViewManagerPtr() const {
         return const_cast<ViewManager*>(&m_viewManager);
     }
@@ -347,6 +360,10 @@ private:
     uint32_t calculateNextWakeupMs(uint32_t frameIntervalMs) const;
 
     U8G2& u8g2_;
+    const uint16_t displayWidth_;
+    const uint16_t displayHeight_;
+    const uint16_t displayBufferSize_;
+    Canvas canvas_;
 
 #if PIXELUI_USE_ANIMATION
     AnimationManager m_animationManager;

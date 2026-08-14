@@ -26,12 +26,11 @@ PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
     if (value_ < 0) value_ = 0;
     if (value_ > maximum) value_ = maximum;
 
-    U8G2& u8g2 = ui.getU8G2();
     const int32_t totalWidth = digitCount_ * DIGIT_WIDTH + (digitCount_ - 1U) * DIGIT_GAP;
-    const int32_t startX = (u8g2.getDisplayWidth() - totalWidth) / 2;
+    const int32_t startX = (ui.getDisplayWidth() - totalWidth) / 2;
     const int32_t digitY = title_ && title_[0] != '\0'
-        ? u8g2.getDisplayHeight() / 2
-        : (u8g2.getDisplayHeight() - DIGIT_HEIGHT) / 2;
+        ? ui.getDisplayHeight() / 2
+        : (ui.getDisplayHeight() - DIGIT_HEIGHT) / 2;
 
     int32_t divisor = 1;
     for (uint8_t i = 1; i < digitCount_; ++i) divisor *= 10;

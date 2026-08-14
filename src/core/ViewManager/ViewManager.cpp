@@ -42,7 +42,13 @@ void ViewManager::attachInputRouter() {
 #endif
 
         IApplication* current = m_applicationStack.top();
-        return (current != nullptr) ? current->handleInput(event) : false;
+        if (current == nullptr) return false;
+        if (current->handleInput(event)) return true;
+        if (current->useVerticalScroll && m_ui.getCanvas().camera().handleInput(event)) {
+            m_ui.markDirty();
+            return true;
+        }
+        return false;
     });
 }
 
@@ -92,8 +98,12 @@ bool ViewManager::pop() {
 
     IApplication* previousApplication = m_applicationStack.top();
     if (previousApplication != nullptr) {
+        restoreCurrentCameraState();
         m_ui.setDrawable(previousApplication);
         previousApplication->onResume();
+    } else {
+        m_ui.getCanvas().camera().setEnabled(false);
+        m_ui.getCanvas().camera().setY(0);
     }
 
     m_ui.markDirty();
@@ -117,16 +127,27 @@ ViewManager::LaunchResult ViewManager::toLaunchResult(ApplicationStackResult res
 void ViewManager::activatePushedApplication(IApplication* application) {
     IApplication* previousApplication = m_applicationStack.previous();
     if (previousApplication != nullptr) {
+        const size_t currentDepth = m_applicationStack.depth();
+        if (currentDepth >= 2U) {
+            m_cameraStates[currentDepth - 2U].y = m_ui.getCanvas().camera().storedY();
+            m_cameraStates[currentDepth - 2U].contentHeight =
+                m_ui.getCanvas().camera().contentHeight();
+        }
         clearNonOwningReferences();
         previousApplication->onPause();
     }
 
     m_ui.setDrawable(application);
+    m_cameraStates[m_applicationStack.depth() - 1U] = CameraState{};
+    m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
+    m_ui.getCanvas().camera().setContentHeight(0);
+    m_ui.getCanvas().camera().setY(0);
     m_ui.clearFocusManager();
     if (previousApplication != nullptr && m_ui.isFading()) {
         m_pendingEnter = application;
     } else {
         application->onEnter([this]() { pop(); });
+        m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
     }
     m_ui.markDirty();
 }
@@ -138,6 +159,7 @@ void ViewManager::completePendingEnter() {
 
     IApplication* application = m_pendingEnter;
     application->onEnter([this]() { pop(); });
+    m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
     m_pendingEnter = nullptr;
     m_ui.markDirty();
 }
@@ -147,4 +169,13 @@ void ViewManager::clearNonOwningReferences() {
     m_ui.clearAllCoroutines();
     m_ui.clearFocusManager();
     m_ui.clearPopups();
+}
+
+void ViewManager::restoreCurrentCameraState() {
+    IApplication* application = m_applicationStack.top();
+    if (application == nullptr) return;
+    const CameraState& state = m_cameraStates[m_applicationStack.depth() - 1U];
+    m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
+    m_ui.getCanvas().camera().setContentHeight(state.contentHeight);
+    m_ui.getCanvas().camera().setY(state.y);
 }

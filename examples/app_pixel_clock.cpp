@@ -300,7 +300,7 @@ public:
         
         // Calculate positions from right to left
         // Seconds are at the rightmost position
-        int16_t secondX = u8g2.getDisplayWidth() - 22; // Leave some margin from right edge
+        int16_t secondX = m_ui.getDisplayWidth() - 22; // Leave some margin from right edge
         int16_t minuteX = secondX - 42; // Before seconds
         int16_t hourX = minuteX - 40;   // Before minutes
         

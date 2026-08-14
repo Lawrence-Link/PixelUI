@@ -27,22 +27,18 @@
 #include "u8g2_wrapper.h"
 #include "u8x8.h"
 
-void U8G2Wrapper::init() {
-    // Initialize u8g2 structure with your desired display IC preset.
-    u8g2_Setup_ssd1306_128x64_noname_f( 
-        &u8g2,
-        U8G2_R0,
-        u8x8_byte_empty,
-        u8x8_dummy_cb
-    );
+U8G2Wrapper::U8G2Wrapper() {
+    u8g2_Setup_ssd1306_128x64_noname_f(
+        &u8g2, U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
+    width = U8G2::getDisplayWidth();
+    height = U8G2::getDisplayHeight();
+    bufferSize = u8g2_GetBufferSize(&u8g2);
+}
 
+void U8G2Wrapper::init() {
     u8g2_InitDisplay(&u8g2);
     u8g2_SetPowerSave(&u8g2, 0);
 
-    // after initialization
-
-    width = getWidth();
-    height = getHeight();
 }
 
 void U8G2Wrapper::drawTestString(const char* str) {
@@ -54,8 +50,6 @@ void U8G2Wrapper::drawTestString(const char* str) {
 
 Framebuffer U8G2Wrapper::getFramebufferPixels() {
     uint8_t* buffer = u8g2_GetBufferPtr(&u8g2);
-    size_t buffer_size = u8g2_GetBufferSize(&u8g2);
-
     int bytes_per_column = (height + 7) / 8;
     
     // pixel buffer is width * height, each column has `bytes_per_column` bytes.
@@ -65,7 +59,7 @@ Framebuffer U8G2Wrapper::getFramebufferPixels() {
         for (int byte_row = 0; byte_row < bytes_per_column; ++byte_row) {
             // calculate the index in the buffer, each column has `bytes_per_column` bytes. every byte represents 8 pixels vertically.
             size_t byte_index = x + byte_row * width;
-            if (byte_index >= buffer_size) {
+            if (byte_index >= bufferSize) {
                 continue;
             }
             uint8_t byte = buffer[byte_index]; 

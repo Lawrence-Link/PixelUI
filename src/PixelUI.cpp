@@ -41,6 +41,12 @@
  */
 PixelUI::PixelUI(U8G2& u8g2)
     : u8g2_(u8g2)
+      , displayWidth_(u8g2.getDisplayWidth())
+      , displayHeight_(u8g2.getDisplayHeight())
+      , displayBufferSize_((displayWidth_ != 0U && displayHeight_ != 0U)
+            ? u8g2_GetBufferSize(u8g2.getU8g2())
+            : 0U)
+      , canvas_(u8g2, displayWidth_, displayHeight_)
 #if PIXELUI_USE_POPUP
       , m_popupManager(*this)
 #endif
@@ -208,6 +214,34 @@ bool PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
         prot);
 }
 
+bool PixelUI::scrollCanvasBy(int32_t deltaY) {
+    if (!canvas_.camera().scrollBy(deltaY)) return false;
+    markDirty();
+    return true;
+}
+
+bool PixelUI::scrollCanvasTo(int32_t y) {
+    if (!canvas_.camera().setY(y)) return false;
+    markDirty();
+    return true;
+}
+
+bool PixelUI::ensureCanvasVisible(int32_t top, int32_t bottom) {
+    if (!canvas_.camera().ensureVisible(top, bottom)) return false;
+    markDirty();
+    return true;
+}
+
+bool PixelUI::animateCanvasTo(int32_t y, uint32_t duration,
+                              EasingType easing, PROTECTION protection) {
+    const int32_t target = etl::max(0, etl::min(y, canvas_.camera().maxY()));
+    const int32_t start = canvas_.camera().storedY();
+    if (start == target) return false;
+    return animateCallback(
+        start, target, duration, easing,
+        [this](int32_t value) { canvas_.camera().setY(value); }, protection);
+}
+
 /**
  * @brief Animate two integer values simultaneously
  */
@@ -360,7 +394,9 @@ bool PixelUI::renderer() {
         // remains pending for the next pass instead of being lost.
         isDirty_.store(false, etl::memory_order_release);
         u8g2_.clearBuffer();
+        canvas_.beginFrame();
         if (currentDrawable_) currentDrawable_->draw();
+        if (canvas_.endFrame()) markDirty();
 #if PIXELUI_USE_POPUP
         m_popupManager.drawPopups();
 #endif
@@ -374,7 +410,9 @@ bool PixelUI::renderer() {
         if (m_fadeStep == 0) {
             isDirty_.store(false, etl::memory_order_release);
             u8g2_.clearBuffer();
+            canvas_.beginFrame();
             if (currentDrawable_) currentDrawable_->draw();
+            if (canvas_.endFrame()) markDirty();
 #if PIXELUI_USE_POPUP
             m_popupManager.drawPopups();
 #endif
@@ -389,7 +427,7 @@ bool PixelUI::renderer() {
 
             isDirty_.store(false, etl::memory_order_release);
             uint8_t *buf_ptr = u8g2_.getBufferPtr();
-            const uint16_t buf_len = u8g2_GetBufferSize(u8g2_.getU8g2());
+            const uint16_t buf_len = displayBufferSize_;
             switch (m_fadeStep) {
                 case 1: for (uint16_t i=0;i<buf_len;i++) if (i%2) buf_ptr[i] &= 0xAA; break;
                 case 2: for (uint16_t i=0;i<buf_len;i++) if (i%2) buf_ptr[i] &= 0x00; break;

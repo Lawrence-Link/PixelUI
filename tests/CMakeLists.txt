@@ -93,6 +93,15 @@ target_link_libraries(render_scheduling_test PRIVATE pixelui u8g2_c)
 target_compile_definitions(render_scheduling_test PRIVATE ETL_NO_STL)
 add_test(NAME render_scheduling_test COMMAND render_scheduling_test)
 
+add_executable(
+    canvas_camera_test
+    canvas_camera_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc/U8g2lib.cpp
+)
+target_link_libraries(canvas_camera_test PRIVATE pixelui u8g2_c)
+target_compile_definitions(canvas_camera_test PRIVATE ETL_NO_STL)
+add_test(NAME canvas_camera_test COMMAND canvas_camera_test)
+
 add_executable(memory_metrics memory_metrics.cpp)
 target_link_libraries(memory_metrics PRIVATE pixelui)
 
@@ -149,6 +158,11 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
     target_compile_options(
         render_scheduling_test
+        PRIVATE
+            "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
+    )
+    target_compile_options(
+        canvas_camera_test
         PRIVATE
             "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
     )
