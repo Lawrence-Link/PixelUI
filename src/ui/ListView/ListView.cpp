@@ -115,13 +115,8 @@ void ListView::clearNonInitialAnimations() {
  * @return True if scrolling is needed, false otherwise.
  */
 bool ListView::shouldScroll(int newCursor) {
-    if (newCursor < 0 || FontHeight == 0) return false;
-    const int32_t rowHeight = FontHeight + spacing_;
-    const int32_t itemTop = topMargin_ + newCursor * rowHeight;
-    const int32_t itemBottom = itemTop + FontHeight + 3;
-    const CanvasCamera& camera = m_ui.getCanvas().camera();
-    return itemTop < camera.storedY() ||
-           itemBottom > camera.storedY() + camera.viewportHeight();
+    return newCursor < topVisibleIndex_ ||
+           newCursor >= topVisibleIndex_ + visibleItemCount_;
 }
 
 /**
@@ -134,17 +129,22 @@ void ListView::updateScrollPosition() {
     if (!shouldScroll(currentCursor)) return;
 
     const int32_t rowHeight = FontHeight + spacing_;
-    const int32_t itemTop = topMargin_ + currentCursor * rowHeight;
-    const int32_t itemBottom = itemTop + FontHeight + 3;
-    CanvasCamera& camera = m_ui.getCanvas().camera();
-    int32_t target = camera.storedY();
-    if (itemTop < target) target = itemTop;
-    else if (itemBottom > target + camera.viewportHeight())
-        target = itemBottom - camera.viewportHeight();
+    int32_t newTopIndex = topVisibleIndex_;
+    if (currentCursor < topVisibleIndex_) {
+        newTopIndex = currentCursor;
+    } else if (currentCursor >= topVisibleIndex_ + visibleItemCount_) {
+        newTopIndex = currentCursor - visibleItemCount_ + 1;
+    }
 
-    target = etl::max(0, etl::min(target, camera.maxY()));
-    topVisibleIndex_ = target / rowHeight;
-    m_ui.animateCanvasTo(target, 350, EasingType::EASE_OUT_CUBIC,
+    const int32_t maxTopIndex = etl::max(
+        (int32_t)0, m_itemLength + 1 - visibleItemCount_);
+    newTopIndex = etl::max((int32_t)0,
+                           etl::min(newTopIndex, maxTopIndex));
+    if (newTopIndex == topVisibleIndex_) return;
+
+    topVisibleIndex_ = newTopIndex;
+    m_ui.animateCanvasTo(topVisibleIndex_ * rowHeight, 350,
+                         EasingType::EASE_OUT_CUBIC,
                          PROTECTION::PROTECTED);
 }
 
@@ -369,7 +369,6 @@ void ListView::draw() {
     canvas.setFont(PIXELUI_FONT_TEXT);
     const int32_t rowHeight = FontHeight + spacing_;
     const int32_t cameraY = canvas.camera().storedY();
-    topVisibleIndex_ = (rowHeight > 0) ? cameraY / rowHeight : 0;
     int startIndex = etl::max((int32_t)0, topVisibleIndex_ - 2);
     int endIndex = etl::min(m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
     canvas.setContentHeight(topMargin_ + (m_itemLength + 1) * rowHeight);
