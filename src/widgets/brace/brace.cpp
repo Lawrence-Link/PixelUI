@@ -30,34 +30,49 @@
 /**
  * @brief Construct a new Brace object
  * * @param ui Reference to the PixelUI instance
- * * Note: pos_x_ and pos_y_ now represent the top-left corner.
+ * * Note: pos_x and pos_y represent the top-left corner.
  */
 Brace::Brace(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h) : 
-    m_ui(ui), 
-    pos_x_(pos_x),
-    pos_y_(pos_y),
-    size_w_(size_w),
-    size_h_(size_h) 
+    m_ui(ui)
 {
-    setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
-    int32_t start_anim_x = (size_w_ / 2);
-    int32_t start_anim_y = (size_h_ / 2);
+    updateBounds({pos_x, pos_y, size_w, size_h});
+    const int32_t start_anim_x = size_w / 2;
+    const int32_t start_anim_y = size_h / 2;
     
     anim_w = 0; 
     anim_h = 0;
 
     anim_x = start_anim_x;
     anim_y = start_anim_y;
+}
 
-    setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
+void Brace::updateBounds(const FocusBox& bounds) {
+    setWidgetBounds(bounds);
+    setFocusBox({
+        bounds.x + 1,
+        bounds.y + 1,
+        bounds.w > 1 ? bounds.w - 1 : 0,
+        bounds.h > 1 ? bounds.h - 1 : 0
+    });
+}
+
+void Brace::setSize(uint16_t width, uint16_t height) {
+    const FocusBox bounds = getLocalBounds();
+    updateBounds({bounds.x, bounds.y, width, height});
+}
+
+void Brace::setPosition(int16_t pos_x, int16_t pos_y) {
+    const FocusBox bounds = getLocalBounds();
+    updateBounds({pos_x, pos_y, bounds.w, bounds.h});
 }
 
 /**
  * @brief Initialize animations for brace expansion and set the focus box
  */
 void Brace::onLoad() {
-    int32_t start_anim_x = (size_w_ / 2);
-    int32_t start_anim_y = (size_h_ / 2);
+    const FocusBox bounds = getLocalBounds();
+    const int32_t start_anim_x = bounds.w / 2;
+    const int32_t start_anim_y = bounds.h / 2;
     
     anim_w = 0; 
     anim_h = 0;
@@ -65,8 +80,8 @@ void Brace::onLoad() {
     anim_x = start_anim_x;
     anim_y = start_anim_y;
 
-    m_ui.animate(anim_w, size_w_, 550, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
-    m_ui.animate(anim_h, size_h_, 600, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    m_ui.animate(anim_w, bounds.w, 550, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    m_ui.animate(anim_h, bounds.h, 600, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
     
     m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
     m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
@@ -80,49 +95,43 @@ void Brace::onOffload() {
 }
 
 /**
- * @brief Draw the brace with corners and optional content inside
+ * @brief Draw the brace and its child content.
  */
 U8G2& Brace::display() { return m_ui.getU8G2(); }
 
-void Brace::drawSelf(const WidgetRenderContext& context) {
+void Brace::drawSelf(const WidgetRenderContext&) {}
+
+FocusBox Brace::getChildrenClipBounds() const {
+    const FocusBox bounds = getLocalBounds();
+    return {bounds.x + anim_x, bounds.y + anim_y, anim_w, anim_h};
+}
+
+void Brace::drawOverlay(const WidgetRenderContext& context) {
     U8G2& u8g2 = m_ui.getU8G2();
+    const FocusBox bounds = getLocalBounds();
 
-    int tl_x = context.originX + pos_x_ + anim_x;
-    int tl_y = context.originY + pos_y_ + anim_y;
-    int current_w = anim_w;
-    int current_h = anim_h;
+    const int32_t tl_x = context.originX + bounds.x + anim_x;
+    const int32_t tl_y = context.originY + bounds.y + anim_y;
+    const int32_t current_w = anim_w;
+    const int32_t current_h = anim_h;
+    if (current_w <= 0 || current_h <= 0) return;
 
-    /**< Set the clipping window to restrict drawing inside the brace, based on top-left */
-    setClipWindow(context, {
-        tl_x - context.originX,
-        tl_y - context.originY,
-        current_w,
-        current_h
-    });
-
-    /**< Draw the user-provided content inside the brace, if any */
-    if (contentWithinBrace) {
-        contentWithinBrace();
-    }
-
-    /**< Reset clipping to full screen */
-    restoreClipWindow(context);
-
-    /**< Draw corner lines for the brace */
+    const int32_t corner_w = current_w < 4 ? current_w : 4;
+    const int32_t corner_h = current_h < 4 ? current_h : 4;
     
     // Top-left corner: (tl_x, tl_y)
-    u8g2.drawLine(tl_x, tl_y, tl_x + 4, tl_y);
-    u8g2.drawLine(tl_x, tl_y, tl_x, tl_y + 4);
+    u8g2.drawLine(tl_x, tl_y, tl_x + corner_w, tl_y);
+    u8g2.drawLine(tl_x, tl_y, tl_x, tl_y + corner_h);
 
     // Top-right corner: (tl_x + current_w, tl_y)
-    u8g2.drawLine(tl_x + current_w, tl_y, tl_x + current_w - 4, tl_y);
-    u8g2.drawLine(tl_x + current_w, tl_y, tl_x + current_w, tl_y + 4);
+    u8g2.drawLine(tl_x + current_w, tl_y, tl_x + current_w - corner_w, tl_y);
+    u8g2.drawLine(tl_x + current_w, tl_y, tl_x + current_w, tl_y + corner_h);
 
     // Bottom-left corner: (tl_x, tl_y + current_h)
-    u8g2.drawLine(tl_x, tl_y + current_h, tl_x + 4, tl_y + current_h);
-    u8g2.drawLine(tl_x, tl_y + current_h, tl_x, tl_y + current_h - 4);
+    u8g2.drawLine(tl_x, tl_y + current_h, tl_x + corner_w, tl_y + current_h);
+    u8g2.drawLine(tl_x, tl_y + current_h, tl_x, tl_y + current_h - corner_h);
 
     // Bottom-right corner: (tl_x + current_w, tl_y + current_h)
-    u8g2.drawLine(tl_x + current_w, tl_y + current_h, tl_x + current_w - 4, tl_y + current_h);
-    u8g2.drawLine(tl_x + current_w, tl_y + current_h, tl_x + current_w, tl_y + current_h - 4);
+    u8g2.drawLine(tl_x + current_w, tl_y + current_h, tl_x + current_w - corner_w, tl_y + current_h);
+    u8g2.drawLine(tl_x + current_w, tl_y + current_h, tl_x + current_w, tl_y + current_h - corner_h);
 }

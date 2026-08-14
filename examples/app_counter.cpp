@@ -80,6 +80,36 @@ static const unsigned char image_BAT_25_bits[] = {0xff,0x01,0x07,0x03,0x07,0x03,
 /** @brief Bitmap data for the battery empty icon (10x6). */
 static const unsigned char image_BAT_empty_bits[] = {0xff,0x01,0x01,0x03,0x01,0x03,0x01,0x03,0x01,0x03,0xff,0x01};
 
+namespace {
+
+class CounterReadingWidget : public IWidget {
+public:
+    explicit CounterReadingWidget(PixelUI& ui) : ui_(ui) {
+        setWidgetBounds({0, 0, 56, 18});
+    }
+
+    void onLoad() override {}
+    void onOffload() override {}
+
+private:
+    PixelUI& ui_;
+
+    void drawSelf(const WidgetRenderContext& context) override {
+        U8G2& u8g2 = ui_.getU8G2();
+        u8g2.setFont(u8g2_font_5x7_tr);
+        u8g2.drawStr(context.originX + 27, context.originY + 9, "10.00");
+        u8g2.drawStr(context.originX + 28, context.originY + 16, "uSv/h");
+        u8g2.drawRBox(context.originX + 5, context.originY + 5, 20, 10, 2);
+        u8g2.setDrawColor(0);
+        u8g2.drawStr(context.originX + 8, context.originY + 13, "Max");
+        u8g2.setDrawColor(1);
+    }
+
+    U8G2& display() override { return ui_.getU8G2(); }
+};
+
+} // namespace
+
 // --- USER DEFINED APP: A Geiger counter UI demo ---
 
 /**
@@ -100,6 +130,7 @@ private:
     CurveChart histogram;
     /** @brief Widget for displaying a main, bracketed value. */
     Brace brace;
+    CounterReadingWidget brace_content;
     /** @brief Icon button for battery status. */
     IconButton icon_battery;
     /** @brief Icon button for alert status. */
@@ -152,11 +183,14 @@ public:
         EXPAND_BASE::BOTTOM_RIGHT,
         "Curve"),
     brace(ui, 3, 45, 56, 18),
+    brace_content(ui),
     icon_battery(ui, 14, 2, 10, 6),
     icon_alert(ui, 28, 1, 9, 7),
     icon_sounding(ui, 40, 1, 7, 7),
     icon_alarm(ui, 51, 1, 6, 7)
-    {}
+    {
+        brace.addChild(brace_content);
+    }
 
     /**
      * @brief Setup function called when the application is entered.
@@ -170,10 +204,6 @@ public:
         // --- HISTOGRAM SETUP ---
         // Define expansion behaviour (to full screen for stats view)
         // histogram.setExpand(EXPAND_BASE::BOTTOM_RIGHT, 76, 63);
-
-        // --- BRACE SETUP ---
-        // Set custom content drawing function for the brace widget
-        brace.setDrawContentFunction([this]() { braceContent(); });
 
         // --- ICON BUTTON SETUP ---
         // Battery Icon
@@ -196,26 +226,6 @@ public:
         // Initialize state machine and first-time flag
         loadState = LoadState::INIT;
         first_time = false;
-    }
-
-    /**
-     * @brief Custom content drawing for the Brace widget.
-     *
-     * Draws the main radiation reading "10.00 uSv/h" and a "Max" label.
-     */
-    void braceContent() {
-        U8G2& u8g2 = m_ui.getU8G2();
-        // Draw the main value and unit
-        u8g2.setFont(u8g2_font_5x7_tr);
-        u8g2.drawStr(30, 54, "10.00");
-        u8g2.drawStr(31, 61, "uSv/h");
-        // Draw the "Max" box
-        u8g2.drawRBox(8, 50, 20, 10, 2);
-        // Set draw color to background (0) to invert the text color inside the box
-        u8g2.setDrawColor(0);
-        u8g2.drawStr(11, 58, "Max");
-        // Restore draw color to foreground (1)
-        u8g2.setDrawColor(1);
     }
 
     /**

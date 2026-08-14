@@ -36,27 +36,17 @@ public:
 
     void onLoad() override;
     void onOffload() override;
-    bool onSelect() override { if (m_callback) m_callback(); return false;}
+    bool onSelect() override {
+        if (m_callback) m_callback();
+        return false;
+    }
 
-    void setCallback(VoidCallback cb) { m_callback = cb; };
-    void setSize(uint16_t mar_w, uint16_t mar_h) {
-        size_w_ = mar_w; size_h_ = mar_h;
-        setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
-        setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
-    }
-    void setPosition(int16_t pos_x, int16_t pos_y) {
-        pos_x_ = pos_x; pos_y_=pos_y;
-        setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
-        setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
-    }
-    void setDrawContentFunction(VoidCallback func) { contentWithinBrace = func; }
+    void setCallback(VoidCallback cb) { m_callback = cb; }
+    void setSize(uint16_t width, uint16_t height);
+    void setPosition(int16_t pos_x, int16_t pos_y);
     
 private:
     PixelUI& m_ui;
-    int16_t pos_x_ = 0, pos_y_ = 0;
-    int16_t size_w_ = 0, size_h_ = 0;
-
-    VoidCallback contentWithinBrace;
     VoidCallback m_callback = nullptr;
 
     int32_t anim_w = 0;
@@ -64,6 +54,9 @@ private:
     int32_t anim_x = 0;
     int32_t anim_y = 0;
 
+    void updateBounds(const FocusBox& bounds);
     void drawSelf(const WidgetRenderContext& context) override;
+    void drawOverlay(const WidgetRenderContext& context) override;
+    FocusBox getChildrenClipBounds() const override;
     U8G2& display() override;
 };

@@ -42,11 +42,10 @@ anim_coroutine([this](CoroutineContext& ctx) {
     CORO_END(ctx);}),
 btn_light(m_ui, 30, 2, 23, 7, image_light_auto_bits),
 btn_pump(m_ui, 42, 17, 15, 11, image_pump_auto_bits),
-brace_plant(m_ui, 3, 24, 29, 24)
+brace_plant(m_ui, 3, 24, 29, 24),
+plant(m_ui, 4, 1, 21, 23, image_plant_bits)
 {
-        brace_plant.setDrawContentFunction([this]() {
-            m_ui.getU8G2().drawXBMP(7,25, 21, 23, image_plant_bits);
-        });
+        brace_plant.addChild(plant);
 
         btn_light.setCallback([this]() {
             state_lamp = static_cast<ControlState> (!(bool)state_lamp);

@@ -1,4 +1,5 @@
 #include "PixelUI.h"
+#include "widgets/brace/brace.h"
 
 namespace {
 
@@ -22,12 +23,18 @@ public:
         selectionCount_ = &count;
     }
 
+    void setDrawLog(int* log, size_t& count) {
+        drawLog_ = log;
+        drawCount_ = &count;
+    }
+
     int32_t screenX = -1;
     int32_t screenY = -1;
     FocusBox receivedClip = {0, 0, 0, 0};
 
 private:
     void drawSelf(const WidgetRenderContext& context) override {
+        if (drawLog_ && drawCount_) drawLog_[(*drawCount_)++] = id_;
         const FocusBox bounds = getLocalBounds();
         screenX = context.originX + bounds.x;
         screenY = context.originY + bounds.y;
@@ -40,6 +47,35 @@ private:
     int id_ = 0;
     int* selectionLog_ = nullptr;
     size_t* selectionCount_ = nullptr;
+    int* drawLog_ = nullptr;
+    size_t* drawCount_ = nullptr;
+};
+
+class LayeredProbe : public IWidget {
+public:
+    LayeredProbe(
+        PixelUI& ui,
+        const FocusBox& bounds,
+        const FocusBox& childrenClip,
+        int* drawLog,
+        size_t& drawCount)
+        : ui_(ui), childrenClip_(childrenClip), drawLog_(drawLog), drawCount_(drawCount) {
+        setWidgetBounds(bounds);
+    }
+
+    void onLoad() override {}
+    void onOffload() override {}
+
+private:
+    PixelUI& ui_;
+    FocusBox childrenClip_;
+    int* drawLog_;
+    size_t& drawCount_;
+
+    void drawSelf(const WidgetRenderContext&) override { drawLog_[drawCount_++] = 1; }
+    void drawOverlay(const WidgetRenderContext&) override { drawLog_[drawCount_++] = 3; }
+    FocusBox getChildrenClipBounds() const override { return childrenClip_; }
+    U8G2& display() override { return ui_.getU8G2(); }
 };
 
 } // namespace
@@ -172,6 +208,34 @@ int main() {
     contextualRoot.draw(popupContext);
     if (!(contextualRoot.receivedClip == popupContext.clip)) return 36;
     if (!(contextualChild.receivedClip == FocusBox{45, 22, 20, 16})) return 37;
+
+    int drawLog[3] = {};
+    size_t drawCount = 0;
+    LayeredProbe layered(ui, {10, 8, 30, 20}, {12, 10, 6, 7}, drawLog, drawCount);
+    ProbeWidget layeredChild(ui, 1, 1, 4, 4, 2);
+    layeredChild.setDrawLog(drawLog, drawCount);
+    if (!layered.addChild(layeredChild)) return 38;
+    layered.draw();
+    if (drawCount != 3U || drawLog[0] != 1 || drawLog[1] != 2 || drawLog[2] != 3) return 39;
+    if (!(layeredChild.receivedClip == FocusBox{12, 10, 6, 7})) return 40;
+
+    Brace animatedBrace(ui, 5, 6, 20, 10);
+    ProbeWidget braceChild(ui, 1, 1, 4, 4);
+    if (!animatedBrace.addChild(braceChild)) return 41;
+    animatedBrace.draw();
+    if (braceChild.screenX != -1) return 42;
+
+    bool braceSelected = false;
+    animatedBrace.setFocusable(true);
+    animatedBrace.setCallback([&braceSelected]() { braceSelected = true; });
+    if (animatedBrace.onSelect() || !braceSelected || !animatedBrace.isFocusable()) return 43;
+
+    animatedBrace.onLoad();
+    ui.Heartbeat(600);
+    ui.process();
+    animatedBrace.draw();
+    if (braceChild.screenX != 6 || braceChild.screenY != 7) return 44;
+    if (!(braceChild.receivedClip == FocusBox{5, 6, 20, 10})) return 45;
 
     return 0;
 }

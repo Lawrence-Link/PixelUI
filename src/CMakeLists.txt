@@ -28,6 +28,7 @@ add_library(pixelui STATIC
     widgets/histogram/histogram.cpp
     widgets/IWidget.cpp
     widgets/brace/brace.cpp
+    widgets/bitmap/bitmap_widget.cpp
     widgets/icon_button/icon_button.cpp
     widgets/text_button/text_button.cpp
     widgets/num_scroll/num_scroll.cpp

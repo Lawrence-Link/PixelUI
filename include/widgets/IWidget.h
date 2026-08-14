@@ -76,6 +76,8 @@ protected:
     void setFocusBox(const FocusBox& box) { focus_ = box; }
     void setWidgetBounds(const FocusBox& bounds) { bounds_ = bounds; }
     virtual void drawSelf(const WidgetRenderContext& context) = 0;
+    virtual void drawOverlay(const WidgetRenderContext&) {}
+    virtual FocusBox getChildrenClipBounds() const { return bounds_; }
     virtual U8G2& display() = 0;
 
     void setClipWindow(const WidgetRenderContext& context, const FocusBox& localClip);

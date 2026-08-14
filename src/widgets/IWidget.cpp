@@ -143,6 +143,7 @@ void IWidget::drawTree(const WidgetRenderContext& parentContext) {
     if (!visible_ || parentContext.clip.w <= 0 || parentContext.clip.h <= 0) return;
 
     WidgetRenderContext context = parentContext;
+    restoreClipWindow(context);
     drawSelf(context);
     restoreClipWindow(context);
 
@@ -150,13 +151,21 @@ void IWidget::drawTree(const WidgetRenderContext& parentContext) {
     childContext.originX += bounds_.x;
     childContext.originY += bounds_.y;
     if (clipChildren_) {
+        const FocusBox childrenClip = getChildrenClipBounds();
         childContext.clip = intersectBoxes(
             context.clip,
-            {context.originX + bounds_.x, context.originY + bounds_.y, bounds_.w, bounds_.h});
+            {context.originX + childrenClip.x,
+             context.originY + childrenClip.y,
+             childrenClip.w,
+             childrenClip.h});
     }
 
     for (IWidget* child = firstChild_; child; child = child->nextSibling_) {
         child->drawTree(childContext);
         restoreClipWindow(context);
     }
+
+    restoreClipWindow(context);
+    drawOverlay(context);
+    restoreClipWindow(context);
 }
