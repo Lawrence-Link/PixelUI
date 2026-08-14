@@ -87,7 +87,7 @@ bool Clock::handleEvent(InputEvent event) { return false; }
 /**
  * @brief Draw the clock widget
  */
-U8G2& Clock::display() { return m_ui.getU8G2(); }
+Canvas& Clock::display() { return m_ui.getCanvas(); }
 
 void Clock::drawSelf(const WidgetRenderContext& context) {
     draw_origin_x_ = context.originX;
@@ -108,7 +108,7 @@ void Clock::drawSelf(const WidgetRenderContext& context) {
  * @brief Draw the dial (circle) with animation progress
  */
 void Clock::drawDial() {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
 
     if (m_dial_progress >= 360) {
         u8g2.drawCircle(draw_origin_x_ + m_x, draw_origin_y_ + m_y, m_radius); /**< Full dial */
@@ -133,7 +133,7 @@ void Clock::drawDial() {
  * @brief Draw hour marks (ticks) around the dial
  */
 void Clock::drawHourMarks() {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
 
     int visible_marks = m_marks_progress;
     if (visible_marks > 12) visible_marks = 12;
@@ -152,7 +152,7 @@ void Clock::drawHourMarks() {
  * @brief Draw hour, minute, and second hands
  */
 void Clock::drawHands() {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
 
     /**< Hour hand (with minute offset) */
     int hour_angle = (m_hour % 12) * 30 + (m_minute * 30) / 60 - 90;

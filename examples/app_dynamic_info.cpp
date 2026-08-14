@@ -59,7 +59,7 @@ public:
      * @brief Main drawing function, called to render content.
      */
     void draw() override {
-        U8G2& display = m_ui.getU8G2();
+        Canvas& display = m_ui.getCanvas();
 
         display.setFont(u8g2_font_ncenB10_tr);
         display.drawStr(40, m_titleY, "PixelUI");

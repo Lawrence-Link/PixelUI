@@ -82,7 +82,7 @@ public:
     }
 
     void draw() override {
-        U8G2& u8g2 = m_ui.getU8G2();
+        Canvas& u8g2 = m_ui.getCanvas();
         u8g2.setFont(u8g2_font_5x7_tr);
         u8g2.drawStr(4, 9, "Parent / Child");
         u8g2.drawStr(4, 16, "one root, two children");

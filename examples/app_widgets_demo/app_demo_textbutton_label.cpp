@@ -72,7 +72,7 @@ public:
     {}
 
     void draw() override {
-        U8G2& u8g2 = m_ui.getU8G2();
+        Canvas& u8g2 = m_ui.getCanvas();
 
         u8g2.drawHLine(0, 19, anim_title_bar);
 

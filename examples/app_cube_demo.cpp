@@ -124,7 +124,7 @@ void project2D(float v[3], int16_t &x2d, int16_t &y2d, int16_t screenW, int16_t 
  * @param angleX Current rotation angle around the X-axis.
  * @param angleY Current rotation angle around the Y-axis.
  */
-void drawCube(U8G2 &display, float angleX, float angleY) {
+void drawCube(Canvas& display, float angleX, float angleY) {
     // Arrays to hold the transformed 3D coordinates and the final 2D coordinates
     float transformed[8][3];
     int16_t projected[8][2];
@@ -186,7 +186,7 @@ public:
     void draw() override {
         // Signal the UI to redraw the screen
         m_ui.markDirty();
-        U8G2& display = m_ui.getU8G2();
+        Canvas& display = m_ui.getCanvas();
 
         // Draw a static title header
         display.setFont(u8g2_font_ncenB10_tr);

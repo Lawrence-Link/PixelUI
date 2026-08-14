@@ -65,14 +65,14 @@ void IconButton::onOffload() {
 /**
  * @brief Render the icon button on the screen.
  */
-U8G2& IconButton::display() { return m_ui.getU8G2(); }
+Canvas& IconButton::display() { return m_ui.getCanvas(); }
 
 void IconButton::drawSelf(const WidgetRenderContext& context) {
     if (!src) {
         return; // No image source, nothing to draw
     }
 
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
 
     // Draw XBM bitmap at current animated position
     u8g2.drawXBM(context.originX + pos_x, context.originY + pos_y, m_w, m_h, src);

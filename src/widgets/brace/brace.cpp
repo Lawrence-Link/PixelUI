@@ -97,7 +97,7 @@ void Brace::onOffload() {
 /**
  * @brief Draw the brace and its child content.
  */
-U8G2& Brace::display() { return m_ui.getU8G2(); }
+Canvas& Brace::display() { return m_ui.getCanvas(); }
 
 void Brace::drawSelf(const WidgetRenderContext&) {}
 
@@ -107,7 +107,7 @@ FocusBox Brace::getChildrenClipBounds() const {
 }
 
 void Brace::drawOverlay(const WidgetRenderContext& context) {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
     const FocusBox bounds = getLocalBounds();
 
     const int32_t tl_x = context.originX + bounds.x + anim_x;

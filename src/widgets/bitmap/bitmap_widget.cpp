@@ -27,7 +27,7 @@ void BitmapWidget::drawSelf(const WidgetRenderContext& context) {
     if (!source_) return;
 
     const FocusBox bounds = getLocalBounds();
-    ui_.getU8G2().drawXBMP(
+    ui_.getCanvas().drawXBMP(
         context.originX + bounds.x,
         context.originY + bounds.y,
         bounds.w,
@@ -35,4 +35,4 @@ void BitmapWidget::drawSelf(const WidgetRenderContext& context) {
         source_);
 }
 
-U8G2& BitmapWidget::display() { return ui_.getU8G2(); }
+Canvas& BitmapWidget::display() { return ui_.getCanvas(); }

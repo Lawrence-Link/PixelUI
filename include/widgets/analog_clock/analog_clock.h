@@ -91,7 +91,7 @@ private:
     void drawHourMarks();
     void drawHands();
     void drawSelf(const WidgetRenderContext& context) override;
-    U8G2& display() override;
+    Canvas& display() override;
 
     int32_t draw_origin_x_ = 0;
     int32_t draw_origin_y_ = 0;

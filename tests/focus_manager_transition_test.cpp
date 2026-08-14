@@ -39,7 +39,7 @@ public:
 
 private:
     void drawSelf(const WidgetRenderContext&) override {}
-    U8G2& display() override { return ui_->getU8G2(); }
+    Canvas& display() override { return ui_->getCanvas(); }
 
 public:
     void attach(PixelUI& ui) { ui_ = &ui; }

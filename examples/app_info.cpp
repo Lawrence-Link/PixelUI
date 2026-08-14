@@ -53,7 +53,7 @@ public:
      * Displays "Hello World!" in English and Chinese.
      */
     void draw() override {
-        U8G2& u8g2 = m_ui.getU8G2();
+        Canvas& u8g2 = m_ui.getCanvas();
 
         // Use a font that supports the required Chinese characters.
         u8g2.setFont(u8g2_font_unifont_t_chinese2);

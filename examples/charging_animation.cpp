@@ -63,7 +63,7 @@ public:
     // ---------------- Drawing function ----------------
     void draw() override {
         m_ui.markDirty();
-        U8G2& display = m_ui.getU8G2();
+        Canvas& display = m_ui.getCanvas();
 
         int centerX = 64 + lightningOffsetX;
         int centerY = 32;
@@ -164,7 +164,7 @@ public:
 private:
     // ---------------- Lightning drawing ----------------
     void drawChargingLightning(int size, int centerX, int centerY) {
-        U8G2 &g = m_ui.getU8G2();
+        Canvas& g = m_ui.getCanvas();
         int p1x = centerX + size * 0.4; int p1y = centerY - size * 0.6;
         int p2x = centerX - size * 0.1; int p2y = centerY - size * 0.1;
         int p3x = centerX + size * 0.35; int p3y = centerY - size * 0.1;
@@ -182,7 +182,7 @@ private:
     }
 
     // ---------------- Ring drawing ----------------
-    void drawBatteryRing(U8G2 &u8g2, int x0, int y0, int radius, int thickness, int percent) {
+    void drawBatteryRing(Canvas& u8g2, int x0, int y0, int radius, int thickness, int percent) {
         if (thickness < 1) thickness = 1;
         if (radius <= 0) return;
         if (percent <= 0) return;

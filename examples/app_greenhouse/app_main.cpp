@@ -84,7 +84,7 @@ bool Greenhouse_App::handleInput(InputEvent event) {
 
 void Greenhouse_App::draw() 
 {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
     
     u8g2.drawRFrame(58, 16, anim_w_brd, anim_h_brd, 3);
     u8g2.drawFrame(122, 1, 4, 62);  // Progress bar frame

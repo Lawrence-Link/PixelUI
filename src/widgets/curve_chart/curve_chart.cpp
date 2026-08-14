@@ -372,10 +372,10 @@ void CurveChart::calculateExpandPosition(int32_t& target_x, int32_t& target_y) {
     }
 }
 
-U8G2& CurveChart::display() { return m_ui.getU8G2(); }
+Canvas& CurveChart::display() { return m_ui.getCanvas(); }
 
 void CurveChart::drawSelf(const WidgetRenderContext& context) {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
     // tl_x and tl_y are the animated top-left corner coordinates
     int tl_x = context.originX + pos_x_ + anim_x;
     int tl_y = context.originY + pos_y_ + anim_y;
@@ -431,7 +431,7 @@ void CurveChart::drawSelf(const WidgetRenderContext& context) {
         // Calculate text position using TextAlignHelper
         // Use Top alignment for Y to position near top, Right alignment for X
         TextPos text_pos = TextAlignHelper::calcTextPos(
-            u8g2.getU8g2(),
+            u8g2.rawDisplay().getU8g2(),
             label_area,
             m_label,
             TextAlignX::Right,
@@ -452,7 +452,7 @@ void CurveChart::drawSelf(const WidgetRenderContext& context) {
  * @param height Current height of the widget.
  * @param u8g2 Reference to U8G2 for drawing.
  */
-void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, U8G2& u8g2) {
+void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, Canvas& u8g2) {
     // Return early if there's no data or the buffer is invalid
     if (m_data_count == 0) {
         return;

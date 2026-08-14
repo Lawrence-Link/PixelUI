@@ -58,5 +58,5 @@ private:
     void drawSelf(const WidgetRenderContext& context) override;
     void drawOverlay(const WidgetRenderContext& context) override;
     FocusBox getChildrenClipBounds() const override;
-    U8G2& display() override;
+    Canvas& display() override;
 };

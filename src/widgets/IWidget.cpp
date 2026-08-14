@@ -128,7 +128,7 @@ void IWidget::restoreClipWindow(const WidgetRenderContext& context) {
 }
 
 void IWidget::draw() {
-    U8G2& u8g2 = display();
+    Canvas& u8g2 = display();
     WidgetRenderContext context{0, 0, {0, 0, u8g2.getDisplayWidth(), u8g2.getDisplayHeight()}};
     drawTree(context);
     u8g2.setMaxClipWindow();

@@ -226,7 +226,7 @@ public:
      * @brief Draw a single digit with scrolling effect.
      */
     void drawScrollingDigit(int16_t x, int16_t y, DigitState& digit, bool useLargeFont, int16_t width, int16_t height) {
-        U8G2& u8g2 = m_ui.getU8G2();
+        Canvas& u8g2 = m_ui.getCanvas();
         
         int32_t digitHeight = useLargeFont ? DIGIT_HEIGHT_LARGE : DIGIT_HEIGHT_SMALL;
         
@@ -269,7 +269,7 @@ public:
     }
     
     void draw() override {
-        U8G2& u8g2 = m_ui.getU8G2();
+        Canvas& u8g2 = m_ui.getCanvas();
         
         if (isInitialized) {
             uint32_t currentTime = m_ui.getCurrentTime();

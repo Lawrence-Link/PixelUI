@@ -27,7 +27,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "U8g2lib.h"
+#include "core/canvas/Canvas.h"
 #include "core/Callbacks.h"
 #include "core/CommonTypes.h"
 
@@ -78,7 +78,7 @@ protected:
     virtual void drawSelf(const WidgetRenderContext& context) = 0;
     virtual void drawOverlay(const WidgetRenderContext&) {}
     virtual FocusBox getChildrenClipBounds() const { return bounds_; }
-    virtual U8G2& display() = 0;
+    virtual Canvas& display() = 0;
 
     void setClipWindow(const WidgetRenderContext& context, const FocusBox& localClip);
     void restoreClipWindow(const WidgetRenderContext& context);

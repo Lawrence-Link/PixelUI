@@ -40,9 +40,9 @@ void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
     m_ui.setContinousDraw(true);
 
-    U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(PIXELUI_FONT_TEXT);
-    FontHeight = u8g2.getFontAscent() - u8g2.getFontDescent();
+    Canvas& canvas = m_ui.getCanvas();
+    canvas.setFont(PIXELUI_FONT_TEXT);
+    FontHeight = canvas.getFontAscent() - canvas.getFontDescent();
     
     topVisibleIndex_ = 0;
     m_ui.getCanvas().camera().setContentHeight(m_ui.getDisplayHeight());
@@ -155,8 +155,8 @@ void ListView::updateScrollPosition() {
  * @return Screen Y position of the item including scroll offset.
  */
 int32_t ListView::calculateItemY(int itemIndex) {
-    U8G2& u8g2 = m_ui.getU8G2();
-    return topMargin_ + itemIndex * (FontHeight + spacing_) + u8g2.getFontAscent();
+    return topMargin_ + itemIndex * (FontHeight + spacing_) +
+           m_ui.getCanvas().getFontAscent();
 }
 
 /**
@@ -174,11 +174,11 @@ void ListView::scrollToTarget(){
     m_ui.getCanvas().camera().setContentHeight(contentHeight);
     updateScrollPosition();
     
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& canvas = m_ui.getCanvas();
     int32_t targetCursorY = topMargin_ + currentCursor * (FontHeight + spacing_) - 1;
     
     m_ui.animate(CursorY, targetCursorY, 150, EasingType::EASE_IN_OUT_CUBIC);
-    m_ui.animate(CursorWidth, u8g2.getUTF8Width(m_itemList[currentCursor].title) + 6, 500, EasingType::EASE_OUT_CUBIC);
+    m_ui.animate(CursorWidth, canvas.getUTF8Width(m_itemList[currentCursor].title) + 6, 500, EasingType::EASE_OUT_CUBIC);
     m_ui.animate(progress_bar_top, ((int64_t)currentCursor * 64) / (m_itemLength + 1) + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
     m_ui.animate(progress_bar_bottom, ((int64_t)1 * 64) / (m_itemLength + 1), 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
 }
@@ -329,17 +329,14 @@ bool ListView::handleInput(InputEvent event) {
  */
 void ListView::drawCursor() {
     Canvas& canvas = m_ui.getCanvas();
-    U8G2& u8g2 = m_ui.getU8G2();
     canvas.setDrawColor(2);
     canvas.drawRBox(CursorX, CursorY - 2, CursorWidth, FontHeight + 3, 0);
     canvas.setDrawColor(1);
 
-    if (!currentCursor)
-        u8g2.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width("<") - 5,
-                     m_ui.getDisplayHeight(), "<");
-    else
-        u8g2.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(">") - 5,
-                     m_ui.getDisplayHeight(), ">");
+    U8G2& overlay = canvas.rawDisplay();
+    const char* hint = currentCursor ? ">" : "<";
+    overlay.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(hint) - 5,
+                    m_ui.getDisplayHeight(), hint);
 }
 
 /**
@@ -371,7 +368,6 @@ void ListView::onExit() {
  */
 void ListView::draw() {
     Canvas& canvas = m_ui.getCanvas();
-    U8G2& u8g2 = m_ui.getU8G2();
     canvas.setFont(PIXELUI_FONT_TEXT);
     const int32_t rowHeight = FontHeight + spacing_;
     const int32_t cameraY = canvas.camera().storedY();
@@ -404,27 +400,27 @@ void ListView::draw() {
             }
 
             if (m_itemList[itemIndex].extra.text) {
-                canvas.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(m_itemList[itemIndex].extra.text) - 4, itemY, m_itemList[itemIndex].extra.text);
+                canvas.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(m_itemList[itemIndex].extra.text) - 4, itemY, m_itemList[itemIndex].extra.text);
             }
 
             // Draw integer value if present
             if (m_itemList[itemIndex].extra.intValue) {
                 char buf[16] = {0};
                 snprintf(buf, sizeof(buf), "%" PRId32, *m_itemList[itemIndex].extra.intValue);
-                canvas.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(buf) - 8, itemY, buf);
+                canvas.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(buf) - 8, itemY, buf);
             }
 
             // Draw float value if present
             if (m_itemList[itemIndex].extra.float_dot1f_Value) {
                 char buf[16] = {0};
                 snprintf(buf, sizeof(buf), "%.1f", *m_itemList[itemIndex].extra.float_dot1f_Value);
-                canvas.drawStr(m_ui.getDisplayWidth() - u8g2.getUTF8Width(buf) - 8, itemY, buf);
+                canvas.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(buf) - 8, itemY, buf);
             }
         }
     }
 
     // Draw progress bar and cursor
-    u8g2.drawVLine(126, progress_bar_top, progress_bar_bottom);
+    canvas.rawDisplay().drawVLine(126, progress_bar_top, progress_bar_bottom);
     drawCursor();
 }
 

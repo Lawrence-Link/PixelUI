@@ -43,7 +43,7 @@ private:
     POS load_pos;
     uint8_t const* m_font;
     void drawSelf(const WidgetRenderContext& context) override;
-    U8G2& display() override;
+    Canvas& display() override;
 public:
     Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM, const uint8_t* font = PIXELUI_FONT_TEXT);
     ~Label() = default;

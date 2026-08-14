@@ -56,12 +56,12 @@ void TextButton::onOffload() { }
 /**
  * @brief Render the text button.
  */
-U8G2& TextButton::display() { return m_ui.getU8G2(); }
+Canvas& TextButton::display() { return m_ui.getCanvas(); }
 
 void TextButton::drawSelf(const WidgetRenderContext& context) {
     if (!src) return;
 
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
 
     // Compute animated drawing position (centered)
     int32_t draw_x = context.originX + m_x + (m_w - anim_w) / 2;

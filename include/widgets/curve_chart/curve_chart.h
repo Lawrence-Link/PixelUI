@@ -152,9 +152,9 @@ private:
     void initializeDataBuffer();
     void updateStatistics(float new_value, float old_value, bool replacing_data);
     void recalculateExtremes();
-    void drawCuveData(int center_x, int center_y, int half_width, int half_height, U8G2& u8g2);
+    void drawCuveData(int center_x, int center_y, int half_width, int half_height, Canvas& u8g2);
     void drawSelf(const WidgetRenderContext& context) override;
-    U8G2& display() override;
+    Canvas& display() override;
 
     bool is_expanded = false;
 };

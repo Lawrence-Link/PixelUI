@@ -73,7 +73,7 @@ public:
 
     void draw() override {
 
-        U8G2& u8g2 = m_ui.getU8G2();
+        Canvas& u8g2 = m_ui.getCanvas();
 
         if (!once_flag) {
             once_flag = true;

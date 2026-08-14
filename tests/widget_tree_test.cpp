@@ -41,7 +41,7 @@ private:
         receivedClip = context.clip;
     }
 
-    U8G2& display() override { return ui_.getU8G2(); }
+    Canvas& display() override { return ui_.getCanvas(); }
 
     PixelUI& ui_;
     int id_ = 0;
@@ -75,7 +75,7 @@ private:
     void drawSelf(const WidgetRenderContext&) override { drawLog_[drawCount_++] = 1; }
     void drawOverlay(const WidgetRenderContext&) override { drawLog_[drawCount_++] = 3; }
     FocusBox getChildrenClipBounds() const override { return childrenClip_; }
-    U8G2& display() override { return ui_.getU8G2(); }
+    Canvas& display() override { return ui_.getCanvas(); }
 };
 
 } // namespace

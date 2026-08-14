@@ -24,5 +24,5 @@ private:
     const unsigned char* source_ = nullptr;
 
     void drawSelf(const WidgetRenderContext& context) override;
-    U8G2& display() override;
+    Canvas& display() override;
 };

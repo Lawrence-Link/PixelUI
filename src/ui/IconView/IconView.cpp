@@ -224,7 +224,7 @@ void IconView::updateProgressBar() {
  * @brief Draw the title text centered at the top of the display.
  */
 void IconView::drawTitle() {
-    U8G2& display = ui_.getU8G2();
+    Canvas& display = ui_.getCanvas();
     display.setFont(PIXELUI_FONT_SMALL);
     int titleWidth = display.getStrWidth(title_.c_str());
     display.drawStr((ui_.getDisplayWidth() - titleWidth) / 2, titleY_, title_.c_str());
@@ -234,7 +234,7 @@ void IconView::drawTitle() {
  * @brief Draw the animated progress bar at the bottom.
  */
 void IconView::drawProgressBar() {
-    U8G2& display = ui_.getU8G2();
+    Canvas& display = ui_.getCanvas();
     for (int i = 0; i <= static_cast<int>(animation_pixel_dots); i++) {
         display.drawPixel(i * 2, 49);
     }
@@ -246,7 +246,7 @@ void IconView::drawProgressBar() {
  */
 void IconView::drawStatusText() {
     if (items_.empty()) return;
-    U8G2& display = ui_.getU8G2();
+    Canvas& display = ui_.getCanvas();
     char statusText[32];
     snprintf(statusText, sizeof(statusText), "%d/%d", currentIndex_ + 1, (int)items_.size());
     display.setFont(PIXELUI_FONT_TINY);
@@ -258,7 +258,7 @@ void IconView::drawStatusText() {
  */
 void IconView::drawSelectedItemTitle() {
     if (items_.empty()) return;
-    U8G2& display = ui_.getU8G2();
+    Canvas& display = ui_.getCanvas();
     const auto& currentItem = items_[currentIndex_];
     display.setFont(font_title);
     int titleWidth = display.getUTF8Width(currentItem.title);
@@ -271,7 +271,7 @@ void IconView::drawSelectedItemTitle() {
 void IconView::drawHorizontalIconList() {
     if (items_.empty()) {
         // Show a fallback message if no icons exist.
-        U8G2& display = ui_.getU8G2();
+        Canvas& display = ui_.getCanvas();
         display.setFont(PIXELUI_FONT_TINY);
         display.drawStr(centerX_ - 20, iconY_ + 16, "No Items");
         return;
@@ -294,7 +294,7 @@ void IconView::drawHorizontalIconList() {
  * @param y Y coordinate of icon.
  */
 void IconView::drawIcon(const IconItem& item, int x, int y) {
-    U8G2& display = ui_.getU8G2();
+    Canvas& display = ui_.getCanvas();
     if (item.bitmap) {
         // Center 24x24 bitmap within icon area.
         int iconX = x + (iconWidth_ - 24) / 2;
@@ -325,7 +325,7 @@ void IconView::initializeSlotPositions() {
  * @param length Total side length of the selector square.
  */
 void IconView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
-    U8G2& display = ui_.getU8G2();
+    Canvas& display = ui_.getCanvas();
     int half_length = 0.5 * length;
 
     // Draw corner-style selector lines.

@@ -96,7 +96,7 @@ private:
     static constexpr uint32_t TIMEOUT_MS = 5000;
 
     void drawSelf(const WidgetRenderContext& context) override;
-    U8G2& display() override;
+    Canvas& display() override;
 
     void incrementValue();
     void decrementValue();

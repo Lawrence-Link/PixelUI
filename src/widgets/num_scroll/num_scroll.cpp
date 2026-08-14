@@ -153,10 +153,10 @@ bool NumScroll::handleEvent(InputEvent event) {
 /**
  * @brief Render the scrollable number widget.
  */
-U8G2& NumScroll::display() { return m_ui.getU8G2(); }
+Canvas& NumScroll::display() { return m_ui.getCanvas(); }
 
 void NumScroll::drawSelf(const WidgetRenderContext& context) {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
 
     // Compute animated drawing area (centered)
     int32_t draw_x = context.originX + m_x + (m_w - anim_w) / 2;

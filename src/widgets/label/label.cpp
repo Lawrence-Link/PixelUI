@@ -48,7 +48,7 @@ Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, 
  *        based on alignment and triggers slide-in animation.
  */
 void Label::onLoad() {
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
     u8g2.setFont(m_font);
 
     // Calculate font height
@@ -89,12 +89,12 @@ void Label::onOffload() {
 /**
  * @brief Render the label text on screen with clipping to avoid overflow.
  */
-U8G2& Label::display() { return m_ui.getU8G2(); }
+Canvas& Label::display() { return m_ui.getCanvas(); }
 
 void Label::drawSelf(const WidgetRenderContext& context) {
     if (!src) return;
 
-    U8G2& u8g2 = m_ui.getU8G2();
+    Canvas& u8g2 = m_ui.getCanvas();
     u8g2.setFont(m_font);
 
     // Compute font metrics

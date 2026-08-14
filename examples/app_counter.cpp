@@ -95,7 +95,7 @@ private:
     PixelUI& ui_;
 
     void drawSelf(const WidgetRenderContext& context) override {
-        U8G2& u8g2 = ui_.getU8G2();
+        Canvas& u8g2 = ui_.getCanvas();
         u8g2.setFont(u8g2_font_5x7_tr);
         u8g2.drawStr(context.originX + 27, context.originY + 9, "10.00");
         u8g2.drawStr(context.originX + 28, context.originY + 16, "uSv/h");
@@ -105,7 +105,7 @@ private:
         u8g2.setDrawColor(1);
     }
 
-    U8G2& display() override { return ui_.getU8G2(); }
+    Canvas& display() override { return ui_.getCanvas(); }
 };
 
 } // namespace
@@ -285,7 +285,7 @@ public:
         }
 
         // --- UI DRAWING ---
-        U8G2& u8g2 = m_ui.getU8G2();
+        Canvas& u8g2 = m_ui.getCanvas();
 
         // Draw seperation with animated clipping
         u8g2.setClipWindow(0, 7, anim_bg, 18);
@@ -325,7 +325,6 @@ public:
 
         // Conditional drawing for histogram expanded view (STATS screen)
         if (histogram.isExpanded()) {
-            u8g2.clearBuffer(); // Clear the buffer for the stats view
             u8g2.drawStr(3, 10, "<STATS>");
             u8g2.drawStr(3, 20, "Max:");
             u8g2.drawStr(3, 30, "1.45uSv/h");
