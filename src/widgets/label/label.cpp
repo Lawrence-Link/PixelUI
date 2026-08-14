@@ -39,8 +39,8 @@ Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, 
     : m_ui(ui), m_x(x), m_y(y), src(content), load_pos(pos), m_font(font)
 {
     setFocusable(true);
+    setFocusInsets({1, 1, 1, 1});
     setWidgetBounds({m_x, m_y, m_w, m_h});
-    setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
 }
 
 /**

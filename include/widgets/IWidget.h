@@ -55,7 +55,7 @@ private:
     bool visible_ = true;
     bool enabled_ = true;
     bool clipChildren_ = true;
-    FocusBox focus_ = {0, 0, 0, 0};
+    FocusInsets focusInsets_ = {};
     FocusBox bounds_ = {0, 0, 0, 0};
 
     IWidget* parent_ = nullptr;
@@ -73,7 +73,8 @@ protected:
     bool m_is_active = false;
     uint32_t m_last_interaction_time = 0;
 
-    void setFocusBox(const FocusBox& box) { focus_ = box; }
+    void setFocusInsets(const FocusInsets& insets) { focusInsets_ = insets; }
+    void setFocusBox(const FocusBox& box);
     void setWidgetBounds(const FocusBox& bounds) { bounds_ = bounds; }
     virtual void drawSelf(const WidgetRenderContext& context) = 0;
     virtual void drawOverlay(const WidgetRenderContext&) {}
@@ -136,5 +137,6 @@ public:
 
     FocusBox getLocalBounds() const { return bounds_; }
     FocusBox getScreenBounds() const;
+    FocusInsets getFocusInsets() const { return focusInsets_; }
     FocusBox getFocusBox() const;
 };

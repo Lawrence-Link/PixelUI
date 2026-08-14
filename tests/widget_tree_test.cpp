@@ -28,6 +28,9 @@ public:
         drawCount_ = &count;
     }
 
+    void configureFocusInsets(const FocusInsets& insets) { setFocusInsets(insets); }
+    void setBounds(const FocusBox& bounds) { setWidgetBounds(bounds); }
+
     int32_t screenX = -1;
     int32_t screenY = -1;
     FocusBox receivedClip = {0, 0, 0, 0};
@@ -236,6 +239,25 @@ int main() {
     animatedBrace.draw();
     if (braceChild.screenX != 6 || braceChild.screenY != 7) return 44;
     if (!(braceChild.receivedClip == FocusBox{5, 6, 20, 10})) return 45;
+
+    ProbeWidget insetWidget(ui, 10, 12, 20, 8);
+    if (!(insetWidget.getFocusInsets() == FocusInsets{})) return 46;
+    if (!(insetWidget.getFocusBox() == FocusBox{10, 12, 20, 8})) return 47;
+
+    insetWidget.configureFocusInsets({1, 2, 3, 4});
+    if (!(insetWidget.getFocusBox() == FocusBox{11, 14, 16, 2})) return 48;
+    insetWidget.setBounds({20, 30, 4, 3});
+    if (!(insetWidget.getFocusBox() == FocusBox{21, 32, 0, 0})) return 49;
+
+    insetWidget.configureFocusInsets({-1, -2, -3, -4});
+    if (!(insetWidget.getFocusBox() == FocusBox{19, 28, 8, 9})) return 50;
+
+    ProbeWidget insetParent(ui, 7, 9, 40, 20);
+    if (!insetParent.addChild(insetWidget)) return 51;
+    if (!(insetWidget.getFocusBox() == FocusBox{26, 37, 8, 9})) return 52;
+
+    if (!(animatedBrace.getFocusInsets() == FocusInsets{1, 1, 0, 0})) return 53;
+    if (!(animatedBrace.getFocusBox() == FocusBox{6, 7, 19, 9})) return 54;
 
     return 0;
 }

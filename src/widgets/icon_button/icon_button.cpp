@@ -40,8 +40,8 @@ IconButton::IconButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t
     src(source)
 {
     setFocusable(true);
+    setFocusInsets({-1, -1, -1, -1});
     setWidgetBounds({pos_x, pos_y, m_w, m_h});
-    IWidget::setFocusBox(FocusBox(pos_x - 1, pos_y - 1, m_w + 2, m_h + 2));
 }
 
 /**

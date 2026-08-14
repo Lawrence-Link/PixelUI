@@ -71,12 +71,10 @@ public:
     void setSize(uint16_t mar_w, uint16_t mar_h) { 
         size_w_ = mar_w; size_h_ = mar_h; 
         setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
-        setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
     }
     void setPosition(uint16_t pos_x, uint16_t pos_y) { 
         pos_x_ = pos_x; pos_y_ = pos_y;
         setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
-        setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
     }
 
     bool isExpanded() const { return is_expanded; }

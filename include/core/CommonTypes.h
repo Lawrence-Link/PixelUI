@@ -75,3 +75,16 @@ struct FocusBox {
         return (x == other.x && y == other.y && w == other.w && h == other.h);
     }
 };
+
+// Positive values contract the focus box; negative values expand it.
+struct FocusInsets {
+    int32_t left = 0;
+    int32_t top = 0;
+    int32_t right = 0;
+    int32_t bottom = 0;
+
+    bool operator==(const FocusInsets& other) const {
+        return left == other.left && top == other.top &&
+               right == other.right && bottom == other.bottom;
+    }
+};

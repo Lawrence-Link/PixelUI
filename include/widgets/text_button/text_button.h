@@ -50,8 +50,8 @@ public:
         : m_ui(ui), m_x(x), m_y(y), m_w(w), m_h(h), src(text)
     {
         setFocusable(true);
+        setFocusInsets({1, 1, 1, 1});
         setWidgetBounds({m_x, m_y, m_w, m_h});
-        setFocusBox({m_x, m_y, m_w, m_h});
     }
     ~TextButton() override = default;
 
@@ -65,12 +65,10 @@ public:
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y; 
         setWidgetBounds({m_x, m_y, m_w, m_h});
-        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2)); // reconfigure the focusbox
     }
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h; 
         setWidgetBounds({m_x, m_y, m_w, m_h});
-        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2)); // reconfigure the focusbux
     }
     void setText(const char* text) { src = text; }
 };

@@ -104,8 +104,24 @@ FocusBox IWidget::getScreenBounds() const {
     return result;
 }
 
+void IWidget::setFocusBox(const FocusBox& box) {
+    focusInsets_ = {
+        box.x - bounds_.x,
+        box.y - bounds_.y,
+        bounds_.x + bounds_.w - box.x - box.w,
+        bounds_.y + bounds_.h - box.y - box.h
+    };
+}
+
 FocusBox IWidget::getFocusBox() const {
-    FocusBox result = focus_;
+    FocusBox result = {
+        bounds_.x + focusInsets_.left,
+        bounds_.y + focusInsets_.top,
+        bounds_.w - focusInsets_.left - focusInsets_.right,
+        bounds_.h - focusInsets_.top - focusInsets_.bottom
+    };
+    if (result.w < 0) result.w = 0;
+    if (result.h < 0) result.h = 0;
     for (const IWidget* current = parent_; current; current = current->parent_) {
         result.x += current->bounds_.x;
         result.y += current->bounds_.y;
@@ -128,10 +144,10 @@ void IWidget::restoreClipWindow(const WidgetRenderContext& context) {
 }
 
 void IWidget::draw() {
-    Canvas& u8g2 = display();
-    WidgetRenderContext context{0, 0, {0, 0, u8g2.getDisplayWidth(), u8g2.getDisplayHeight()}};
+    Canvas& canvas = display();
+    WidgetRenderContext context{0, 0, {0, 0, canvas.getDisplayWidth(), canvas.getDisplayHeight()}};
     drawTree(context);
-    u8g2.setMaxClipWindow();
+    canvas.setMaxClipWindow();
 }
 
 void IWidget::draw(const WidgetRenderContext& context) {

@@ -51,12 +51,10 @@ public:
     void setPosition(uint16_t x, uint16_t y) {
         pos_x = x; pos_y = y;
         setWidgetBounds({pos_x, pos_y, m_w, m_h});
-        IWidget::setFocusBox(FocusBox(pos_x - 1, pos_y - 1, m_w + 2, m_h + 2));
     };
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h;
         setWidgetBounds({pos_x, pos_y, m_w, m_h});
-        IWidget::setFocusBox(FocusBox(pos_x - 1, pos_y - 1, m_w + 2, m_h + 2));
     }
     void setSource(const unsigned char* source) {src = source;};
 };

@@ -38,9 +38,6 @@ void TextButton::onLoad() {
     anim_x = center_x;
     anim_y = center_y;
 
-    // Set focus box slightly inside the widget
-    setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
-
     // Animate width and height expansion from the center
     m_ui.animate(anim_w, anim_h,
                  m_w, m_h,

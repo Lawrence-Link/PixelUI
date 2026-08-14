@@ -88,8 +88,15 @@ void PopupValueDigits::drawContent(const PopupContentBounds& bounds) {
         u8g2.drawUTF8(bounds.centerX - titleWidth / 2, bounds.centerY - 7, title_);
     }
 
+    // Popup geometry is screen-fixed, while NumScroll draws through the
+    // camera-aware Canvas. Express the screen bounds in canvas coordinates so
+    // Canvas translates the digits back onto the popup without changing the
+    // underlying application's camera state.
+    const CanvasCamera& camera = ui().getCanvas().camera();
     const WidgetRenderContext context{
-        0, 0, {bounds.x, bounds.y, bounds.width, bounds.height}};
+        camera.x(), camera.y(),
+        {bounds.x + camera.x(), bounds.y + camera.y(),
+         bounds.width, bounds.height}};
     for (uint8_t i = 0; i < digitCount_; ++i) digits_[i]->draw(context);
     setContentClip(bounds);
     focusManager_.draw();

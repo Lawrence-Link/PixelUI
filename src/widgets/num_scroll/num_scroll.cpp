@@ -46,12 +46,12 @@ NumScroll::NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h
  }
 
 void NumScroll::updateGeometry() {
-    setWidgetBounds({m_x, m_y, m_w, m_h});
     if (presentation_ == Presentation::Bare) {
-        setFocusBox(FocusBox(m_x + 2, m_y + m_h - 2, m_w - 4, 2));
+        setFocusInsets({2, static_cast<int32_t>(m_h) - 2, 2, 0});
     } else {
-        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
+        setFocusInsets({1, 1, 1, 1});
     }
+    setWidgetBounds({m_x, m_y, m_w, m_h});
 }
 
 /**

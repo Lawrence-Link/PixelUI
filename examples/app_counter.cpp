@@ -285,51 +285,51 @@ public:
         }
 
         // --- UI DRAWING ---
-        Canvas& u8g2 = m_ui.getCanvas();
-
-        // Draw seperation with animated clipping
-        u8g2.setClipWindow(0, 7, anim_bg, 18);
-        u8g2.drawXBM(0, 7, 128, 10, image_Background_bits);
-        u8g2.setMaxClipWindow();
-
-        // Draw "MEAS" label
-        u8g2.setFont(u8g2_font_5x7_tr);
-        u8g2.drawStr(5, 42, "MEAS");
-        
-        // Draw status text ("PLEASE WAIT") with animated clipping
-        u8g2.setClipWindow(29, 36, 83, 42);
-        u8g2.drawStr(anim_status_x, 42, "PLEASE WAIT");
-        u8g2.setMaxClipWindow();
-
-        // Draw animated measurement mark box (color 2 is XOR mode)
-        u8g2.setDrawColor(2);
-        u8g2.drawBox(3, 35, anim_mark_m, 8);
-        u8g2.setDrawColor(1); // Restore to foreground color
-
-        // Draw placeholder reading
-        u8g2.setFont(u8g2_font_profont17_tr);
-        u8g2.drawStr(3, 31, "-.-- uSv/h");
-
-        // Draw count data labels
-        u8g2.setFont(u8g2_font_4x6_tr);
-        u8g2.drawStr(100, 32, "CPM");
-        u8g2.drawStr(100, 39, "0000");
-        // histogram.setData(s_static_data_buffer, 25, 0); // deprecated method
+        Canvas& canvas = m_ui.getCanvas();
 
         // Draw all widgets
-        icon_sounding.draw();
-        icon_alarm.draw();
-        icon_alert.draw();
-        icon_battery.draw();
-        brace.draw();
+
+        if (!histogram.isExpanded()) {
+            // Draw "MEAS" label
+            canvas.setFont(u8g2_font_5x7_tr);
+            canvas.drawStr(5, 42, "MEAS");
+            
+            // Draw status text ("PLEASE WAIT") with animated clipping
+            canvas.setClipWindow(29, 36, 83, 42);
+            canvas.drawStr(anim_status_x, 42, "PLEASE WAIT");
+            canvas.setMaxClipWindow();
+
+            // Draw animated measurement mark box (color 2 is XOR mode)
+            canvas.setDrawColor(2);
+            canvas.drawBox(3, 35, anim_mark_m, 8);
+            canvas.setDrawColor(1); // Restore to foreground color
+
+            // Draw placeholder reading
+            canvas.setFont(u8g2_font_profont17_tr);
+            canvas.drawStr(3, 31, "-.-- uSv/h");
+
+            // Draw count data labels
+            canvas.setFont(u8g2_font_4x6_tr);
+            canvas.drawStr(100, 32, "CPM");
+            canvas.drawStr(100, 39, "0000");
+
+            canvas.setClipWindow(0, 7, anim_bg, 18);
+            canvas.drawXBM(0, 7, 128, 10, image_Background_bits);
+            canvas.setMaxClipWindow();
+
+            icon_sounding.draw();
+            icon_alarm.draw();
+            icon_alert.draw();
+            icon_battery.draw();
+            brace.draw();
+        } else {
 
         // Conditional drawing for histogram expanded view (STATS screen)
-        if (histogram.isExpanded()) {
-            u8g2.drawStr(3, 10, "<STATS>");
-            u8g2.drawStr(3, 20, "Max:");
-            u8g2.drawStr(3, 30, "1.45uSv/h");
-            u8g2.drawStr(3, 40, "Min:");
-            u8g2.drawStr(3, 50, "0.25uSv/h");
+            canvas.drawStr(3, 10, "<STATS>");
+            canvas.drawStr(3, 20, "Max:");
+            canvas.drawStr(3, 30, "1.45uSv/h");
+            canvas.drawStr(3, 40, "Min:");
+            canvas.drawStr(3, 50, "0.25uSv/h");
         }
         histogram.draw();
     }

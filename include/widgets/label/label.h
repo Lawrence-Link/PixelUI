@@ -55,13 +55,11 @@ public:
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y;
         setWidgetBounds({m_x, m_y, m_w, m_h});
-        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
     };
 
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h;
         setWidgetBounds({m_x, m_y, m_w, m_h});
-        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
     }
     
     void setText(const char* source) {src = source;};

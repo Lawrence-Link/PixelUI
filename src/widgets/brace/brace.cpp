@@ -35,6 +35,7 @@
 Brace::Brace(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h) : 
     m_ui(ui)
 {
+    setFocusInsets({1, 1, 0, 0});
     updateBounds({pos_x, pos_y, size_w, size_h});
     const int32_t start_anim_x = size_w / 2;
     const int32_t start_anim_y = size_h / 2;
@@ -48,12 +49,6 @@ Brace::Brace(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint1
 
 void Brace::updateBounds(const FocusBox& bounds) {
     setWidgetBounds(bounds);
-    setFocusBox({
-        bounds.x + 1,
-        bounds.y + 1,
-        bounds.w > 1 ? bounds.w - 1 : 0,
-        bounds.h > 1 ? bounds.h - 1 : 0
-    });
 }
 
 void Brace::setSize(uint16_t width, uint16_t height) {

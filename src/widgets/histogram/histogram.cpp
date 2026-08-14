@@ -67,6 +67,7 @@ Histogram::Histogram(
     m_buffer_size(static_cast<int>(buffer_size)),
     m_label(label)
 {
+    setFocusInsets({1, 1, 0, 0});
     setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
     // pos_x_ and pos_y_ now represent the top-left anchor point.
     int32_t start_anim_x = (size_w_ / 2);
@@ -78,7 +79,6 @@ Histogram::Histogram(
     anim_x = start_anim_x;
     anim_y = start_anim_y;
 
-    setFocusBox(FocusBox(pos_x_ + 1, pos_y_ + 1, size_w_ - 1, size_h_ - 1));
 }
 
 /**

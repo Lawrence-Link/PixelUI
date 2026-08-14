@@ -1,6 +1,7 @@
 #include "PixelUI.h"
 #include "core/animation/animation.h"
 #include "ui/Popup/PopupValueDigits.h"
+#include <string.h>
 
 namespace {
 
@@ -53,22 +54,37 @@ int main() {
 
     ui.Heartbeat(200);
     popup.update(ui.getCurrentTime());
+
+    uint8_t unscrolledFrame[1024] = {};
+    display.clearBuffer();
+    popup.draw();
+    memcpy(unscrolledFrame, u8g2_GetBufferPtr(display.getU8g2()),
+           ui.getDisplayBufferSize());
+
+    ui.getCanvas().camera().setEnabled(true);
+    ui.getCanvas().camera().setContentHeight(128);
+    ui.getCanvas().camera().setY(32);
+    display.clearBuffer();
+    popup.draw();
+    if (memcmp(unscrolledFrame, u8g2_GetBufferPtr(display.getU8g2()),
+               ui.getDisplayBufferSize()) != 0) return 2;
+
     popup.handleInput(InputEvent::RIGHT);
     popup.handleInput(InputEvent::SELECT);
     popup.handleInput(InputEvent::RIGHT);
-    if (value != 1123 || callbackCount != 1 || callbackValue != 1123) return 2;
+    if (value != 1123 || callbackCount != 1 || callbackValue != 1123) return 3;
 
     popup.handleInput(InputEvent::BACK);
     popup.handleInput(InputEvent::RIGHT);
     popup.handleInput(InputEvent::SELECT);
     popup.handleInput(InputEvent::LEFT);
-    if (value != 1023 || callbackCount != 2 || callbackValue != 1023) return 3;
+    if (value != 1023 || callbackCount != 2 || callbackValue != 1023) return 4;
 
     int32_t clamped = 1234567;
     PopupValueDigits sixDigits(ui, 100, 40, clamped, 6, "", 0);
-    if (clamped != 999999) return 4;
+    if (clamped != 999999) return 5;
     if (PopupValueDigits::isValidDigitCount(0) ||
-        PopupValueDigits::isValidDigitCount(MAX_INT_FIXED_WIDTH + 1U)) return 5;
+        PopupValueDigits::isValidDigitCount(MAX_INT_FIXED_WIDTH + 1U)) return 6;
 
     return 0;
 }
