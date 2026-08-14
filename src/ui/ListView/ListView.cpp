@@ -41,7 +41,7 @@ void ListView::onEnter(ExitCallback exitCallback){
     m_ui.setContinousDraw(true);
 
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(u8g2_font_wqy12_t_gb2312b);
+    u8g2.setFont(PIXELUI_FONT_TEXT_BOLD);
     FontHeight = u8g2.getFontAscent() - u8g2.getFontDescent();
     
     topVisibleIndex_ = 0;
@@ -353,7 +353,7 @@ void ListView::onExit() {
  */
 void ListView::draw() {
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(u8g2_font_wqy12_t_gb2312b); 
+    u8g2.setFont(PIXELUI_FONT_TEXT_BOLD);
     int startIndex = etl::max((int32_t)0, topVisibleIndex_ - 2);
     int endIndex = etl::min(m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
     

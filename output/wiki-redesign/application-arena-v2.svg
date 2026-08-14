@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <defs>
+    <pattern id="grid" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="#555" stroke-width="1"/></pattern>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V8" stroke="#aaa" stroke-width="3"/></pattern>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#f5f5f5"/></marker>
+    <style>
+      .label{font:700 18px Menlo,'PingFang SC',monospace;fill:#f5f5f5;letter-spacing:0}
+      .small{font:14px Menlo,'PingFang SC',monospace;fill:#d8d8d8;letter-spacing:0}
+      .tiny{font:12px Menlo,'PingFang SC',monospace;fill:#aaa;letter-spacing:0}
+      .wire{fill:none;stroke:#f5f5f5;stroke-width:2;stroke-linecap:square;stroke-linejoin:miter}
+    </style>
+  </defs>
+  <rect width="960" height="540" fill="#050505"/>
+  <rect x="936" width="24" height="540" fill="#f5f5f5"/>
+  <text x="948" y="23" transform="rotate(90 948 23)" font-family="Menlo,monospace" font-size="14" fill="#050505">DOCUMENTATION</text>
+  <text class="label" x="904" y="38" text-anchor="end" font-size="24">ApplicationStack / 固定 App 内存区</text>
+  <text class="tiny" x="904" y="61" text-anchor="end">4096 bytes, aligned placement construction, LIFO rollback</text>
+
+  <text class="label" x="45" y="113">arena bytes</text>
+  <text class="tiny" x="853" y="112" text-anchor="end">0 ................................. 4096</text>
+
+  <!-- raw byte strip -->
+  <g transform="translate(47 137)">
+    <rect x="0" y="0" width="806" height="116" fill="url(#grid)" stroke="#fff" stroke-width="3"/>
+    <rect x="3" y="3" width="181" height="110" fill="#356aa0"/>
+    <rect x="184" y="3" width="43" height="110" fill="url(#hatch)"/>
+    <rect x="227" y="3" width="278" height="110" fill="#6846bd"/>
+    <path d="M505 3h298v110H505" fill="url(#grid)"/>
+    <text x="91" y="66" text-anchor="middle" font-family="Menlo,monospace" font-size="23" font-weight="700" fill="#fff">App A</text>
+    <text x="205" y="66" text-anchor="middle" font-family="Menlo,monospace" font-size="12" font-weight="700" fill="#050505" transform="rotate(-90 205 66)">pad</text>
+    <text x="366" y="66" text-anchor="middle" font-family="Menlo,monospace" font-size="23" font-weight="700" fill="#fff">App B</text>
+    <text x="654" y="66" text-anchor="middle" font-family="Menlo,monospace" font-size="22" font-weight="700" fill="#fff">free space</text>
+    <path d="M0 119v13M184 119v13M227 119v13M505 119v13M806 119v13" stroke="#fff" stroke-width="2"/>
+  </g>
+
+  <!-- marker annotations -->
+  <path class="wire" d="M48 273v36" marker-end="url(#arr)"/>
+  <text class="small" x="47" y="332" fill="#35a7ff">marker A</text>
+  <path class="wire" d="M274 273v36" marker-end="url(#arr)"/>
+  <text class="small" x="252" y="332" fill="#8d63ff">marker B</text>
+  <path class="wire" d="M552 273v36" marker-end="url(#arr)"/>
+  <text class="small" x="492" y="332" fill="#43d17a">current offset</text>
+  <path d="M206 258c12 12 19 19 28 37" fill="none" stroke="#ff3b30" stroke-width="2"/>
+  <text class="tiny" x="145" y="303" fill="#ff3b30">alignof(B)</text>
+
+  <!-- metadata is shown as an annotated record, not UI cards -->
+  <text class="label" x="47" y="386">metadata × MAX_VIEW_DEPTH (8)</text>
+  <path d="M47 405H790" stroke="#fff" stroke-width="2"/>
+  <circle cx="82" cy="429" r="8" fill="#35a7ff"/>
+  <text class="small" x="101" y="435">App pointer</text>
+  <path d="M219 429h64" stroke="#777" stroke-width="2"/>
+  <circle cx="304" cy="429" r="8" fill="#8d63ff"/>
+  <text class="small" x="323" y="435">marker</text>
+  <path d="M403 429h64" stroke="#777" stroke-width="2"/>
+  <circle cx="488" cy="429" r="8" fill="#ff3b30"/>
+  <text class="small" x="507" y="435">end offset</text>
+  <path d="M620 429h64" stroke="#777" stroke-width="2"/>
+  <circle cx="705" cy="429" r="8" fill="#43d17a"/>
+  <text class="small" x="724" y="435">destroy thunk</text>
+
+  <text class="tiny" x="48" y="486"><tspan fill="#43d17a">push:</tspan><tspan dx="10">align → check → construct → commit</tspan></text>
+  <text class="tiny" x="404" y="486"><tspan fill="#ff3b30">pop:</tspan><tspan dx="10">destroy concrete T → restore marker</tspan></text>
+  <path d="M47 499c132 16 255 14 365 0" fill="none" stroke="#43d17a" stroke-width="2"/>
+  <path d="M402 499c144 17 279 15 431-1" fill="none" stroke="#ff3b30" stroke-width="2"/>
+
+  <g transform="translate(807 458)">
+    <rect x="0" y="0" width="30" height="30" fill="#fff"/><rect x="6" y="6" width="6" height="6" fill="#050505"/><rect x="19" y="6" width="6" height="6" fill="#050505"/><rect x="11" y="18" width="14" height="7" fill="#050505"/>
+    <text x="38" y="19" font-family="Menlo,monospace" font-size="19" font-weight="700" fill="#fff">Pixel UI</text>
+  </g>
+</svg>

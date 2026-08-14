@@ -6,6 +6,7 @@
 
 #include "PopupBase.h"
 #include "U8g2lib.h"
+#include "config.h"
 
 /**
  * @class PopupInfo
@@ -34,7 +35,7 @@ private:
 public:
     PopupInfo(PixelUI& ui, uint16_t width, uint16_t height, 
               const char* text, const char* title = "", uint16_t duration = 3000,
-              const uint8_t* font = u8g2_font_wqy12_t_gb2312);
+              const uint8_t* font = PIXELUI_FONT_TEXT);
     ~PopupInfo() = default;
     
     void drawContent(const PopupContentBounds& bounds) override;

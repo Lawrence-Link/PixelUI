@@ -445,7 +445,7 @@ void Histogram::drawSelf(const WidgetRenderContext& context) {
 
     // Draw label if provided (positioned in the top-right area)
     if (m_label != nullptr) {
-        u8g2.setFont(u8g2_font_4x6_tr);
+        u8g2.setFont(PIXELUI_FONT_CHART);
         
         // Define label area in top-right corner (matching original offset logic)
         Rect label_area = {

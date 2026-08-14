@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <defs>
+    <pattern id="pixels" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="2" height="2" fill="#fff" opacity=".22"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0L8 4L0 8Z" fill="#f5f5f5"/>
+    </marker>
+    <style>
+      .label{font:700 18px Menlo,'PingFang SC',monospace;fill:#f5f5f5;letter-spacing:0}
+      .small{font:14px Menlo,'PingFang SC',monospace;fill:#d8d8d8;letter-spacing:0}
+      .tiny{font:12px Menlo,'PingFang SC',monospace;fill:#aaa;letter-spacing:0}
+      .wire{fill:none;stroke:#f5f5f5;stroke-width:2;stroke-linecap:square;stroke-linejoin:miter}
+    </style>
+  </defs>
+  <rect width="960" height="540" fill="#050505"/>
+  <rect x="936" width="24" height="540" fill="#f5f5f5"/>
+  <text x="948" y="23" transform="rotate(90 948 23)" font-family="Menlo,monospace" font-size="14" fill="#050505">DOCUMENTATION</text>
+
+  <text class="label" x="905" y="38" text-anchor="end" font-size="24">PixelUI / 架构心智模型</text>
+  <text class="tiny" x="905" y="61" text-anchor="end">time, input and pixels meet in one loop</text>
+
+  <!-- time source -->
+  <text class="small" x="42" y="116">Heartbeat(ms)</text>
+  <path d="M44 152h32l9-28 16 57 17-44 14 15h46" fill="none" stroke="#ff3b30" stroke-width="4" stroke-linejoin="bevel"/>
+  <text class="tiny" x="44" y="202">time + update flag</text>
+  <path class="wire" d="M181 152C242 152 270 133 338 148" marker-end="url(#arrow)"/>
+
+  <!-- input source -->
+  <text class="small" x="42" y="272">handleInput()</text>
+  <g transform="translate(48 293)" fill="none" stroke="#f5f5f5" stroke-width="3">
+    <path d="M20 0v18M11 9h18"/>
+    <rect x="0" y="28" width="40" height="25"/>
+    <path d="M57 8h28M71-6v28" stroke="#35a7ff"/>
+    <circle cx="98" cy="40" r="7" fill="#35a7ff" stroke="none"/>
+    <circle cx="124" cy="40" r="7" fill="#ff3b30" stroke="none"/>
+  </g>
+  <text class="tiny" x="48" y="372">buttons / encoder</text>
+  <path class="wire" d="M184 324C248 324 272 300 339 284" marker-end="url(#arrow)"/>
+
+  <!-- central OLED / renderer -->
+  <g>
+    <path d="M359 103h263l22 22v201l-22 22H359l-22-22V125Z" fill="#080808" stroke="#f5f5f5" stroke-width="4"/>
+    <path d="M351 117h279v217H351Z" fill="url(#pixels)" stroke="#666" stroke-width="1"/>
+    <text x="490" y="153" text-anchor="middle" font-family="Menlo,monospace" font-size="21" font-weight="700" fill="#fff">PixelUI::renderer()</text>
+    <path d="M411 189h158" stroke="#fff" stroke-width="2"/>
+    <text class="small" x="397" y="222"><tspan fill="#8d63ff">01</tspan><tspan dx="14">update managers</tspan></text>
+    <text class="small" x="397" y="252"><tspan fill="#35a7ff">02</tspan><tspan dx="14">draw current App</tspan></text>
+    <text class="small" x="397" y="282"><tspan fill="#ff3b30">03</tspan><tspan dx="14">Popup + Focus</tspan></text>
+    <text class="small" x="397" y="312"><tspan fill="#43d17a">04</tspan><tspan dx="14">U8g2 sendBuffer</tspan></text>
+    <rect x="626" y="126" width="8" height="8" fill="#fff"/>
+    <rect x="346" y="317" width="7" height="7" fill="#fff"/>
+  </g>
+
+  <!-- manager annotations -->
+  <path d="M645 170C701 151 727 121 776 112" class="wire"/>
+  <circle cx="782" cy="110" r="6" fill="#8d63ff"/>
+  <text class="label" x="800" y="116">Animation</text>
+  <path d="M645 215C715 208 749 203 796 196" class="wire"/>
+  <circle cx="802" cy="195" r="6" fill="#ff3b30"/>
+  <text class="label" x="820" y="201">Popup</text>
+  <path d="M645 258C703 269 728 283 774 289" class="wire"/>
+  <circle cx="781" cy="290" r="6" fill="#43d17a"/>
+  <text class="label" x="799" y="296">Coroutine</text>
+  <path d="M645 301C693 321 719 348 768 367" class="wire"/>
+  <circle cx="775" cy="370" r="6" fill="#35a7ff"/>
+  <text class="label" x="793" y="376">Focus</text>
+
+  <!-- input priority, treated as a handwritten footnote rather than cards -->
+  <text class="label" x="42" y="433">输入先问谁？</text>
+  <path d="M46 472h116" stroke="#35a7ff" stroke-width="5"/>
+  <text class="small" x="47" y="463">Focus</text>
+  <path class="wire" d="M171 471h74" marker-end="url(#arrow)"/>
+  <path d="M257 472h116" stroke="#ff3b30" stroke-width="5"/>
+  <text class="small" x="258" y="463">Popup</text>
+  <path class="wire" d="M383 471h74" marker-end="url(#arrow)"/>
+  <path d="M469 472h116" stroke="#f5f5f5" stroke-width="5"/>
+  <text class="small" x="470" y="463">top App</text>
+  <text class="tiny" x="614" y="476">handled? stop here.</text>
+  <path d="M604 466c13-10 18 13 30 2" fill="none" stroke="#ff3b30" stroke-width="2"/>
+
+  <!-- simple PixelUI signature -->
+  <g transform="translate(800 454)">
+    <rect x="0" y="0" width="34" height="34" fill="#fff"/>
+    <rect x="6" y="6" width="6" height="6" fill="#050505"/><rect x="22" y="6" width="6" height="6" fill="#050505"/>
+    <rect x="12" y="18" width="16" height="10" fill="#050505"/>
+    <text x="43" y="20" font-family="Menlo,monospace" font-size="21" font-weight="700" fill="#fff">Pixel</text>
+    <text x="43" y="43" font-family="Menlo,monospace" font-size="21" font-weight="700" fill="#fff">UI</text>
+  </g>
+</svg>

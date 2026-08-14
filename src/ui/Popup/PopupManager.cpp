@@ -3,6 +3,7 @@
  */
 
 #include "ui/Popup/PopupManager.h"
+#if PIXELUI_USE_POPUP
 #include "PixelUI.h"
 
 PopupManager::~PopupManager() {
@@ -21,6 +22,7 @@ bool PopupManager::enqueue(Request&& request) {
     return active_ != nullptr;
 }
 
+#if PIXELUI_USE_POPUP_INFO
 bool PopupManager::enqueueInfo(uint16_t width, uint16_t height,
                                const char* text, const char* title,
                                uint16_t duration, const uint8_t* font) {
@@ -38,7 +40,9 @@ bool PopupManager::enqueueInfo(uint16_t width, uint16_t height,
     request.font = font;
     return enqueue(etl::move(request));
 }
+#endif
 
+#if PIXELUI_USE_POPUP_PROGRESS
 bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
                                    int32_t& value, int32_t minValue,
                                    int32_t maxValue, const char* title,
@@ -57,7 +61,9 @@ bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
     request.useApparentValue = useApparentValue;
     return enqueue(etl::move(request));
 }
+#endif
 
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
 bool PopupManager::enqueueValueDigits(uint16_t width, uint16_t height,
                                       int32_t& value, uint8_t digitCount,
                                       const char* title, uint16_t duration,
@@ -74,6 +80,7 @@ bool PopupManager::enqueueValueDigits(uint16_t width, uint16_t height,
     request.callback = etl::move(callback);
     return enqueue(etl::move(request));
 }
+#endif
 
 void PopupManager::activateNext() {
     if ((active_ != nullptr) || requests_.empty()) {
@@ -85,11 +92,14 @@ void PopupManager::activateNext() {
 
     dispatching_ = true;
     switch (request.type) {
+#if PIXELUI_USE_POPUP_INFO
         case RequestType::Info:
             active_ = activePool_.create<PopupInfo>(
                 ui_, request.width, request.height, request.text,
                 request.title, request.duration, request.font);
             break;
+#endif
+#if PIXELUI_USE_POPUP_PROGRESS
         case RequestType::Progress:
             active_ = activePool_.create<PopupProgress>(
                 ui_, request.width, request.height, *request.value,
@@ -97,10 +107,15 @@ void PopupManager::activateNext() {
                 request.duration, etl::move(request.callback),
                 request.useApparentValue);
             break;
+#endif
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
         case RequestType::ValueDigits:
             active_ = activePool_.create<PopupValueDigits>(
                 ui_, request.width, request.height, *request.value, request.digitCount,
                 request.title, request.duration, etl::move(request.callback));
+            break;
+#endif
+        case RequestType::None:
             break;
     }
     dispatching_ = false;
@@ -162,3 +177,4 @@ bool PopupManager::handleTopPopupInput(InputEvent event) {
     dispatching_ = false;
     return handled;
 }
+#endif

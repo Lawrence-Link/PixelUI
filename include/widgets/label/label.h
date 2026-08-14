@@ -45,7 +45,7 @@ private:
     void drawSelf(const WidgetRenderContext& context) override;
     U8G2& display() override;
 public:
-    Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM, const uint8_t* font = u8g2_font_wqy12_t_gb2312);
+    Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM, const uint8_t* font = PIXELUI_FONT_TEXT);
     ~Label() = default;
     void onLoad() override;
     void onOffload() override;

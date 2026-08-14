@@ -27,19 +27,32 @@
 #pragma once
 
 #include "U8g2lib.h"
-#include "core/animation/animation.h"
+#include "config.h"
 #include "core/Callbacks.h"
-#include "core/coroutine/Coroutine.h"
 #include "core/IInputHandler.h"
 #include "core/ViewManager/ViewManager.h"
-#include "focus/focus.h"
 #include "ui/IDrawable.h"
-#include "ui/Popup/PopupManager.h"
 #include "core/CommonTypes.h"
-#include "config.h"
 #include <etl/atomic.h>
 #include <etl/inplace_function.h>
 
+#if PIXELUI_USE_ANIMATION
+#include "core/animation/animation.h"
+#endif
+
+#if PIXELUI_USE_COROUTINE
+#include "core/coroutine/Coroutine.h"
+#endif
+
+#if PIXELUI_USE_FOCUS
+#include "focus/focus.h"
+#endif
+
+#if PIXELUI_USE_POPUP
+#include "ui/Popup/PopupManager.h"
+#endif
+
+class Coroutine;
 class IWidget;
 
 /**
@@ -62,16 +75,37 @@ public:
 
     void addCoroutine(Coroutine* coroutine);
     void removeCoroutine(Coroutine* coroutine);
-    void clearAllCoroutines() { m_coroutineScheduler.clear(); }
+    void clearAllCoroutines() {
+#if PIXELUI_USE_COROUTINE
+        m_coroutineScheduler.clear();
+#endif
+    }
     
-    size_t getActiveCoroutineCount() { return m_coroutineScheduler.getActiveCount(); }
+    size_t getActiveCoroutineCount() {
+#if PIXELUI_USE_COROUTINE
+        return m_coroutineScheduler.getActiveCount();
+#else
+        return 0U;
+#endif
+    }
     size_t getFocusedWidgetCount() const;
 
-    /**
-     * @brief Main update loop to be called periodically.
-     * @param ms Time elapsed since the last call.
-     */
+    /** @brief Compatibility tick entry; prefer tickFromISR() on embedded hosts. */
     void Heartbeat(uint32_t ms);
+
+    /**
+     * @brief ISR-safe time input: atomically accumulates elapsed milliseconds.
+     *
+     * This function never reads or updates UI managers. The configured notify
+     * hook runs only when the pending tick total changes from zero to nonzero.
+     */
+    void tickFromISR(uint32_t elapsedMs);
+
+    /**
+     * @brief Consumes pending ticks and updates all managers on the UI task.
+     * @return true if elapsed time was consumed.
+     */
+    bool process();
     
     // animation related functions.
     
@@ -108,22 +142,61 @@ public:
     /**
      * @brief Clears all unprotected animations.
      */
-    void clearUnprotectedAnimations() { m_animationManager.clearUnprotected(); }
+    void clearUnprotectedAnimations() {
+#if PIXELUI_USE_ANIMATION
+        m_animationManager.clearUnprotected();
+#endif
+    }
     
     /**
      * @brief Clears all animations.
      */
-    void clearAllAnimations() { m_animationManager.clear(); }
-    void clearAnimationProtection() { m_animationManager.clearAllProtectionMarks(); }
-    size_t activeAnimationCount() const { return m_animationManager.activeCount(); }
+    void clearAllAnimations() {
+#if PIXELUI_USE_ANIMATION
+        m_animationManager.clear();
+#endif
+    }
+    void clearAnimationProtection() {
+#if PIXELUI_USE_ANIMATION
+        m_animationManager.clearAllProtectionMarks();
+#endif
+    }
+    size_t activeAnimationCount() const {
+#if PIXELUI_USE_ANIMATION
+        return m_animationManager.activeCount();
+#else
+        return 0U;
+#endif
+    }
 
-    uint32_t getCurrentTime() const { return _currentTime; }
+    uint32_t getCurrentTime() const {
+        return _currentTime + pendingTickMs_.load(etl::memory_order_acquire);
+    }
 
     // setters
     void setRefreshCallback(VoidCallback function) { if (function) m_refresh_callback = function; }
+    /**
+     * @brief Sets a coalesced wake-up notification for clean-to-dirty changes.
+     *
+     * The callback should post or signal host-loop work; it must not call
+     * renderer() synchronously from inside a PixelUI mutation.
+     */
+    void setRenderRequestCallback(VoidCallback function);
+    /**
+     * @brief Installs the ISR-to-UI-task notification hook.
+     *
+     * Configure this before enabling the timer interrupt and do not replace it
+     * while the ISR can run. The function must be an ISR-safe platform API.
+     */
+    void setTaskNotifyFromISR(IsrTaskNotifyFunction function, void* context = nullptr);
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
     void clearInputCallback() { inputCallback_ = nullptr; }
-    void setContinousDraw(bool isEnabled) { continousMode_ = isEnabled; };
+    void setContinuousDraw(bool isEnabled) {
+        continousMode_ = isEnabled;
+        if (isEnabled) markDirty();
+    }
+    // Backward-compatible spelling retained for existing applications.
+    void setContinousDraw(bool isEnabled) { setContinuousDraw(isEnabled); }
     void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
     
     // TBD:
@@ -135,8 +208,18 @@ public:
         return const_cast<ViewManager*>(&m_viewManager);
     }
 
-    size_t popupCount() const { return m_popupManager.getPopupCounts(); }
-    void clearPopups() { m_popupManager.clearPopups(); }
+    size_t popupCount() const {
+#if PIXELUI_USE_POPUP
+        return m_popupManager.getPopupCounts();
+#else
+        return 0U;
+#endif
+    }
+    void clearPopups() {
+#if PIXELUI_USE_POPUP
+        m_popupManager.clearPopups();
+#endif
+    }
 
     // popup related functions
 
@@ -197,7 +280,30 @@ public:
     /**
      * @brief Marks the display buffer as dirty, forcing a redraw.
      */
-    void markDirty() { isDirty_ = true; }
+    void markDirty();
+
+    /**
+     * @brief Returns true when time-driven UI work still needs Heartbeat calls.
+     *
+     * An event loop may stop its periodic UI timer while this returns false and
+     * wake it again when an input/data event starts an animation, Popup, fade,
+     * coroutine, or continuous drawing.
+     */
+    bool needsHeartbeat() const;
+
+    /**
+     * @brief Returns the host timer delay recommended by the configured policy.
+     *
+     * With tickless disabled this always returns periodicTickMs. With tickless
+     * enabled it returns WAIT_FOREVER while no time-driven work is active.
+     */
+    uint32_t nextWakeupMs(uint32_t periodicTickMs) const;
+    static constexpr uint32_t WAIT_FOREVER = UINT32_MAX;
+
+    /**
+     * @brief Returns true when renderer() has work that may produce a frame.
+     */
+    bool hasPendingFrame() const;
     /**
      * @brief Marks the UI as fading out.
      */
@@ -211,11 +317,15 @@ public:
     /**
      * @brief The main rendering function.
      */
-    void renderer();
+    bool renderer();
 
     friend class ViewManager;
+#if PIXELUI_USE_POPUP
     friend class PopupManager;
+#endif
+#if PIXELUI_USE_FOCUS
     friend class FocusManager;
+#endif
 
 protected:
     void setDrawable(IDrawable* drawable) { currentDrawable_ = drawable; }
@@ -224,20 +334,31 @@ protected:
 private:
     U8G2& u8g2_;
 
+#if PIXELUI_USE_ANIMATION
     AnimationManager m_animationManager;
+#endif
+#if PIXELUI_USE_POPUP
     PopupManager m_popupManager;
+#endif
+#if PIXELUI_USE_COROUTINE
     CoroutineScheduler m_coroutineScheduler;
+#endif
+#if PIXELUI_USE_FOCUS
     FocusManager m_focusManager;
+#endif
 
     uint32_t _currentTime = 0;
     IDrawable* currentDrawable_ = nullptr;
-    etl::atomic<bool> update_symbol_{false};
+    etl::atomic<uint32_t> pendingTickMs_{0U};
 
-    bool isDirty_ = false;
+    etl::atomic<bool> isDirty_{false};
     bool isFading_ = false;
     bool continousMode_ = false;
 
     VoidCallback m_refresh_callback = nullptr;
+    VoidCallback m_render_request_callback = nullptr;
+    IsrTaskNotifyFunction m_taskNotifyFromISR_ = nullptr;
+    void* m_taskNotifyContext_ = nullptr;
     DelayFunction m_func_delay = nullptr;
     InputCallback inputCallback_ = nullptr;
 

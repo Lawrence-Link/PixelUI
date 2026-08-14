@@ -26,6 +26,7 @@
 
 #include "ui/Popup/PopupBase.h"
 #include "PixelUI.h"
+#include "core/animation/animation.h"
 
 /**
  * @brief Construct a PopupBase object

@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <defs>
+    <pattern id="fade" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="3" height="3" fill="#fff"/><rect x="5" y="5" width="2" height="2" fill="#8d63ff"/>
+    </pattern>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#f5f5f5"/></marker>
+    <style>
+      .label{font:700 18px Menlo,'PingFang SC',monospace;fill:#f5f5f5;letter-spacing:0}
+      .small{font:14px Menlo,'PingFang SC',monospace;fill:#d8d8d8;letter-spacing:0}
+      .tiny{font:12px Menlo,'PingFang SC',monospace;fill:#aaa;letter-spacing:0}
+      .wire{fill:none;stroke:#f5f5f5;stroke-width:2;stroke-linecap:square;stroke-linejoin:miter}
+    </style>
+  </defs>
+  <rect width="960" height="540" fill="#050505"/>
+  <rect x="936" width="24" height="540" fill="#f5f5f5"/>
+  <text x="948" y="23" transform="rotate(90 948 23)" font-family="Menlo,monospace" font-size="14" fill="#050505">DOCUMENTATION</text>
+  <text class="label" x="904" y="38" text-anchor="end" font-size="24">ViewManager / App 生命周期</text>
+  <text class="tiny" x="904" y="61" text-anchor="end">push, fade, enter, pop and deterministic cleanup</text>
+
+  <text class="label" x="42" y="104">PUSH B</text>
+  <text class="tiny" x="42" y="124">A stays alive below the new page</text>
+
+  <!-- App A screen -->
+  <g transform="translate(56 151)">
+    <path d="M0 0h146l12 12v111l-12 12H0l-12-12V12Z" fill="#050505" stroke="#fff" stroke-width="3"/>
+    <text x="72" y="45" text-anchor="middle" font-family="Menlo,monospace" font-size="34" font-weight="700" fill="#35a7ff">A</text>
+    <path d="M26 70h92M26 88h66" stroke="#fff" stroke-width="5"/>
+    <text class="tiny" x="16" y="119">active / drawable</text>
+  </g>
+  <text class="small" x="62" y="310" fill="#35a7ff">A.onPause()</text>
+
+  <path class="wire" d="M219 218C249 196 268 189 300 191" marker-end="url(#arr)"/>
+  <text class="tiny" x="238" y="177">construct B in arena</text>
+
+  <!-- stacked A+B -->
+  <g transform="translate(318 145)">
+    <path d="M-17 17h123v105H-17" fill="none" stroke="#35a7ff" stroke-width="3"/>
+    <path d="M0 0h123l12 12v103l-12 12H0l-12-12V12Z" fill="#050505" stroke="#fff" stroke-width="3"/>
+    <text x="61" y="55" text-anchor="middle" font-family="Menlo,monospace" font-size="38" font-weight="700" fill="#fff">B</text>
+    <path d="M24 76h76M24 94h48" stroke="#fff" stroke-width="5"/>
+    <text class="tiny" x="16" y="115">pendingEnter</text>
+  </g>
+
+  <path class="wire" d="M463 210C492 190 510 187 542 190" marker-end="url(#arr)"/>
+  <text class="tiny" x="487" y="174">fade frames</text>
+
+  <!-- fade screen -->
+  <g transform="translate(559 145)">
+    <path d="M0 0h123l12 12v103l-12 12H0l-12-12V12Z" fill="url(#fade)" stroke="#8d63ff" stroke-width="3"/>
+    <path d="M5 110L117 14" stroke="#050505" stroke-width="8"/>
+    <text x="62" y="73" text-anchor="middle" font-family="Menlo,monospace" font-size="17" font-weight="700" fill="#050505">FADE</text>
+  </g>
+
+  <path class="wire" d="M704 210C733 191 750 191 781 194" marker-end="url(#arr)"/>
+  <text class="small" x="746" y="173" fill="#43d17a">complete</text>
+
+  <!-- B entered -->
+  <g transform="translate(798 145)">
+    <path d="M0 0h84l12 12v103l-12 12H0l-12-12V12Z" fill="#050505" stroke="#43d17a" stroke-width="3"/>
+    <text x="42" y="55" text-anchor="middle" font-family="Menlo,monospace" font-size="38" font-weight="700" fill="#43d17a">B</text>
+    <path d="M17 76h51M17 94h38" stroke="#fff" stroke-width="5"/>
+  </g>
+  <text class="small" x="778" y="309" fill="#43d17a">B.onEnter()</text>
+
+  <!-- pop path as a sweeping return line -->
+  <path d="M864 339C842 424 714 442 631 441C501 440 397 434 282 443C190 450 116 437 93 392" fill="none" stroke="#ff3b30" stroke-width="3" marker-end="url(#arr)"/>
+  <text class="label" x="798" y="373" fill="#ff3b30">POP B</text>
+  <text class="small" x="646" y="416">B.onExit()</text>
+  <text class="small" x="464" y="416">clear refs</text>
+  <text class="small" x="292" y="416">destroy B</text>
+  <text class="small" x="70" y="473" fill="#35a7ff">A.onResume()</text>
+  <path d="M618 423l-8 26M450 423l-5 21M282 423l-5 22" stroke="#fff" stroke-width="2"/>
+
+  <!-- reentrancy note -->
+  <g transform="translate(396 475)">
+    <path d="M0 9h29" stroke="#fff" stroke-width="2" marker-end="url(#arr)"/>
+    <path d="M8 0l16 18M24 0L8 18" stroke="#ff3b30" stroke-width="3"/>
+    <text class="tiny" x="41" y="14">nested push/pop → TransitionInProgress</text>
+  </g>
+
+  <g transform="translate(807 459)">
+    <rect x="0" y="0" width="30" height="30" fill="#fff"/><rect x="6" y="6" width="6" height="6" fill="#050505"/><rect x="19" y="6" width="6" height="6" fill="#050505"/><rect x="11" y="18" width="14" height="7" fill="#050505"/>
+    <text x="38" y="19" font-family="Menlo,monospace" font-size="19" font-weight="700" fill="#fff">Pixel UI</text>
+  </g>
+</svg>

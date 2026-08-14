@@ -49,7 +49,7 @@ using SelectionCallback = etl::inplace_function<void(int index, const IconItem& 
 // IconView is now a complete, standalone view component.
 class IconView : public IApplication {
 public:
-    IconView(PixelUI& ui, const uint8_t * font = u8g2_font_wqy12_t_gb2312);
+    IconView(PixelUI& ui, const uint8_t * font = PIXELUI_FONT_TEXT);
     ~IconView() = default;
 
     // --- IApplication Interface Implementation ---

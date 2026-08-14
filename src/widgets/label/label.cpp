@@ -95,7 +95,7 @@ void Label::drawSelf(const WidgetRenderContext& context) {
     if (!src) return;
 
     U8G2& u8g2 = m_ui.getU8G2();
-    u8g2.setFont(u8g2_font_wqy12_t_gb2312);
+    u8g2.setFont(PIXELUI_FONT_TEXT);
 
     // Compute font metrics
     int8_t font_ascent = u8g2.getAscent();

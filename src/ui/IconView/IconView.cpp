@@ -225,7 +225,7 @@ void IconView::updateProgressBar() {
  */
 void IconView::drawTitle() {
     U8G2& display = ui_.getU8G2();
-    display.setFont(u8g2_font_5x7_mf);
+    display.setFont(PIXELUI_FONT_SMALL);
     int titleWidth = display.getStrWidth(title_.c_str());
     display.drawStr((display.getWidth() - titleWidth) / 2, titleY_, title_.c_str());
 }
@@ -249,7 +249,7 @@ void IconView::drawStatusText() {
     U8G2& display = ui_.getU8G2();
     char statusText[32];
     snprintf(statusText, sizeof(statusText), "%d/%d", currentIndex_ + 1, (int)items_.size());
-    display.setFont(u8g2_font_tom_thumb_4x6_mf);
+    display.setFont(PIXELUI_FONT_TINY);
     display.drawStr(2, 60, statusText);
 }
 
@@ -272,7 +272,7 @@ void IconView::drawHorizontalIconList() {
     if (items_.empty()) {
         // Show a fallback message if no icons exist.
         U8G2& display = ui_.getU8G2();
-        display.setFont(u8g2_font_tom_thumb_4x6_mf);
+        display.setFont(PIXELUI_FONT_TINY);
         display.drawStr(centerX_ - 20, iconY_ + 16, "No Items");
         return;
     }

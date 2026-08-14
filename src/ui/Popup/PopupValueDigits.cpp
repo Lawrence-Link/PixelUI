@@ -84,7 +84,7 @@ void PopupValueDigits::synchronizeValue() {
 void PopupValueDigits::drawContent(const PopupContentBounds& bounds) {
     U8G2& u8g2 = ui().getU8G2();
     if (title_ && title_[0] != '\0') {
-        u8g2.setFont(u8g2_font_wqy12_t_gb2312);
+        u8g2.setFont(PIXELUI_FONT_TEXT);
         const int16_t titleWidth = u8g2.getUTF8Width(title_);
         u8g2.drawUTF8(bounds.centerX - titleWidth / 2, bounds.centerY - 7, title_);
     }

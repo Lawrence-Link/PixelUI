@@ -35,9 +35,11 @@ void ViewManager::attachInputRouter() {
             return false;
         }
 
+#if PIXELUI_USE_POPUP
         if (m_ui.popupCount() > 0U) {
             return m_ui.m_popupManager.handleTopPopupInput(event);
         }
+#endif
 
         IApplication* current = m_applicationStack.top();
         return (current != nullptr) ? current->handleInput(event) : false;

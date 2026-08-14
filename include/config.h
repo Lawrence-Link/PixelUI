@@ -26,82 +26,76 @@
 
 #pragma once
 
-#include <stddef.h>
+/* Define PIXELUI_CONFIG_PATH globally to use a complete external config file. */
+#ifdef PIXELUI_CONFIG_PATH
 
-// Maximum number of concurrent animations allowed in the system
-constexpr int MAX_ANIMATION_COUNT = 35; 
+#include PIXELUI_CONFIG_PATH
 
-// Maximum length of text strings for widgets that contains text
-constexpr int MAX_TEXT_LENGTH = 30;
+#else
 
-// Maximum number of apps that can be registered
-constexpr int MAX_APP_NUM = 11;
+/* Feature modules. Keep these values identical in the library and firmware. */
+#define PIXELUI_USE_ANIMATION           1
+#define PIXELUI_USE_POPUP               1
+#define PIXELUI_USE_COROUTINE           1
+#define PIXELUI_USE_FOCUS               1
 
-// Maximum number of applications held by the view stack
-constexpr int MAX_VIEW_DEPTH = 8;
+/* Power policy. 0 keeps the host's periodic timer; 1 allows idle tick suppression. */
+#ifndef PIXELUI_ENABLE_TICKLESS
+#define PIXELUI_ENABLE_TICKLESS          0
+#endif
 
-// Fixed LIFO storage shared by all live applications.
-constexpr size_t APPLICATION_ARENA_SIZE = 4096;
-constexpr size_t APPLICATION_ARENA_MAX_ALIGNMENT = 64;
+/* Popup types. PopupValueDigits also requires Focus. */
+#define PIXELUI_USE_POPUP_INFO          1
+#define PIXELUI_USE_POPUP_PROGRESS      1
+#define PIXELUI_USE_POPUP_VALUE_DIGITS  1
 
-// Maximum number of items displayed by an IconView
-constexpr int MAX_ICONVIEW_ITEMS = MAX_APP_NUM;
+/* Font roles. Replace the WQY fonts when full Chinese coverage is unnecessary. */
+#define PIXELUI_FONT_TEXT       u8g2_font_wqy12_t_gb2312
+#define PIXELUI_FONT_TEXT_BOLD  u8g2_font_wqy12_t_gb2312b
+#define PIXELUI_FONT_SMALL      u8g2_font_5x7_mf
+#define PIXELUI_FONT_TINY       u8g2_font_tom_thumb_4x6_mf
+#define PIXELUI_FONT_NUMERIC    u8g2_font_tenfatguys_tn
+#define PIXELUI_FONT_CHART      u8g2_font_4x6_tr
 
-// Inline storage reserved for callbacks and captured lambdas
-constexpr int CALLBACK_STORAGE_SIZE = 32;
+/* Fixed-capacity storage. All memory is reserved statically. */
+#define PIXELUI_MAX_ANIMATION_COUNT             35
+#define PIXELUI_MAX_TEXT_LENGTH                 30
+#define PIXELUI_MAX_APP_NUM                     11
+#define PIXELUI_MAX_VIEW_DEPTH                   8
+#define PIXELUI_APPLICATION_ARENA_SIZE        4096
+#define PIXELUI_APPLICATION_ARENA_MAX_ALIGNMENT 64
+#define PIXELUI_CALLBACK_STORAGE_SIZE           32
+#define PIXELUI_MAX_APPVIEW_SLOT_NUM            10
+#define PIXELUI_MAX_ICONVIEW_ITEMS              11
+#define PIXELUI_MAX_LISTVIEW_SLOT_NUM           30
+#define PIXELUI_MAX_LISTITEM_NAME_NUM           30
+#define PIXELUI_LISTVIEW_ITEMS_PER_PAGE          4
+#define PIXELUI_MAX_LISTVIEW_DEPTH               6
+#define PIXELUI_CALLBACK_ANIMATION_STACK_SIZE     2
+#define PIXELUI_MAX_POPUP_NUM                     3
+#define PIXELUI_MAX_ONSCREEN_WIDGET_NUM           6
+#define PIXELUI_MAX_INT_FIXED_WIDTH               6
+#define PIXELUI_MAX_COROUTINE_NUM                10
 
-// Maximum slots in a single AppView
-constexpr int MAX_APPVIEW_SLOT_NUM = 10;
+/* Input mapping. */
+#define FOCUS_MANAGER_NAVI_PREV    InputEvent::LEFT
+#define FOCUS_MANAGER_NAVI_NEXT    InputEvent::RIGHT
+#define FOCUS_MANAGER_NAVI_SELECT  InputEvent::SELECT
 
-// Maximum slots in a ListView
-constexpr int MAX_LISTVIEW_SLOT_NUM = 30;
+#define LISTVIEW_NAVI_UP            InputEvent::LEFT
+#define LISTVIEW_NAVI_DOWN          InputEvent::RIGHT
+#define LISTVIEW_NAVI_SELECT        InputEvent::SELECT
+#define LISTVIEW_NAVI_BACK          InputEvent::BACK
 
-// Maximum number of characters in a ListItem name
-constexpr int MAX_LISTITEM_NAME_NUM = 30;
+#define ICONVIEW_NAVI_LEFT          InputEvent::LEFT
+#define ICONVIEW_NAVI_RIGHT         InputEvent::RIGHT
+#define ICONVIEW_NAVI_SELECT        InputEvent::SELECT
+#define ICONVIEW_NAVI_BACK          InputEvent::BACK
 
-// Number of items shown per page in a ListView
-constexpr int LISTVIEW_ITEMS_PER_PAGE = 4;
+#define NUMSCROLL_NAVI_UP           InputEvent::RIGHT
+#define NUMSCROLL_NAVI_DOWN         InputEvent::LEFT
+#define NUMSCROLL_NAVI_SELECT       InputEvent::SELECT
 
-// Maximum depth of nested ListViews
-constexpr int MAX_LISTVIEW_DEPTH = 6;
+#endif
 
-// Stack size for callback animations (for internal coroutine/animation safety)
-constexpr int CALLBACK_ANIMATION_STACK_SIZE = 2;
-
-// Maximum number of active plus pending Popup requests
-constexpr int MAX_POPUP_NUM = 3;
-
-// Maximum number of widgets displayed on screen at the same time
-constexpr int MAX_ONSCREEN_WIDGET_NUM = 6;
-
-// Maximum width (number of digits) for fixed-width integer display
-constexpr int MAX_INT_FIXED_WIDTH = 6;
-
-constexpr int MAX_COROUTINE_NUM = 10; // Maximum number of concurrent coroutines allowed in the system
-
-
-/* Input Event Router */
-
-/* FocusManager */
-#define FOCUS_MANAGER_NAVI_PREV     InputEvent::LEFT
-#define FOCUS_MANAGER_NAVI_NEXT     InputEvent::RIGHT
-#define FOCUS_MANAGER_NAVI_SELECT   InputEvent::SELECT
-
-/* ListView */
-#define LISTVIEW_NAVI_UP         InputEvent::LEFT
-#define LISTVIEW_NAVI_DOWN       InputEvent::RIGHT
-#define LISTVIEW_NAVI_SELECT     InputEvent::SELECT
-#define LISTVIEW_NAVI_BACK       InputEvent::BACK
-// #define LISTVIEW_NAVI_LEFT       InputEvent::LEFT
-// #define LISTVIEW_NAVI_RIGHT      InputEvent::RIGHT
-
-/* IconView */
-#define ICONVIEW_NAVI_LEFT     InputEvent::LEFT
-#define ICONVIEW_NAVI_RIGHT    InputEvent::RIGHT
-#define ICONVIEW_NAVI_SELECT   InputEvent::SELECT
-#define ICONVIEW_NAVI_BACK     InputEvent::BACK
-
-/* NumScroll */
-#define NUMSCROLL_NAVI_UP       InputEvent::RIGHT
-#define NUMSCROLL_NAVI_DOWN     InputEvent::LEFT
-#define NUMSCROLL_NAVI_SELECT   InputEvent::SELECT
+#include "core/config_internal.h"

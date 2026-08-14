@@ -4,16 +4,27 @@
 
 #pragma once
 
-#include "PopupInfo.h"
-#include "PopupProgress.h"
-#include "PopupValueDigits.h"
 #include "core/Callbacks.h"
 #include "config.h"
 #include <etl/queue.h>
 #include <etl/utility.h>
 #include <etl/variant_pool.h>
 
+#if PIXELUI_USE_POPUP_INFO
+#include "PopupInfo.h"
+#endif
+
+#if PIXELUI_USE_POPUP_PROGRESS
+#include "PopupProgress.h"
+#endif
+
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
+#include "PopupValueDigits.h"
+#endif
+
 class PixelUI;
+
+#if PIXELUI_USE_POPUP
 
 /**
  * @brief Owns one active Popup and a fixed-capacity FIFO of pending requests.
@@ -24,32 +35,60 @@ private:
     static constexpr size_t MAX_PENDING_POPUP_NUM = MAX_POPUP_NUM - 1U;
 
     enum class RequestType : uint8_t {
+        None,
+#if PIXELUI_USE_POPUP_INFO
         Info,
+#endif
+#if PIXELUI_USE_POPUP_PROGRESS
         Progress,
+#endif
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
         ValueDigits
+#endif
     };
 
     struct Request {
-        RequestType type = RequestType::Info;
+        RequestType type = RequestType::None;
         uint16_t width = 0;
         uint16_t height = 0;
         uint16_t duration = 0;
+#if PIXELUI_USE_POPUP_INFO
         const char* text = nullptr;
+#endif
         const char* title = nullptr;
+#if PIXELUI_USE_POPUP_PROGRESS || PIXELUI_USE_POPUP_VALUE_DIGITS
         int32_t* value = nullptr;
+#endif
+#if PIXELUI_USE_POPUP_PROGRESS
         int32_t minValue = 0;
         int32_t maxValue = 0;
+#endif
+#if PIXELUI_USE_POPUP_INFO
         const uint8_t* font = nullptr;
+#endif
+#if PIXELUI_USE_POPUP_PROGRESS || PIXELUI_USE_POPUP_VALUE_DIGITS
         ValueCallback callback;
+#endif
+#if PIXELUI_USE_POPUP_PROGRESS
         bool useApparentValue = false;
+#endif
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
         uint8_t digitCount = 0;
+#endif
     };
 
     using ActivePool = etl::variant_pool<
-        1,
-        PopupInfo,
-        PopupProgress,
-        PopupValueDigits>;
+        1
+#if PIXELUI_USE_POPUP_INFO
+        , PopupInfo
+#endif
+#if PIXELUI_USE_POPUP_PROGRESS
+        , PopupProgress
+#endif
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
+        , PopupValueDigits
+#endif
+    >;
 
     PixelUI& ui_;
     ActivePool activePool_;
@@ -68,18 +107,24 @@ public:
     PopupManager(const PopupManager&) = delete;
     PopupManager& operator=(const PopupManager&) = delete;
 
+#if PIXELUI_USE_POPUP_INFO
     bool enqueueInfo(uint16_t width, uint16_t height,
                      const char* text, const char* title, uint16_t duration,
-                     const uint8_t* font = u8g2_font_wqy12_t_gb2312);
+                     const uint8_t* font = PIXELUI_FONT_TEXT);
+#endif
+#if PIXELUI_USE_POPUP_PROGRESS
     bool enqueueProgress(uint16_t width, uint16_t height,
                          int32_t& value, int32_t minValue, int32_t maxValue,
                          const char* title, uint16_t duration,
                          ValueCallback callback = nullptr,
                          bool useApparentValue = false);
+#endif
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
     bool enqueueValueDigits(uint16_t width, uint16_t height,
                             int32_t& value, uint8_t digitCount,
                             const char* title, uint16_t duration,
                             ValueCallback callback = nullptr);
+#endif
 
     void clearPopups();
     void drawPopups();
@@ -92,3 +137,5 @@ public:
     size_t pendingCount() const { return requests_.size(); }
     bool hasActivePopup() const { return active_ != nullptr; }
 };
+
+#endif

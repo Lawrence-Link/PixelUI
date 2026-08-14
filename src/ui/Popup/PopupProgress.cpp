@@ -103,7 +103,7 @@ void PopupProgress::drawContent(const PopupContentBounds& bounds) {
     
     // draw title centered above the bar
     if (_title && strlen(_title) > 0) {
-        u8g2.setFont(u8g2_font_wqy12_t_gb2312);
+        u8g2.setFont(PIXELUI_FONT_TEXT);
         int16_t titleWidth = u8g2.getUTF8Width(_title);
         u8g2.drawUTF8(bounds.centerX - titleWidth / 2, bounds.centerY - 7, _title);
     }

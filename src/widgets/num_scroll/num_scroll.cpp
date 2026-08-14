@@ -204,7 +204,7 @@ void NumScroll::drawSelf(const WidgetRenderContext& context) {
         });
     }
 
-    u8g2.setFont(u8g2_font_tenfatguys_tn);
+    u8g2.setFont(PIXELUI_FONT_NUMERIC);
 
     const int digit_height = 16;
     char buffer[16];
