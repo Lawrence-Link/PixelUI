@@ -51,11 +51,10 @@
 
 /* Font roles. Replace the WQY fonts when full Chinese coverage is unnecessary. */
 #define PIXELUI_FONT_TEXT       u8g2_font_wqy12_t_gb2312
-#define PIXELUI_FONT_TEXT_BOLD  u8g2_font_wqy12_t_gb2312b
 #define PIXELUI_FONT_SMALL      u8g2_font_5x7_mf
-#define PIXELUI_FONT_TINY       u8g2_font_tom_thumb_4x6_mf
+#define PIXELUI_FONT_TINY       u8g2_font_4x6_tr
 #define PIXELUI_FONT_NUMERIC    u8g2_font_tenfatguys_tn
-#define PIXELUI_FONT_CHART      u8g2_font_4x6_tr
+#define PIXELUI_FONT_CHART      PIXELUI_FONT_TINY      
 
 /* Fixed-capacity storage. All memory is reserved statically. */
 #define PIXELUI_MAX_ANIMATION_COUNT             35
