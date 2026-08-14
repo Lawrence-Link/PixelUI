@@ -50,7 +50,10 @@ set(SIM_SOURCES
     ../examples/app_dynamic_info.cpp
     ../examples/app_cube_demo.cpp
     ../examples/charging_animation.cpp
-    ../examples/app_counter.cpp
+    ../examples/app_counter/app_main.cpp
+    ../examples/app_counter/app_counter.cpp
+    ../examples/app_counter/app_resources.cpp
+    ../examples/app_counter/counter_reading_widget.cpp
     ../examples/app_pixel_clock.cpp
     ../examples/ListViewDemo1.cpp
     ../examples/app_widgets_demo/app_demo_analogclock_numscroll.cpp
