@@ -30,27 +30,16 @@
 #include "core/animation/animation.h"
 #include "core/Callbacks.h"
 #include "core/coroutine/Coroutine.h"
+#include "core/IInputHandler.h"
+#include "core/ViewManager/ViewManager.h"
+#include "focus/focus.h"
 #include "ui/IDrawable.h"
 #include "ui/Popup/PopupManager.h"
 #include "core/CommonTypes.h"
 #include "config.h"
 #include <etl/atomic.h>
 #include <etl/inplace_function.h>
-#include <etl/memory.h>
 
-/**
- * @class IInputHandler
- * @brief An interface for handling input events.
- */
-class IInputHandler{
-public:
-    virtual bool handleInput(InputEvent event) = 0;
-    virtual ~IInputHandler() = default;
-};
-
-class ViewManager;
-class CoroutineScheduler;
-class FocusManager;
 class IWidget;
 
 /**
@@ -73,9 +62,9 @@ public:
 
     void addCoroutine(Coroutine* coroutine);
     void removeCoroutine(Coroutine* coroutine);
-    void clearAllCoroutines() { m_coroutineSchedulerPtr->clear(); }
+    void clearAllCoroutines() { m_coroutineScheduler.clear(); }
     
-    size_t getActiveCoroutineCount() { return m_coroutineSchedulerPtr->getActiveCount(); }
+    size_t getActiveCoroutineCount() { return m_coroutineScheduler.getActiveCount(); }
     size_t getFocusedWidgetCount() const;
 
     /**
@@ -142,7 +131,9 @@ public:
 
     // getters
     U8G2& getU8G2() const { return u8g2_; }
-    ViewManager* getViewManagerPtr() const { return m_viewManagerPtr.get(); }
+    ViewManager* getViewManagerPtr() const {
+        return const_cast<ViewManager*>(&m_viewManager);
+    }
 
     size_t popupCount() const { return m_popupManager.getPopupCounts(); }
     void clearPopups() { m_popupManager.clearPopups(); }
@@ -235,9 +226,8 @@ private:
 
     AnimationManager m_animationManager;
     PopupManager m_popupManager;
-    etl::unique_ptr<ViewManager> m_viewManagerPtr;
-    etl::unique_ptr<CoroutineScheduler> m_coroutineSchedulerPtr;
-    etl::unique_ptr<FocusManager> m_focusManagerPtr;
+    CoroutineScheduler m_coroutineScheduler;
+    FocusManager m_focusManager;
 
     uint32_t _currentTime = 0;
     IDrawable* currentDrawable_ = nullptr;
@@ -255,4 +245,7 @@ private:
     void (*m_func_debug_print)(const char*) = nullptr;
     uint8_t m_fadeStep = 0;
     uint32_t m_lastFadeTime = 0;
+
+    // Must be last so applications are destroyed before their dependencies.
+    ViewManager m_viewManager;
 };

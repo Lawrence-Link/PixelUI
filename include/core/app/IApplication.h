@@ -26,9 +26,13 @@
 
 #pragma once
 
-#include "PixelUI.h"
+#include "core/Callbacks.h"
+#include "core/IInputHandler.h"
+#include "ui/IDrawable.h"
 #include <etl/inplace_function.h>
 #include "config.h"
+
+class PixelUI;
 
 class IApplication : public IDrawable, public IInputHandler {
     friend class ViewManager;

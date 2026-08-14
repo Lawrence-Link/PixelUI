@@ -27,13 +27,10 @@
  */
 
 #include "PixelUI.h"
-#include "core/ViewManager/ViewManager.h"
 #include "core/animation/animation.h"
 #include "ui/Popup/PopupProgress.h"
 #include "ui/Popup/PopupInfo.h"
 #include "ui/Popup/PopupValueDigits.h"
-#include "core/coroutine/Coroutine.h"
-#include "focus/focus.h"
 #include <inttypes.h>
 
 /**
@@ -43,23 +40,23 @@
  * Initializes core subsystems: ViewManager, AnimationManager, PopupManager, and CoroutineScheduler.
  */
 PixelUI::PixelUI(U8G2& u8g2)
-    : u8g2_(u8g2), m_popupManager(*this), _currentTime(0) {
-    m_viewManagerPtr.reset(new ViewManager(*this));
-    m_coroutineSchedulerPtr.reset(new CoroutineScheduler(*this));
-    m_focusManagerPtr.reset(new FocusManager(*this));
+    : u8g2_(u8g2),
+      m_popupManager(*this),
+      m_coroutineScheduler(*this),
+      m_focusManager(*this),
+      _currentTime(0),
+      m_viewManager(*this) {
+    m_viewManager.attachInputRouter();
 }
 
-PixelUI::~PixelUI() {
-    // Applications may reference every other manager, so destroy them first.
-    m_viewManagerPtr.reset();
-}
+PixelUI::~PixelUI() = default;
 
 /**
  * @brief Add a coroutine to the scheduler
  * @param coroutine Non-owning pointer to the Coroutine object
  */
 void PixelUI::addCoroutine(Coroutine* coroutine) { 
-    m_coroutineSchedulerPtr->addCoroutine(coroutine); 
+    m_coroutineScheduler.addCoroutine(coroutine);
 }
 
 /**
@@ -67,7 +64,7 @@ void PixelUI::addCoroutine(Coroutine* coroutine) {
  * @param coroutine Non-owning pointer to the Coroutine object
  */
 void PixelUI::removeCoroutine(Coroutine* coroutine) { 
-    m_coroutineSchedulerPtr->removeCoroutine(coroutine); 
+    m_coroutineScheduler.removeCoroutine(coroutine);
 }
 
 /**
@@ -141,17 +138,17 @@ bool PixelUI::animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY,
  * @param w Pointer to the widget to add
  */
 bool PixelUI::addWidgetToFocusManager(IWidget* w) {
-    return m_focusManagerPtr->addWidget(w);
+    return m_focusManager.addWidget(w);
 }
 /**
  * @brief Clear all widgets from the FocusManager
  */
 void PixelUI::clearFocusManager() {
-    m_focusManagerPtr->clear();
+    m_focusManager.clear();
 }
 
 size_t PixelUI::getFocusedWidgetCount() const {
-    return m_focusManagerPtr->widgetCount();
+    return m_focusManager.widgetCount();
 }
 /**
  * @brief Handle input event
@@ -161,10 +158,7 @@ size_t PixelUI::getFocusedWidgetCount() const {
  */
 
 void PixelUI::handleInput(InputEvent event) {
-    if (m_focusManagerPtr) 
-    {
-        if (m_focusManagerPtr->handleInput(event)) return;
-    }
+    if (m_focusManager.handleInput(event)) return;
     if (inputCallback_) inputCallback_(event);
 }
 
@@ -174,12 +168,12 @@ void PixelUI::handleInput(InputEvent event) {
  * Handles optional fading effects and calls the refresh callback if set.
  */
 void PixelUI::renderer() {
-    if (m_viewManagerPtr->isTransitionCommitInProgress()) return;
+    if (m_viewManager.isTransitionCommitInProgress()) return;
 
     if (update_symbol_.load()) { // check for update before rendering context
         update_symbol_.store(0) ;
         m_popupManager.updatePopups(_currentTime);
-        m_coroutineSchedulerPtr->update(_currentTime);
+        m_coroutineScheduler.update(_currentTime);
         m_animationManager.update(_currentTime);
     }
 
@@ -193,7 +187,7 @@ void PixelUI::renderer() {
         u8g2_.clearBuffer();
         if (currentDrawable_) currentDrawable_->draw();
         m_popupManager.drawPopups();
-        m_focusManagerPtr->draw();
+        m_focusManager.draw();
         u8g2_.sendBuffer();
         if (m_refresh_callback) m_refresh_callback();
         isDirty_ = false;
@@ -226,7 +220,7 @@ void PixelUI::renderer() {
             if (m_fadeStep > 4) {
                 isFading_ = false;
                 m_fadeStep = 0;
-                m_viewManagerPtr->completePendingEnter();
+                m_viewManager.completePendingEnter();
             }
         }
     }

@@ -40,27 +40,7 @@ public:
         TransitionInProgress,
     };
 
-    ViewManager(PixelUI &ui) : m_ui(ui) {
-        m_ui.setInputCallback ([this](InputEvent event) -> bool {
-            if (isTransitioning()) {
-                return false;
-            }
-
-            // Prioritize pop-up input - check for an active pop-up
-
-            if (m_ui.popupCount() > 0U) {
-                // The active Popup always gets the first chance to handle input.
-                return m_ui.m_popupManager.handleTopPopupInput(event);
-            }
-            
-            // If the pop-up did not handle the input or there is no pop-up, pass the input to the application at the top of the stack
-            IApplication* current = m_applicationStack.top();
-            if (current != nullptr) {
-                return current->handleInput(event);
-            }
-            return false;
-        });
-    }
+    explicit ViewManager(PixelUI& ui);
     ~ViewManager();
 
     ViewManager(const ViewManager&) = delete;
@@ -97,6 +77,8 @@ public:
     static constexpr size_t getArenaCapacity() noexcept { return ApplicationStack::capacity(); }
 
 private:
+    friend class PixelUI;
+
     class TransitionGuard {
     public:
         explicit TransitionGuard(ViewManager& manager) : manager_(manager) {
@@ -125,14 +107,13 @@ private:
     };
 
     static LaunchResult toLaunchResult(ApplicationStackResult result);
+    void attachInputRouter();
     void activatePushedApplication(IApplication* application);
     void completePendingEnter();
     void clearNonOwningReferences();
     bool isTransitionCommitInProgress() const noexcept {
         return m_isTransitioning.load(etl::memory_order_relaxed);
     }
-
-    friend class PixelUI;
 
     PixelUI &m_ui;
     ApplicationStack m_applicationStack;

@@ -25,6 +25,24 @@
  */
 
 #include "core/ViewManager/ViewManager.h"
+#include "PixelUI.h"
+
+ViewManager::ViewManager(PixelUI& ui) : m_ui(ui) {}
+
+void ViewManager::attachInputRouter() {
+    m_ui.setInputCallback([this](InputEvent event) -> bool {
+        if (isTransitioning()) {
+            return false;
+        }
+
+        if (m_ui.popupCount() > 0U) {
+            return m_ui.m_popupManager.handleTopPopupInput(event);
+        }
+
+        IApplication* current = m_applicationStack.top();
+        return (current != nullptr) ? current->handleInput(event) : false;
+    });
+}
 
 ViewManager::~ViewManager() {
     m_isTransitioning.store(true, etl::memory_order_relaxed);

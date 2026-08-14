@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/app/IApplication.h"
+#include "PixelUI.h"
 #include "core/app/app_system.h"
 #include "core/coroutine/Coroutine.h"
 #include "widgets/icon_button/icon_button.h"

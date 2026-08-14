@@ -27,6 +27,7 @@
 // --- USER DEFINED APP: charging animation
 
 #include "core/app/IApplication.h"
+#include "PixelUI.h"
 #include "core/app/app_system.h"
 #include <etl/memory.h>
 

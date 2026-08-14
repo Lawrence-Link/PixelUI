@@ -25,6 +25,7 @@
  */
 
 #include "core/app/IApplication.h"
+#include "PixelUI.h"
 #include "core/app/app_system.h"
 #include "widgets/brace/brace.h"
 #include "widgets/text_button/text_button.h"
