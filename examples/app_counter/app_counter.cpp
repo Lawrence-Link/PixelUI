@@ -32,7 +32,6 @@ APP_COUNTER::APP_COUNTER(PixelUI& ui, void* parameter) :
 
 void APP_COUNTER::onEnter(ExitCallback cb) {
     IApplication::onEnter(cb);
-    m_ui.setContinousDraw(true);
 
     icon_battery.setSource(app_counter_resources::battery_75_icon);
     icon_sounding.setSource(app_counter_resources::sound_off_icon);
@@ -115,11 +114,21 @@ void APP_COUNTER::draw() {
         icon_battery.draw();
         brace.draw();
     } else {
-        canvas.drawStr(3, 10, "<STATS>");
-        canvas.drawStr(3, 20, "Max:");
-        canvas.drawStr(3, 30, "1.45uSv/h");
-        canvas.drawStr(3, 40, "Min:");
-        canvas.drawStr(3, 50, "0.25uSv/h");
+        canvas.setFontMode(1);
+        canvas.setDrawColor(1);
+        canvas.drawBox(0, 31, 47, 8);
+        canvas.drawBox(0, 0, 47, 8);
+        canvas.setDrawColor(2);
+        canvas.setFont(u8g2_font_5x7_tr);
+        canvas.drawStr(6, 7, "MAXIMUM");
+        canvas.drawStr(6, 38, "AVERAGE");
+        canvas.setDrawColor(1);
+        canvas.drawStr(17, 28, "CPM");
+        canvas.drawStr(17, 60, "CPM");
+        canvas.setFont(u8g2_font_profont11_tr);
+        canvas.drawStr(3, 18, "MAX_VAL");
+        canvas.drawFrame(48, 0, 79, 63);
+        canvas.drawStr(3, 49, "AVG_VAL");
     }
     histogram.draw();
 }
@@ -133,5 +142,4 @@ bool APP_COUNTER::handleInput(InputEvent event) {
 
 void APP_COUNTER::onExit() {
     m_ui.clearAllAnimations();
-    m_ui.setContinousDraw(false);
 }

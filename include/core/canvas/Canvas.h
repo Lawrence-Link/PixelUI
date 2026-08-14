@@ -26,8 +26,9 @@ public:
     void setEnabled(bool enabled);
     bool isEnabled() const { return enabled_; }
 
-    int32_t x() const { return enabled_ ? x_ : 0; }
+    int32_t x() const { return x_; }
     int32_t y() const { return enabled_ ? y_ : 0; }
+    void setX(int32_t x) { x_ = x; }
     int32_t storedY() const { return y_; }
 
     bool setY(int32_t y);

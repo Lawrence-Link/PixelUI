@@ -110,6 +110,7 @@ private:
     void attachInputRouter();
     void activatePushedApplication(IApplication* application);
     void completePendingEnter();
+    void enterApplication(IApplication* application);
     void clearNonOwningReferences();
     void restoreCurrentCameraState();
     bool isTransitionCommitInProgress() const noexcept {

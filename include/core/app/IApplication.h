@@ -50,6 +50,18 @@ public:
     // camera itself (ListView does this to keep its selection visible).
     bool useVerticalScroll = false;
 
+private:
+    bool m_enterTransitionEnabled = false;
+
+public:
+
+    // Enables the standard horizontal slide applied when onEnter begins.
+    // Disabled by default so existing applications keep their current behavior.
+    void setEnterTransitionEnabled(bool enabled) {
+        m_enterTransitionEnabled = enabled;
+    }
+    bool isEnterTransitionEnabled() const { return m_enterTransitionEnabled; }
+
     // Called when the app is pushed to the top of the stack
     virtual void onEnter(ExitCallback exitCallback) { m_exitCallback = exitCallback; }
     // Called when the app is exited

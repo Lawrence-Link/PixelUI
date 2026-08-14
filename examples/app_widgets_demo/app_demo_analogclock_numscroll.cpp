@@ -105,7 +105,6 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
-        m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
 
         num_h.setRange(0,23);
@@ -137,11 +136,9 @@ public:
     }
 
     void onResume() override {
-        m_ui.setContinousDraw(true);
     }
 
     void onExit() override {
-        m_ui.setContinousDraw(false);
 
         // cleanup the coroutine
         m_ui.removeCoroutine(&animationCoroutine_);

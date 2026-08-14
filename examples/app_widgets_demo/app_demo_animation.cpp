@@ -69,7 +69,9 @@ private:
     int32_t curr_timestamp;
 public:
     App_Anim_Demo(PixelUI& ui, void* parameter): m_ui(ui)
-    {}
+    {
+        setEnterTransitionEnabled(true);
+    }
 
     void draw() override {
 
@@ -192,17 +194,14 @@ public:
     
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
-        m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
     }
 
     void onResume() override {
-        m_ui.setContinousDraw(true);
     }
 
     void onExit() override {
         m_ui.clearAllAnimations();
-        m_ui.setContinousDraw(false);
     }
 };
 

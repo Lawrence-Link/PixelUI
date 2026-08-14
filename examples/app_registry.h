@@ -32,7 +32,7 @@
 
 extern AppItem counter_app;
 extern AppItem cube_demo_app;
-extern AppItem bouncy_about_app;
+extern AppItem about_app;
 extern AppItem charging_anim;
 extern AppItem ListViewDemo_app;
 extern AppItem time_setting_app;

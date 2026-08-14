@@ -117,7 +117,6 @@ public:
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
 
-        m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
 
         button_onload.onLoad();
@@ -159,11 +158,9 @@ public:
     }
 
     void onResume() override {
-        m_ui.setContinousDraw(true);
     }
 
     void onExit() override {
-        m_ui.setContinousDraw(false);
     }
 };
 

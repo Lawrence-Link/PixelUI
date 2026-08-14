@@ -27,6 +27,11 @@
 #include "core/ViewManager/ViewManager.h"
 #include "PixelUI.h"
 
+namespace {
+constexpr int32_t ENTER_TRANSITION_START_X = -5;
+constexpr uint32_t ENTER_TRANSITION_DURATION_MS = 150U;
+}
+
 ViewManager::ViewManager(PixelUI& ui) : m_ui(ui) {}
 
 void ViewManager::attachInputRouter() {
@@ -103,6 +108,7 @@ bool ViewManager::pop() {
         previousApplication->onResume();
     } else {
         m_ui.getCanvas().camera().setEnabled(false);
+        m_ui.getCanvas().camera().setX(0);
         m_ui.getCanvas().camera().setY(0);
     }
 
@@ -140,14 +146,14 @@ void ViewManager::activatePushedApplication(IApplication* application) {
     m_ui.setDrawable(application);
     m_cameraStates[m_applicationStack.depth() - 1U] = CameraState{};
     m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
+    m_ui.getCanvas().camera().setX(0);
     m_ui.getCanvas().camera().setContentHeight(0);
     m_ui.getCanvas().camera().setY(0);
     m_ui.clearFocusManager();
     if (previousApplication != nullptr && m_ui.isFading()) {
         m_pendingEnter = application;
     } else {
-        application->onEnter([this]() { pop(); });
-        m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
+        enterApplication(application);
     }
     m_ui.markDirty();
 }
@@ -158,10 +164,29 @@ void ViewManager::completePendingEnter() {
     }
 
     IApplication* application = m_pendingEnter;
-    application->onEnter([this]() { pop(); });
-    m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
+    enterApplication(application);
     m_pendingEnter = nullptr;
     m_ui.markDirty();
+}
+
+void ViewManager::enterApplication(IApplication* application) {
+    CanvasCamera& camera = m_ui.getCanvas().camera();
+    const int32_t startX = application->m_enterTransitionEnabled
+        ? ENTER_TRANSITION_START_X
+        : 0;
+    camera.setX(startX);
+    if (application->m_enterTransitionEnabled &&
+        !m_ui.animateCallback(
+            startX, 0, ENTER_TRANSITION_DURATION_MS,
+            EasingType::EASE_OUT_CUBIC,
+            [this](int32_t value) {
+                m_ui.getCanvas().camera().setX(value);
+            })) {
+        camera.setX(0);
+    }
+
+    application->onEnter([this]() { pop(); });
+    m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
 }
 
 void ViewManager::clearNonOwningReferences() {
@@ -169,6 +194,7 @@ void ViewManager::clearNonOwningReferences() {
     m_ui.clearAllCoroutines();
     m_ui.clearFocusManager();
     m_ui.clearPopups();
+    m_ui.getCanvas().camera().setX(0);
 }
 
 void ViewManager::restoreCurrentCameraState() {
@@ -176,6 +202,7 @@ void ViewManager::restoreCurrentCameraState() {
     if (application == nullptr) return;
     const CameraState& state = m_cameraStates[m_applicationStack.depth() - 1U];
     m_ui.getCanvas().camera().setEnabled(application->useVerticalScroll);
+    m_ui.getCanvas().camera().setX(0);
     m_ui.getCanvas().camera().setContentHeight(state.contentHeight);
     m_ui.getCanvas().camera().setY(state.y);
 }

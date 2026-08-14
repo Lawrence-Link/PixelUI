@@ -20,12 +20,15 @@ struct EventLog {
 struct LifecycleState {
     EventLog* log = nullptr;
     int id = 0;
+    bool enterTransition = false;
 };
 
 class LifecycleApplication : public IApplication {
 public:
     LifecycleApplication(PixelUI&, void* parameters)
-        : state_(*static_cast<LifecycleState*>(parameters)) {}
+        : state_(*static_cast<LifecycleState*>(parameters)) {
+        setEnterTransitionEnabled(state_.enterTransition);
+    }
 
     ~LifecycleApplication() override { state_.log->add(static_cast<char>('0' + state_.id)); }
     void draw() override {}
@@ -210,6 +213,7 @@ int main() {
         EventLog log;
         LifecycleState first{&log, 1};
         LifecycleState second{&log, 2};
+        second.enterTransition = true;
         U8G2 display;
         u8g2_Setup_ssd1306_128x64_noname_f(
             display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
@@ -220,7 +224,8 @@ int main() {
 
         if (manager.launch(fading, &first) != ViewManager::LaunchResult::Ok) return 30;
         if (manager.launch(next, &second) != ViewManager::LaunchResult::Ok) return 31;
-        if (!log.equals("EP") || !manager.isTransitioning()) return 32;
+        if (!log.equals("EP") || !manager.isTransitioning() ||
+            ui.activeAnimationCount() != 0U) return 32;
         if (manager.launch(next, &second) != ViewManager::LaunchResult::TransitionInProgress) return 33;
 
         for (int step = 0; step < 3; ++step) {
@@ -230,7 +235,8 @@ int main() {
         }
         ui.Heartbeat(40);
         ui.renderer();
-        if (!log.equals("EPE") || manager.isTransitioning()) return 35;
+        if (!log.equals("EPE") || manager.isTransitioning() ||
+            ui.activeAnimationCount() != 1U) return 35;
     }
 
     {
