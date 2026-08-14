@@ -97,7 +97,7 @@ void PixelUI::begin() { }
 /**
  * @brief Compatibility wrapper for hosts that inject ticks outside an ISR.
  */
-void PixelUI::Heartbeat(uint32_t ms) {
+void PixelUI::heartbeat(uint32_t ms) {
     pendingTickMs_.fetch_add(ms, etl::memory_order_release);
 }
 

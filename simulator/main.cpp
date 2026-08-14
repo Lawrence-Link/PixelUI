@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 
     QTimer* hbTimer = new QTimer();
     QObject::connect(hbTimer, &QTimer::timeout, [&](){
-        ui.Heartbeat(16);
+        ui.heartbeat(16);
     });
 
     hbTimer->start(16); // 16ms = ~60FPS

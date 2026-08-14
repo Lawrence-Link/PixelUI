@@ -92,7 +92,7 @@ public:
     size_t getFocusedWidgetCount() const;
 
     /** @brief Compatibility tick entry; prefer tickFromISR() on embedded hosts. */
-    void Heartbeat(uint32_t ms);
+    void heartbeat(uint32_t ms);
 
     /**
      * @brief ISR-safe time input: atomically accumulates elapsed milliseconds.
