@@ -52,4 +52,9 @@ public:
     virtual void draw() = 0;
     virtual bool handleInput(InputEvent event) = 0;
     virtual uint16_t getDuration() const = 0;
+    virtual uint32_t nextWakeupMs(
+        uint32_t currentTime, uint32_t frameIntervalMs) const {
+        (void)currentTime;
+        return (frameIntervalMs == 0U) ? 1U : frameIntervalMs;
+    }
 };

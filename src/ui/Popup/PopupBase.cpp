@@ -26,6 +26,7 @@
 
 #include "ui/Popup/PopupBase.h"
 #include "PixelUI.h"
+#include "core/TimeUtils.h"
 #include "core/animation/animation.h"
 
 /**
@@ -195,6 +196,22 @@ bool PopupBase::update(uint32_t currentTime) {
         m_ui.markDirty();
     }
     return active;
+}
+
+uint32_t PopupBase::nextWakeupMs(
+    uint32_t currentTime, uint32_t frameIntervalMs) const {
+    if (!m_started) return 0U;
+
+    if (m_state == PopupState::SHOWING) {
+        if (m_duration == 0U) return PixelUITime::NO_WAKEUP;
+        return PixelUITime::untilDeadline(
+            currentTime, m_stateStartTime + m_duration);
+    }
+
+    const uint32_t remaining = PixelUITime::untilDeadline(
+        currentTime, m_transitionStartTime + TRANSITION_DURATION);
+    return PixelUITime::earlier(
+        PixelUITime::normalizeInterval(frameIntervalMs), remaining);
 }
 
 /**

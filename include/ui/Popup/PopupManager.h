@@ -129,6 +129,7 @@ public:
     void clearPopups();
     void drawPopups();
     void updatePopups(uint32_t currentTime);
+    uint32_t nextWakeupMs(uint32_t currentTime, uint32_t frameIntervalMs) const;
     bool handleTopPopupInput(InputEvent event);
 
     size_t getPopupCounts() const {

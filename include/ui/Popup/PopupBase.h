@@ -45,6 +45,8 @@ public:
     bool update(uint32_t currentTime) final;
     void draw() final;
     bool handleInput(InputEvent event) final;
+    uint32_t nextWakeupMs(
+        uint32_t currentTime, uint32_t frameIntervalMs) const final;
 
 private:
     static constexpr uint32_t TRANSITION_DURATION = 300U;

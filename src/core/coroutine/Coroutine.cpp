@@ -26,6 +26,7 @@
 
 #include "core/coroutine/Coroutine.h"
 #include "PixelUI.h"
+#include "core/TimeUtils.h"
 
 /**
  * @brief Constructor of the coroutine class
@@ -49,8 +50,9 @@ void Coroutine::start() {
  * @brief Rusume a coroutine
  * @param currentTime uint32_t, current timestamp of the system
  */
-void Coroutine::resume(uint32_t currentTime) {
-    if (context_.state == CoroutineState::SUSPENDED && currentTime >= context_.waitUntil) {
+void Coroutine::resume(uint32_t currentTime, bool animationActive) {
+    if (context_.state == CoroutineState::SUSPENDED &&
+        shouldRun(currentTime, animationActive)) {
         context_.state = CoroutineState::RUNNING;
     }
     
@@ -66,26 +68,48 @@ void Coroutine::reset() {
     context_.state = CoroutineState::CREATED;
     context_.pc = 0;
     context_.waitUntil = 0;
+    context_.waitReason = CoroutineWaitReason::NONE;
 }
 
 
 /**
  * @brief check whether a coroutine should run or not
  */
-bool Coroutine::shouldRun(uint32_t currentTime) const {
+bool Coroutine::shouldRun(uint32_t currentTime, bool animationActive) const {
     if (context_.state == CoroutineState::FINISHED) {
         return false;
     }
     
     if (context_.state == CoroutineState::SUSPENDED) {
-        if (currentTime >= context_.waitUntil) {
-            // The coroutine should resume once the delay period has elapsed
-            return true;
+        switch (context_.waitReason) {
+            case CoroutineWaitReason::DELAY:
+                return PixelUITime::deadlineReached(currentTime, context_.waitUntil);
+            case CoroutineWaitReason::ANIMATION:
+                return !animationActive;
+            case CoroutineWaitReason::NONE:
+                return true;
         }
-        return false;
     }
     
     return context_.state == CoroutineState::RUNNING;
+}
+
+uint32_t Coroutine::nextWakeupMs(
+    uint32_t currentTime, bool animationActive) const {
+    if (context_.state == CoroutineState::RUNNING) return 0U;
+    if (context_.state != CoroutineState::SUSPENDED) {
+        return PixelUITime::NO_WAKEUP;
+    }
+
+    switch (context_.waitReason) {
+        case CoroutineWaitReason::DELAY:
+            return PixelUITime::untilDeadline(currentTime, context_.waitUntil);
+        case CoroutineWaitReason::ANIMATION:
+            return animationActive ? PixelUITime::NO_WAKEUP : 0U;
+        case CoroutineWaitReason::NONE:
+            return 0U;
+    }
+    return PixelUITime::NO_WAKEUP;
 }
 /**
  * @brief Coroutine Scheduler Constructor
@@ -140,12 +164,30 @@ void CoroutineScheduler::update(uint32_t currentTime) {
     
     // Execute coroutines that should run
     for (auto& coroutine : coroutines_) {
+        const bool animationActive = ui_.activeAnimationCount() != 0U;
         // shouldRun checks if the coroutine meets its run condition (e.g., a delay time has elapsed)
-        if (coroutine->shouldRun(currentTime)) {
+        if (coroutine->shouldRun(currentTime, animationActive)) {
             // Resume the coroutine's execution
-            coroutine->resume(currentTime);
+            coroutine->resume(currentTime, animationActive);
         }
     }
+
+    coroutines_.erase(
+        etl::remove_if(coroutines_.begin(), coroutines_.end(),
+            [](const Coroutine* coro) { return coro->isFinished(); }),
+        coroutines_.end());
+}
+
+uint32_t CoroutineScheduler::nextWakeupMs(uint32_t currentTime) const {
+    const bool animationActive = ui_.activeAnimationCount() != 0U;
+    uint32_t next = PixelUITime::NO_WAKEUP;
+    for (const Coroutine* coroutine : coroutines_) {
+        if (coroutine != nullptr) {
+            next = PixelUITime::earlier(
+                next, coroutine->nextWakeupMs(currentTime, animationActive));
+        }
+    }
+    return next;
 }
 
 /**

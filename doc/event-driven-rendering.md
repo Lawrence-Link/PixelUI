@@ -4,7 +4,8 @@ PixelUI separates three kinds of work:
 
 - An external event mutates UI state and calls `markDirty()`.
 - A timer ISR calls `tickFromISR(elapsedMs)` with the host-selected interval.
-- The UI task calls `process()` to consume time and update managers.
+- The UI task calls `handler(frameIntervalMs)` to update, render, and obtain the
+  next delay. `process()` and `renderer()` remain available as separate steps.
 - `renderer()` consumes pending work and returns true only when it submits a frame.
 
 `markDirty()` coalesces repeated invalidations. `setRenderRequestCallback()` is
@@ -27,8 +28,7 @@ ui.setTaskNotifyFromISR(notifyUiTaskFromISR, uiTaskHandle);
 for (;;) {
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     dispatchInputAndDataEvents();
-    ui.process();
-    ui.renderer();
+    (void)ui.handler(16U);
 }
 ```
 
@@ -54,15 +54,41 @@ compatibility, at the beginning of `renderer()`.
 The normal embedded configuration keeps a periodic Timer ISR. Its interval is
 not fixed by PixelUI: pass the actual elapsed milliseconds to `tickFromISR()`.
 
-`PIXELUI_ENABLE_TICKLESS` defaults to `0`. When enabled, the host may use
-`nextWakeupMs(periodicTickMs)` after processing an event:
+`PIXELUI_ENABLE_TICKLESS` defaults to `0`. In this mode `handler()` always
+returns its configured frame interval, so the normal periodic Timer ISR policy
+is unchanged.
 
-- A finite result requests the next periodic animation/fade tick.
+When tickless is enabled, `handler(frameIntervalMs)` and
+`nextWakeupMs(frameIntervalMs)` return the earliest deadline across all
+managers:
+
+- Animations and Popup transitions return the smaller of their remaining time
+  and `frameIntervalMs`.
+- A static timed Popup and `CORO_DELAY` return their exact remaining time.
+- Fade returns the remaining time to its next 40 ms step.
+- Continuous drawing returns `frameIntervalMs`.
+- Zero means immediately call `handler()` again; this is used when one manager
+  makes another manager ready during the current pass.
 - `PixelUI::WAIT_FOREVER` means no time-driven UI work is active, so the host
   may stop its UI timer until an input or data event starts new work.
 
-This first tickless policy suppresses only completely idle ticks. It does not
-yet calculate exact Popup or Coroutine deadlines.
+The returned delay does not replace external event notification. Input, data,
+and navigation producers must still wake the UI task. A low-power port should
+program a one-shot Timer ISR from the returned delay and pass the actual elapsed
+milliseconds back through `tickFromISR()`.
+
+```cpp
+uint32_t nextDelayMs = 0U;
+for (;;) {
+    waitForUiTaskNotification();
+    dispatchInputAndDataEvents();
+    nextDelayMs = ui.handler(16U);
+    programOneShotUiTimer(nextDelayMs);
+}
+```
+
+Absolute Coroutine deadlines use wrap-safe half-range comparison and therefore
+must be less than `2^31` milliseconds into the future.
 
 ## Refactoring plan
 
@@ -79,11 +105,10 @@ yet calculate exact Popup or Coroutine deadlines.
    - Update every manager from `process()` on the UI task.
    - Keep periodic timers by default and expose opt-in tickless policy.
 
-3. Deadline-based timers
+3. Deadline-based timers (implemented)
    - Give AnimationManager, PopupManager, and CoroutineScheduler a
      `nextDeadline()` query.
-   - Replace a fixed-rate Heartbeat timer with a one-shot timer for the earliest
-     deadline.
+   - Return the earliest one-shot delay from `handler()`.
    - Keep a configurable frame cadence only while smooth animation or explicit
      continuous drawing is active.
 

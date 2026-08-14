@@ -27,6 +27,7 @@
  */
 
 #include "PixelUI.h"
+#include "core/TimeUtils.h"
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
 #include "ui/Popup/PopupValueDigits.h"
 #endif
@@ -112,25 +113,37 @@ void PixelUI::tickFromISR(uint32_t elapsedMs) {
 bool PixelUI::process() {
     const uint32_t elapsedMs =
         pendingTickMs_.exchange(0U, etl::memory_order_acq_rel);
-    if (elapsedMs == 0U) return false;
-
     _currentTime += elapsedMs;
 
 #if PIXELUI_USE_ANIMATION
+    const bool animationIsDue =
+        m_animationManager.nextWakeupMs(_currentTime, 1U) == 0U;
     const bool animationWasActive = m_animationManager.activeCount() != 0U;
 #endif
 #if PIXELUI_USE_POPUP
-    m_popupManager.updatePopups(_currentTime);
+    if (elapsedMs != 0U ||
+        m_popupManager.nextWakeupMs(_currentTime, 1U) == 0U) {
+        m_popupManager.updatePopups(_currentTime);
+    }
 #endif
 #if PIXELUI_USE_COROUTINE
-    m_coroutineScheduler.update(_currentTime);
+    if (elapsedMs != 0U || m_coroutineScheduler.nextWakeupMs(_currentTime) == 0U) {
+        m_coroutineScheduler.update(_currentTime);
+    }
 #endif
 #if PIXELUI_USE_ANIMATION
-    m_animationManager.update(_currentTime);
-    // Completion removes the animation after writing its final value.
-    if (animationWasActive) markDirty();
+    if (elapsedMs != 0U || animationIsDue) {
+        m_animationManager.update(_currentTime);
+        // Completion removes the animation after writing its final value.
+        if (animationWasActive) markDirty();
+    }
 #endif
-    return true;
+    return elapsedMs != 0U;
+}
+
+uint32_t PixelUI::handler(uint32_t frameIntervalMs) {
+    renderer();
+    return nextWakeupMs(frameIntervalMs);
 }
 
 void PixelUI::setRenderRequestCallback(VoidCallback function) {
@@ -268,26 +281,63 @@ void PixelUI::handleInput(InputEvent event) {
  * Handles optional fading effects and calls the refresh callback if set.
  */
 bool PixelUI::needsHeartbeat() const {
-    if (isFading_ || continousMode_) return true;
+    if (pendingTickMs_.load(etl::memory_order_acquire) != 0U ||
+        isFading_ || continousMode_) return true;
 #if PIXELUI_USE_ANIMATION
-    if (m_animationManager.activeCount() != 0U) return true;
+    if (m_animationManager.nextWakeupMs(_currentTime, 1U) !=
+        PixelUITime::NO_WAKEUP) return true;
 #endif
 #if PIXELUI_USE_POPUP
-    if (m_popupManager.getPopupCounts() != 0U) return true;
+    if (m_popupManager.nextWakeupMs(_currentTime, 1U) !=
+        PixelUITime::NO_WAKEUP) return true;
 #endif
 #if PIXELUI_USE_COROUTINE
-    if (m_coroutineScheduler.getActiveCount() != 0U) return true;
+    if (m_coroutineScheduler.nextWakeupMs(_currentTime) !=
+        PixelUITime::NO_WAKEUP) return true;
 #endif
     return false;
 }
 
 uint32_t PixelUI::nextWakeupMs(uint32_t periodicTickMs) const {
-    if (periodicTickMs == 0U) periodicTickMs = 1U;
+    periodicTickMs = PixelUITime::normalizeInterval(periodicTickMs);
 #if PIXELUI_ENABLE_TICKLESS
-    return needsHeartbeat() ? periodicTickMs : WAIT_FOREVER;
+    return calculateNextWakeupMs(periodicTickMs);
 #else
     return periodicTickMs;
 #endif
+}
+
+uint32_t PixelUI::calculateNextWakeupMs(uint32_t frameIntervalMs) const {
+    if (pendingTickMs_.load(etl::memory_order_acquire) != 0U ||
+        isDirty_.load(etl::memory_order_acquire)) {
+        return 0U;
+    }
+
+    uint32_t next = PixelUITime::NO_WAKEUP;
+    const uint32_t currentTime = _currentTime;
+
+    if (continousMode_) {
+        next = frameIntervalMs;
+    }
+    if (isFading_) {
+        const uint32_t fadeDelay = (m_fadeStep == 0U)
+            ? 0U
+            : PixelUITime::untilDeadline(currentTime, m_lastFadeTime + 40U);
+        next = PixelUITime::earlier(next, fadeDelay);
+    }
+#if PIXELUI_USE_ANIMATION
+    next = PixelUITime::earlier(
+        next, m_animationManager.nextWakeupMs(currentTime, frameIntervalMs));
+#endif
+#if PIXELUI_USE_POPUP
+    next = PixelUITime::earlier(
+        next, m_popupManager.nextWakeupMs(currentTime, frameIntervalMs));
+#endif
+#if PIXELUI_USE_COROUTINE
+    next = PixelUITime::earlier(
+        next, m_coroutineScheduler.nextWakeupMs(currentTime));
+#endif
+    return next;
 }
 
 bool PixelUI::hasPendingFrame() const {

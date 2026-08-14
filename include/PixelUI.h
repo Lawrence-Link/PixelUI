@@ -106,6 +106,14 @@ public:
      * @return true if elapsed time was consumed.
      */
     bool process();
+
+    /**
+     * @brief Runs one UI-task scheduling pass and returns the next delay.
+     *
+     * The pass consumes pending ISR ticks, updates due managers, renders only
+     * when needed, and returns the configured periodic or tickless wake-up.
+     */
+    uint32_t handler(uint32_t frameIntervalMs);
     
     // animation related functions.
     
@@ -217,7 +225,10 @@ public:
     }
     void clearPopups() {
 #if PIXELUI_USE_POPUP
-        m_popupManager.clearPopups();
+        if (m_popupManager.getPopupCounts() != 0U) {
+            m_popupManager.clearPopups();
+            markDirty();
+        }
 #endif
     }
 
@@ -295,7 +306,8 @@ public:
      * @brief Returns the host timer delay recommended by the configured policy.
      *
      * With tickless disabled this always returns periodicTickMs. With tickless
-     * enabled it returns WAIT_FOREVER while no time-driven work is active.
+     * enabled it returns the earliest manager deadline, zero for immediate
+     * work, or WAIT_FOREVER while no time-driven work is active.
      */
     uint32_t nextWakeupMs(uint32_t periodicTickMs) const;
     static constexpr uint32_t WAIT_FOREVER = UINT32_MAX;
@@ -332,6 +344,8 @@ protected:
     bool isFading() const { return isFading_; }
 
 private:
+    uint32_t calculateNextWakeupMs(uint32_t frameIntervalMs) const;
+
     U8G2& u8g2_;
 
 #if PIXELUI_USE_ANIMATION

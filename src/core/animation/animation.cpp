@@ -25,6 +25,7 @@
  */
 
 #include "core/animation/animation.h"
+#include "core/TimeUtils.h"
 
 // Convert float multiplication to integer multiplication and bit shift
 #define MUL_FIXED(a, b) ((int64_t)(a) * (b) >> SHIFT_BITS)
@@ -148,6 +149,19 @@ bool Animation::update(uint32_t currentTime) {
     return true;
 }
 
+uint32_t Animation::nextWakeupMs(
+    uint32_t currentTime, uint32_t frameIntervalMs) const {
+    if (!_isActive) return PixelUITime::NO_WAKEUP;
+
+    const uint32_t elapsed = currentTime - _startTime;
+    if (elapsed >= _duration || (_duration > 0U && elapsed >= _duration - 1U)) {
+        return 0U;
+    }
+
+    return PixelUITime::earlier(
+        PixelUITime::normalizeInterval(frameIntervalMs), _duration - elapsed);
+}
+
 bool AnimationManager::emplace(
     int32_t startValue,
     int32_t endValue,
@@ -241,4 +255,14 @@ void AnimationManager::clearAllProtectionMarks() {
 */
 size_t AnimationManager::activeCount() const {
     return _animations.size();
+}
+
+uint32_t AnimationManager::nextWakeupMs(
+    uint32_t currentTime, uint32_t frameIntervalMs) const {
+    uint32_t next = PixelUITime::NO_WAKEUP;
+    for (const auto& animation : _animations) {
+        next = PixelUITime::earlier(
+            next, animation.nextWakeupMs(currentTime, frameIntervalMs));
+    }
+    return next;
 }

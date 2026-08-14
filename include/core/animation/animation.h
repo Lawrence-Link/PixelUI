@@ -81,6 +81,7 @@ public:
     bool isProtected() const { return _isProtected; }
     void setProtected(bool prot) { _isProtected = prot; }
     int32_t getProgress() const { return _progress; }
+    uint32_t nextWakeupMs(uint32_t currentTime, uint32_t frameIntervalMs) const;
 
 protected:
     int32_t _progress = 0;     
@@ -145,6 +146,7 @@ public:
     void clearAllProtectionMarks();
     size_t activeCount() const;
     size_t available() const { return _animations.available(); }
+    uint32_t nextWakeupMs(uint32_t currentTime, uint32_t frameIntervalMs) const;
 
 private:
     etl::vector<CallbackAnimation, MAX_ANIMATION_COUNT> _animations;

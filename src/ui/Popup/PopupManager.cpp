@@ -5,6 +5,7 @@
 #include "ui/Popup/PopupManager.h"
 #if PIXELUI_USE_POPUP
 #include "PixelUI.h"
+#include "core/TimeUtils.h"
 
 PopupManager::~PopupManager() {
     clearPopups();
@@ -164,7 +165,16 @@ void PopupManager::updatePopups(uint32_t currentTime) {
     if (!active) {
         destroyActive();
         activateNext();
+        ui_.markDirty();
     }
+}
+
+uint32_t PopupManager::nextWakeupMs(
+    uint32_t currentTime, uint32_t frameIntervalMs) const {
+    if (active_ != nullptr) {
+        return active_->nextWakeupMs(currentTime, frameIntervalMs);
+    }
+    return requests_.empty() ? PixelUITime::NO_WAKEUP : 0U;
 }
 
 bool PopupManager::handleTopPopupInput(InputEvent event) {
