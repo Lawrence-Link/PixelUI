@@ -5,7 +5,7 @@
 #include "ui/Popup/PopupInfo.h"
 #include "ui/Popup/PopupManager.h"
 #include "ui/Popup/PopupProgress.h"
-#include "ui/Popup/PopupValue4Digits.h"
+#include "ui/Popup/PopupValueDigits.h"
 #include "focus/focus.h"
 
 #include <stdio.h>
@@ -36,8 +36,8 @@ int main() {
            sizeof(PopupInfo), alignof(PopupInfo));
     printf("sizeof(PopupProgress)=%zu alignof(PopupProgress)=%zu\n",
            sizeof(PopupProgress), alignof(PopupProgress));
-    printf("sizeof(PopupValue4Digits)=%zu alignof(PopupValue4Digits)=%zu\n",
-           sizeof(PopupValue4Digits), alignof(PopupValue4Digits));
+    printf("sizeof(PopupValueDigits)=%zu alignof(PopupValueDigits)=%zu\n",
+           sizeof(PopupValueDigits), alignof(PopupValueDigits));
     printf("sizeof(PopupManager)=%zu alignof(PopupManager)=%zu\n",
            sizeof(PopupManager), alignof(PopupManager));
     printf("arena=%zu metadata_and_padding=%zu\n",

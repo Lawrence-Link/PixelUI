@@ -58,17 +58,19 @@ bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
     return enqueue(etl::move(request));
 }
 
-bool PopupManager::enqueueValue4Digits(uint16_t width, uint16_t height,
-                                       int32_t& value, const char* title,
-                                       uint16_t duration,
-                                       ValueCallback callback) {
+bool PopupManager::enqueueValueDigits(uint16_t width, uint16_t height,
+                                      int32_t& value, uint8_t digitCount,
+                                      const char* title, uint16_t duration,
+                                      ValueCallback callback) {
+    if (!PopupValueDigits::isValidDigitCount(digitCount)) return false;
     Request request;
-    request.type = RequestType::Value4Digits;
+    request.type = RequestType::ValueDigits;
     request.width = width;
     request.height = height;
     request.duration = duration;
     request.title = title;
     request.value = &value;
+    request.digitCount = digitCount;
     request.callback = etl::move(callback);
     return enqueue(etl::move(request));
 }
@@ -95,9 +97,9 @@ void PopupManager::activateNext() {
                 request.duration, etl::move(request.callback),
                 request.useApparentValue);
             break;
-        case RequestType::Value4Digits:
-            active_ = activePool_.create<PopupValue4Digits>(
-                ui_, request.width, request.height, *request.value,
+        case RequestType::ValueDigits:
+            active_ = activePool_.create<PopupValueDigits>(
+                ui_, request.width, request.height, *request.value, request.digitCount,
                 request.title, request.duration, etl::move(request.callback));
             break;
     }

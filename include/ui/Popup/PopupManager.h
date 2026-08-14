@@ -6,7 +6,7 @@
 
 #include "PopupInfo.h"
 #include "PopupProgress.h"
-#include "PopupValue4Digits.h"
+#include "PopupValueDigits.h"
 #include "core/Callbacks.h"
 #include "config.h"
 #include <etl/queue.h>
@@ -26,7 +26,7 @@ private:
     enum class RequestType : uint8_t {
         Info,
         Progress,
-        Value4Digits
+        ValueDigits
     };
 
     struct Request {
@@ -42,13 +42,14 @@ private:
         const uint8_t* font = nullptr;
         ValueCallback callback;
         bool useApparentValue = false;
+        uint8_t digitCount = 0;
     };
 
     using ActivePool = etl::variant_pool<
         1,
         PopupInfo,
         PopupProgress,
-        PopupValue4Digits>;
+        PopupValueDigits>;
 
     PixelUI& ui_;
     ActivePool activePool_;
@@ -75,10 +76,10 @@ public:
                          const char* title, uint16_t duration,
                          ValueCallback callback = nullptr,
                          bool useApparentValue = false);
-    bool enqueueValue4Digits(uint16_t width, uint16_t height,
-                             int32_t& value, const char* title,
-                             uint16_t duration,
-                             ValueCallback callback = nullptr);
+    bool enqueueValueDigits(uint16_t width, uint16_t height,
+                            int32_t& value, uint8_t digitCount,
+                            const char* title, uint16_t duration,
+                            ValueCallback callback = nullptr);
 
     void clearPopups();
     void drawPopups();

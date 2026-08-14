@@ -38,6 +38,11 @@
  */
 class NumScroll : public IWidget {
 public:
+    enum class Presentation : uint8_t {
+        Framed,
+        Bare
+    };
+
     NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     ~NumScroll() = default;
 
@@ -50,19 +55,22 @@ public:
 
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y; 
-        setWidgetBounds({m_x, m_y, m_w, m_h});
-        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
+        updateGeometry();
     }
 
     void setRange(int32_t min_val, int32_t max_val);
     void setValue(int32_t val);
+    void setValueImmediate(int32_t val);
     int32_t getValue() const { return m_current_value; }
 
     void setFixedIntDigits(uint8_t digits) { m_fixed_digits = digits; }
+    void setPresentation(Presentation presentation) {
+        presentation_ = presentation;
+        updateGeometry();
+    }
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h; 
-        setWidgetBounds({m_x, m_y, m_w, m_h});
-        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
+        updateGeometry();
     }
 
 private:
@@ -78,6 +86,7 @@ private:
     int32_t m_min_value = 0;
     int32_t m_max_value = 99;
     uint8_t m_fixed_digits = 0; 
+    Presentation presentation_ = Presentation::Framed;
 
     int32_t m_anim_offset = 0;
     
@@ -92,6 +101,7 @@ private:
     void incrementValue();
     void decrementValue();
     void animateToValue(int32_t new_value);
+    void updateGeometry();
 
     void formatValue(int32_t value, char* buffer, size_t buf_size) const;
 };

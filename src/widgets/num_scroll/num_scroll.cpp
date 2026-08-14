@@ -42,8 +42,16 @@ NumScroll::NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h
     m_h(h)
  {
     setFocusable(true);
+    updateGeometry();
+ }
+
+void NumScroll::updateGeometry() {
     setWidgetBounds({m_x, m_y, m_w, m_h});
-    setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
+    if (presentation_ == Presentation::Bare) {
+        setFocusBox(FocusBox(m_x + 2, m_y + m_h - 2, m_w - 4, 2));
+    } else {
+        setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
+    }
 }
 
 /**
@@ -56,8 +64,7 @@ void NumScroll::onLoad() {
     anim_w = 0;
     anim_h = 0;
 
-    // Set focus box slightly inside widget boundaries
-    setFocusBox(FocusBox(m_x + 1, m_y + 1, m_w - 2, m_h - 2));
+    updateGeometry();
 
     // Animate size from 0 to margin size
     m_ui.animate(anim_w, anim_h,
@@ -76,12 +83,7 @@ void NumScroll::onLoadNoAnim() {
     anim_w = 0;
     anim_h = 0;
 
-    FocusBox box;
-    box.x = m_x + 1;
-    box.y = m_y + 1;
-    box.w = m_w - 2;
-    box.h = m_h - 2;
-    setFocusBox(box);
+    updateGeometry();
 
     // Set final size immediately
     anim_w = m_w;
@@ -164,24 +166,43 @@ void NumScroll::drawSelf(const WidgetRenderContext& context) {
 
     // Clear background
     u8g2.setDrawColor(0);
-    u8g2.drawBox(draw_x + 2, draw_y + 2, anim_w - 4, anim_h - 4);
+    if (presentation_ == Presentation::Bare) {
+        u8g2.drawBox(draw_x, draw_y, anim_w, anim_h);
+    } else {
+        u8g2.drawBox(draw_x + 2, draw_y + 2, anim_w - 4, anim_h - 4);
+    }
     u8g2.setDrawColor(1);
 
-    // Draw border, thicker if active
-    if (m_is_active) {
-        u8g2.drawFrame(draw_x, draw_y, anim_w, anim_h);
-        u8g2.drawFrame(draw_x + 1, draw_y + 1, anim_w - 2, anim_h - 2);
+    if (presentation_ == Presentation::Bare) {
+        if (m_is_active) {
+            u8g2.drawBox(draw_x + 2, draw_y + anim_h - 2, anim_w - 4, 2);
+        }
     } else {
-        u8g2.drawFrame(draw_x, draw_y, anim_w, anim_h);
+        // Draw border, thicker if active
+        if (m_is_active) {
+            u8g2.drawFrame(draw_x, draw_y, anim_w, anim_h);
+            u8g2.drawFrame(draw_x + 1, draw_y + 1, anim_w - 2, anim_h - 2);
+        } else {
+            u8g2.drawFrame(draw_x, draw_y, anim_w, anim_h);
+        }
     }
 
     // Clip drawing area inside the widget
-    setClipWindow(context, {
-        draw_x + 3 - context.originX,
-        draw_y + 3 - context.originY,
-        anim_w - 6,
-        anim_h - 6
-    });
+    if (presentation_ == Presentation::Bare) {
+        setClipWindow(context, {
+            draw_x - context.originX,
+            draw_y - context.originY,
+            anim_w,
+            anim_h - 2
+        });
+    } else {
+        setClipWindow(context, {
+            draw_x + 3 - context.originX,
+            draw_y + 3 - context.originY,
+            anim_w - 6,
+            anim_h - 6
+        });
+    }
 
     u8g2.setFont(u8g2_font_tenfatguys_tn);
 
@@ -240,6 +261,14 @@ void NumScroll::setValue(int32_t val) {
     if (val != m_current_value) {
         animateToValue(val);
     }
+}
+
+void NumScroll::setValueImmediate(int32_t val) {
+    if (val < m_min_value) val = m_min_value;
+    if (val > m_max_value) val = m_max_value;
+    m_current_value = val;
+    m_anim_offset = 0;
+    m_ui.markDirty();
 }
 
 /**

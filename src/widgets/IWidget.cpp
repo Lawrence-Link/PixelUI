@@ -134,6 +134,11 @@ void IWidget::draw() {
     u8g2.setMaxClipWindow();
 }
 
+void IWidget::draw(const WidgetRenderContext& context) {
+    drawTree(context);
+    restoreClipWindow(context);
+}
+
 void IWidget::drawTree(const WidgetRenderContext& parentContext) {
     if (!visible_ || parentContext.clip.w <= 0 || parentContext.clip.h <= 0) return;
 

@@ -165,5 +165,13 @@ int main() {
     clippedRoot.draw();
     if (clippedChild.screenX != -1) return 34;
 
+    ProbeWidget contextualRoot(ui, 45, 22, 20, 20);
+    ProbeWidget contextualChild(ui, 2, 2, 5, 5);
+    if (!contextualRoot.addChild(contextualChild)) return 35;
+    const WidgetRenderContext popupContext{0, 0, {40, 20, 30, 18}};
+    contextualRoot.draw(popupContext);
+    if (!(contextualRoot.receivedClip == popupContext.clip)) return 36;
+    if (!(contextualChild.receivedClip == FocusBox{45, 22, 20, 16})) return 37;
+
     return 0;
 }

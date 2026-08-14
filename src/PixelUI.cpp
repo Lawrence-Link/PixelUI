@@ -31,7 +31,7 @@
 #include "core/animation/animation.h"
 #include "ui/Popup/PopupProgress.h"
 #include "ui/Popup/PopupInfo.h"
-#include "ui/Popup/PopupValue4Digits.h"
+#include "ui/Popup/PopupValueDigits.h"
 #include "core/coroutine/Coroutine.h"
 #include "focus/focus.h"
 #include <inttypes.h>
@@ -271,20 +271,24 @@ bool PixelUI::showPopupInfo(const char* text, const char* title,
 }
 
 /**
- * @brief Show a 4-digit value popup
+ * @brief Show a fixed-width value editor popup
  */
-bool PixelUI::showPopupValue4Digits(int32_t& value, const char* title,
-                                    uint16_t width, uint16_t height,
-                                    uint16_t duration, ValueCallback update_cb) {
-    if (width < 50) width = 50; 
+bool PixelUI::showPopupValueDigits(int32_t& value, uint8_t digitCount,
+                                   const char* title, uint16_t width,
+                                   uint16_t height, uint16_t duration,
+                                   ValueCallback update_cb) {
+    if (!PopupValueDigits::isValidDigitCount(digitCount)) return false;
+    const uint16_t contentWidth = static_cast<uint16_t>(
+        digitCount * 12U + (digitCount - 1U) * 2U + 12U);
+    if (width < contentWidth) width = contentWidth;
     if (width > 120) width = 120;
-    if (height < 30) height = 30; 
+    if (height < 40) height = 40;
     if (height > 60) height = 60;
     if (duration > 30000) duration = 30000; 
     if (duration < 1000) duration = 1000;
 
-    if (m_popupManager.enqueueValue4Digits(
-            width, height, value, title, duration, etl::move(update_cb))) {
+    if (m_popupManager.enqueueValueDigits(
+            width, height, value, digitCount, title, duration, etl::move(update_cb))) {
         markDirty();
         return true;
     }

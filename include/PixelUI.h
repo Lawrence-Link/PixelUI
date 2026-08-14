@@ -162,8 +162,9 @@ public:
                        uint16_t height = 30, uint16_t duration = 3000);
 
     /**
-     * @brief Shows an popup contain 4 digits.
-     * @param text The text content.
+     * @brief Shows a fixed-width integer editor.
+     * @param value Value to edit.
+     * @param digitCount Number of editable digits (1..MAX_INT_FIXED_WIDTH).
      * @param title Optional title.
      * @param width Popup width.
      * @param height Popup height.
@@ -171,11 +172,12 @@ public:
      * @param update_cb function callback when value changed.
      * @return true if the request was accepted.
      */
-    bool showPopupValue4Digits(
+    bool showPopupValueDigits(
         int32_t& value,
+        uint8_t digitCount,
         const char* title = "", 
         uint16_t width = 80, 
-        uint16_t height = 30, 
+        uint16_t height = 40,
         uint16_t duration = 3000,
         ValueCallback update_cb = nullptr);
     

@@ -2,7 +2,7 @@
 
 `PopupManager` is a fixed-capacity FIFO with one active Popup. It contains:
 
-- one `etl::variant_pool<1, PopupInfo, PopupProgress, PopupValue4Digits>` slot;
+- one `etl::variant_pool<1, PopupInfo, PopupProgress, PopupValueDigits>` slot;
 - up to `MAX_POPUP_NUM - 1` compact pending request descriptors;
 - one non-owning `IPopup*` pointing at the active pool object.
 
@@ -41,8 +41,11 @@ the current dispatch returns.
 
 ## Animation cleanup
 
-`PopupValue4Digits` can start animations that reference internal `NumScroll`
+`PopupValueDigits` can start animations that reference internal `NumScroll`
 members. Its destructor currently clears all animations before its pool slot is
 released. This prevents stale member references, but may also stop unrelated
 application animations. Owner-scoped animation cancellation would remove that
 side effect at the cost of additional animation metadata.
+
+Use `showPopupValueDigits()` and pass a digit count from `1` through
+`MAX_INT_FIXED_WIDTH`.

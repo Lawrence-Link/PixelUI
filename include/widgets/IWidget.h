@@ -91,6 +91,7 @@ public:
     IWidget& operator=(IWidget&&) = delete;
 
     void draw();
+    void draw(const WidgetRenderContext& context);
 
     bool addChild(IWidget& child);
     bool removeChild(IWidget& child);

@@ -49,6 +49,15 @@ target_compile_definitions(popup_pool_test PRIVATE ETL_NO_STL)
 add_test(NAME popup_pool_test COMMAND popup_pool_test)
 
 add_executable(
+    popup_value_digits_test
+    popup_value_digits_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc/U8g2lib.cpp
+)
+target_link_libraries(popup_value_digits_test PRIVATE pixelui u8g2_c)
+target_compile_definitions(popup_value_digits_test PRIVATE ETL_NO_STL)
+add_test(NAME popup_value_digits_test COMMAND popup_value_digits_test)
+
+add_executable(
     focus_manager_transition_test
     focus_manager_transition_test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc/U8g2lib.cpp
@@ -97,6 +106,11 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
     target_compile_options(
         popup_pool_test
+        PRIVATE
+            "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
+    )
+    target_compile_options(
+        popup_value_digits_test
         PRIVATE
             "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
     )

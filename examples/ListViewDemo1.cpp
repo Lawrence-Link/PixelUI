@@ -51,7 +51,7 @@ ListItem ItemList[10] = {
     ListItem{.title ="- Sub Menu", .nextList = sub_CathyFlower, .nextListLength = 3},
     ListItem{.title ="- Bool State", .extra = {.switchValue = &bool_state}},
     ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000); }, .extra = {.intValue = &my_value}},
-    ListItem{.title ="- Show 4 Digits", .pFunc = [](){ ui.showPopupValue4Digits(my_value_4_digits, "Value 4D", 100, 40, 5000); }},
+    ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 40, 5000); }},
     ListItem{.title ="- Progress"},
     ListItem{.title ="- Anytone"},
     ListItem{.title ="- Potato"},

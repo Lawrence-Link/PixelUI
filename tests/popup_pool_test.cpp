@@ -76,10 +76,10 @@ int main() {
         (manager.getPopupCounts() != 1U)) return 15;
     manager.clearPopups();
 
-    // Destroying PopupValue4Digits invokes its derived cleanup before reuse.
+    // Destroying PopupValueDigits invokes its derived cleanup before reuse.
     int32_t animatedValue = 0;
     if (!ui.animate(animatedValue, 10, 1000)) return 16;
-    if (!manager.enqueueValue4Digits(80, 30, firstValue, "Digits", 0)) return 17;
+    if (!manager.enqueueValueDigits(80, 40, firstValue, 4, "Digits", 0)) return 17;
     manager.clearPopups();
     if ((ui.activeAnimationCount() != 0U) || manager.hasActivePopup()) return 18;
 
