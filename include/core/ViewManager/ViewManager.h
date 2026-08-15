@@ -27,7 +27,6 @@
 #pragma once
 
 #include "core/app/app_system.h"
-#include <etl/atomic.h>
 #include <etl/utility.h>
 
 class ViewManager {
@@ -67,8 +66,7 @@ public:
     LaunchResult launch(const AppItem& item, void* parameters = nullptr);
     bool pop();
     bool isTransitioning() const noexcept {
-        return m_pendingEnter != nullptr ||
-               m_isTransitioning.load(etl::memory_order_relaxed);
+        return m_pendingEnter != nullptr || m_isTransitioning;
     }
 
     IApplication* getCurrentApp() const;
@@ -85,17 +83,16 @@ private:
             if (manager_.m_pendingEnter != nullptr) {
                 return;
             }
-            bool expected = false;
-            acquired_ = manager_.m_isTransitioning.compare_exchange_strong(
-                expected,
-                true,
-                etl::memory_order_acquire,
-                etl::memory_order_relaxed);
+            if (manager_.m_isTransitioning) {
+                return;
+            }
+            manager_.m_isTransitioning = true;
+            acquired_ = true;
         }
 
         ~TransitionGuard() {
             if (acquired_) {
-                manager_.m_isTransitioning.store(false, etl::memory_order_release);
+                manager_.m_isTransitioning = false;
             }
         }
 
@@ -114,7 +111,7 @@ private:
     void clearNonOwningReferences();
     void restoreCurrentCameraState();
     bool isTransitionCommitInProgress() const noexcept {
-        return m_isTransitioning.load(etl::memory_order_relaxed);
+        return m_isTransitioning;
     }
 
     PixelUI &m_ui;
@@ -125,5 +122,5 @@ private:
     };
     CameraState m_cameraStates[MAX_VIEW_DEPTH]{};
     IApplication* m_pendingEnter = nullptr;
-    etl::atomic<bool> m_isTransitioning{false};
+    bool m_isTransitioning = false;
 };

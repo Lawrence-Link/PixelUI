@@ -2,7 +2,8 @@
 
 PixelUI separates three kinds of work:
 
-- An external event mutates UI state and calls `markDirty()`.
+- The UI task dispatches an external event, mutates UI state, and calls
+  `markDirty()`.
 - A timer ISR calls `tickFromISR(elapsedMs)` with the host-selected interval.
 - The UI task calls `handler(frameIntervalMs)` to update, render, and obtain the
   next delay. `process()` and `renderer()` remain available as separate steps.
@@ -13,6 +14,7 @@ called only when the dirty state changes from clean to dirty, so an RTOS task or
 platform event loop can use it as a wake-up notification without building an
 unbounded event queue. The callback must post or signal work; it must not call
 `renderer()` synchronously from inside the state mutation that raised it.
+Like other UI mutation APIs, `markDirty()` must be called on the UI task.
 
 ```cpp
 void notifyUiTaskFromISR(void* taskHandle) {

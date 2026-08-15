@@ -179,7 +179,7 @@ public:
     }
 
     uint32_t getCurrentTime() const {
-        return _currentTime + pendingTickMs_.load(etl::memory_order_acquire);
+        return _currentTime + pendingTickMs_.load(etl::memory_order_relaxed);
     }
 
     // setters
@@ -382,7 +382,7 @@ private:
     IDrawable* currentDrawable_ = nullptr;
     etl::atomic<uint32_t> pendingTickMs_{0U};
 
-    etl::atomic<bool> isDirty_{false};
+    bool isDirty_ = false;
     bool isFading_ = false;
     bool continousMode_ = false;
 
