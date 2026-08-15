@@ -1,0 +1,183 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1500" height="1072" viewBox="0 0 1500 1072">
+  <defs>
+    <pattern id="pixelGrid" width="14" height="14" patternUnits="userSpaceOnUse">
+      <path d="M14 0H0V14" fill="none" stroke="#333331" stroke-width="1"/>
+    </pattern>
+    <marker id="arrowWhite" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#f6f6f3"/>
+    </marker>
+    <marker id="arrowCyan" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#2fb4d6"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#9a7ce0"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#f06a49"/>
+    </marker>
+    <style>
+      text { letter-spacing: 0; }
+      .sans { font-family: Inter, Helvetica, Arial, sans-serif; }
+      .mono { font-family: Menlo, Monaco, 'SFMono-Regular', monospace; }
+      .white { fill: #f6f6f3; }
+      .muted { fill: #9d9d9a; }
+      .lime { fill: #98ff3d; }
+      .cyan { fill: #2fb4d6; }
+      .purple { fill: #9a7ce0; }
+      .orange { fill: #f06a49; }
+      .hair { stroke: #4b4b49; stroke-width: 1.5; fill: none; }
+      .wire { stroke: #f6f6f3; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+
+  <image x="0" y="0" width="1500" height="1072" xlink:href="/Users/link/dev/PixelUI.wiki/images/doc_bg.png"/>
+  <rect x="1420" y="900" width="80" height="172" fill="#a1ff4b"/>
+
+  <!-- Header -->
+  <text class="sans white" x="72" y="91" font-size="50" font-weight="800">PIXELUI ARCHITECTURE</text>
+  <rect x="72" y="112" width="330" height="7" fill="#98ff3d"/>
+  <text class="mono muted" x="72" y="157" font-size="20">EVENTS IN / MANAGED STATE / FRAMEBUFFER OUT</text>
+  <text class="mono muted" x="72" y="188" font-size="15">One UI task coordinates time, input, application lifetime and drawing.</text>
+
+  <g transform="translate(1050 68)">
+    <text class="mono muted" x="0" y="0" font-size="13">CORE LOOP</text>
+    <text class="mono white" x="0" y="35" font-size="20" font-weight="700">process()</text>
+    <path d="M125 -10V42" class="hair"/>
+    <text class="mono white" x="150" y="35" font-size="20" font-weight="700">renderer()</text>
+  </g>
+
+  <!-- System boundary -->
+  <text class="mono white" x="72" y="247" font-size="18" font-weight="700">SYSTEM BOUNDARY</text>
+  <text class="mono muted" x="1294" y="247" font-size="14" text-anchor="end">host calls in, U8G2 sends pixels out</text>
+  <path d="M72 270H1294" class="hair"/>
+
+  <!-- Sources -->
+  <g transform="translate(72 311)">
+    <path d="M0 24H54l11-24 18 52 18-38 15 10h65" fill="none" stroke="#9a7ce0" stroke-width="4" stroke-linejoin="bevel"/>
+    <text class="mono white" x="0" y="88" font-size="17" font-weight="700">TIME</text>
+    <text class="mono muted" x="0" y="116" font-size="13">tickFromISR(ms)</text>
+
+    <g transform="translate(0 154)" fill="none" stroke="#f6f6f3" stroke-width="3">
+      <path d="M17 0v34M0 17h34"/>
+      <circle cx="62" cy="17" r="9" fill="#2fb4d6" stroke="none"/>
+      <circle cx="91" cy="17" r="9" fill="none" stroke="#2fb4d6"/>
+    </g>
+    <text class="mono white" x="0" y="223" font-size="17" font-weight="700">INPUT</text>
+    <text class="mono muted" x="0" y="251" font-size="13">InputEvent</text>
+  </g>
+
+  <!-- PixelUI orchestrator -->
+  <g transform="translate(393 300)">
+    <path d="M0 0H415L437 22V245L415 267H0L-22 245V22Z" fill="#050505" stroke="#f6f6f3" stroke-width="3"/>
+    <text class="sans white" x="25" y="48" font-size="29" font-weight="800">PIXELUI</text>
+    <text class="mono muted" x="385" y="44" font-size="12" text-anchor="end">ORCHESTRATOR + OWNER</text>
+    <path d="M25 70H390" class="hair"/>
+
+    <rect x="25" y="93" width="8" height="36" fill="#9a7ce0"/>
+    <text class="mono white" x="52" y="111" font-size="18" font-weight="700">process()</text>
+    <text class="mono muted" x="180" y="111" font-size="13">advance timed services</text>
+    <text class="mono muted" x="52" y="132" font-size="12">time → update → dirty / next wakeup</text>
+
+    <rect x="25" y="151" width="8" height="36" fill="#2fb4d6"/>
+    <text class="mono white" x="52" y="169" font-size="18" font-weight="700">handleInput()</text>
+    <text class="mono muted" x="218" y="169" font-size="13">ordered dispatch</text>
+    <text class="mono muted" x="52" y="190" font-size="12">focus → popup → active App → camera</text>
+
+    <rect x="25" y="209" width="8" height="36" fill="#f06a49"/>
+    <text class="mono white" x="52" y="227" font-size="18" font-weight="700">renderer()</text>
+    <text class="mono muted" x="180" y="227" font-size="13">compose one frame</text>
+    <text class="mono muted" x="52" y="248" font-size="12">App → popup → focus → sendBuffer</text>
+  </g>
+
+  <path d="M257 344H358" class="wire" marker-end="url(#arrowWhite)"/>
+  <path d="M220 492H358" class="wire" marker-end="url(#arrowWhite)"/>
+
+  <!-- Output -->
+  <g transform="translate(940 330)">
+    <path d="M0 76H92" class="wire" marker-end="url(#arrowWhite)"/>
+    <g transform="translate(120 0)">
+      <rect x="0" y="0" width="232" height="151" fill="url(#pixelGrid)" stroke="#f6f6f3" stroke-width="3"/>
+      <rect x="15" y="15" width="202" height="121" fill="none" stroke="#5a5a57" stroke-width="1.5"/>
+      <rect x="38" y="43" width="10" height="10" fill="#f6f6f3"/>
+      <rect x="55" y="43" width="10" height="10" fill="#f6f6f3"/>
+      <rect x="72" y="43" width="10" height="10" fill="#f6f6f3"/>
+      <path d="M39 78H191M39 96H157M39 114H176" stroke="#98ff3d" stroke-width="5"/>
+    </g>
+    <text class="mono white" x="120" y="187" font-size="17" font-weight="700">U8G2 FRAMEBUFFER</text>
+    <text class="mono muted" x="120" y="214" font-size="13">clear → draw → sendBuffer()</text>
+  </g>
+
+  <!-- Ownership -->
+  <text class="mono white" x="72" y="635" font-size="18" font-weight="700">PIXELUI-OWNED RUNTIME STATE</text>
+  <text class="mono muted" x="1294" y="635" font-size="14" text-anchor="end">fixed members, optional managers, non-owning links</text>
+  <path d="M72 657H1294" class="hair"/>
+  <path d="M611 567V657" stroke="#f6f6f3" stroke-width="2"/>
+
+  <g transform="translate(72 687)">
+    <g>
+      <rect x="0" y="0" width="185" height="6" fill="#2fb4d6"/>
+      <text class="mono white" x="0" y="35" font-size="16" font-weight="700">VIEW MANAGER</text>
+      <text class="mono muted" x="0" y="61" font-size="12">lifecycle + camera state</text>
+      <rect x="0" y="79" width="43" height="25" fill="none" stroke="#f6f6f3"/>
+      <rect x="47" y="79" width="66" height="25" fill="none" stroke="#f6f6f3"/>
+      <rect x="117" y="79" width="68" height="25" fill="none" stroke="#f6f6f3"/>
+      <text class="mono muted" x="92" y="126" font-size="11" text-anchor="middle">APPLICATION STACK</text>
+    </g>
+
+    <g transform="translate(218 0)">
+      <rect x="0" y="0" width="155" height="6" fill="#9a7ce0"/>
+      <text class="mono white" x="0" y="35" font-size="16" font-weight="700">ANIMATION</text>
+      <text class="mono muted" x="0" y="61" font-size="12">values + deadlines</text>
+    </g>
+
+    <g transform="translate(405 0)">
+      <rect x="0" y="0" width="155" height="6" fill="#f06a49"/>
+      <text class="mono white" x="0" y="35" font-size="16" font-weight="700">POPUP</text>
+      <text class="mono muted" x="0" y="61" font-size="12">queue + active overlay</text>
+    </g>
+
+    <g transform="translate(592 0)">
+      <rect x="0" y="0" width="155" height="6" fill="#73736f"/>
+      <text class="mono white" x="0" y="35" font-size="16" font-weight="700">COROUTINE</text>
+      <text class="mono muted" x="0" y="61" font-size="12">scheduled work</text>
+    </g>
+
+    <g transform="translate(779 0)">
+      <rect x="0" y="0" width="155" height="6" fill="#f6f6f3"/>
+      <text class="mono white" x="0" y="35" font-size="16" font-weight="700">FOCUS</text>
+      <text class="mono muted" x="0" y="61" font-size="12">widget navigation</text>
+    </g>
+
+    <g transform="translate(966 0)">
+      <rect x="0" y="0" width="256" height="6" fill="#98ff3d"/>
+      <text class="mono white" x="0" y="35" font-size="16" font-weight="700">CANVAS + U8G2</text>
+      <text class="mono muted" x="0" y="61" font-size="12">camera-aware drawing / device buffer</text>
+    </g>
+  </g>
+
+  <!-- Three short routes -->
+  <path d="M72 839H1294" class="hair"/>
+  <g transform="translate(192 881)">
+    <text class="mono cyan" x="0" y="0" font-size="15" font-weight="700">INPUT</text>
+    <text class="mono white" x="76" y="0" font-size="14">Focus</text>
+    <path d="M131 -6h32" stroke="#2fb4d6" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+    <text class="mono white" x="184" y="0" font-size="14">Popup</text>
+    <path d="M239 -6h32" stroke="#2fb4d6" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+    <text class="mono white" x="292" y="0" font-size="14">Active App</text>
+    <path d="M385 -6h32" stroke="#2fb4d6" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+    <text class="mono white" x="438" y="0" font-size="14">Camera</text>
+
+    <text class="mono purple" x="0" y="52" font-size="15" font-weight="700">TIME</text>
+    <text class="mono white" x="76" y="52" font-size="14">Popup + Coroutine + Animation</text>
+    <path d="M333 46h44" stroke="#9a7ce0" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
+    <text class="mono white" x="398" y="52" font-size="14">dirty / next wakeup</text>
+
+    <text class="mono orange" x="650" y="0" font-size="15" font-weight="700">FRAME</text>
+    <text class="mono white" x="724" y="0" font-size="14">App + Widget Tree</text>
+    <path d="M873 -6h32" stroke="#f06a49" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+    <text class="mono white" x="926" y="0" font-size="14">Canvas</text>
+    <text class="mono muted" x="650" y="52" font-size="12">then Popup + Focus overlays</text>
+  </g>
+
+  <text class="mono muted" x="1294" y="995" font-size="12" text-anchor="end">Application objects live inside the fixed ApplicationStack arena.</text>
+</svg>

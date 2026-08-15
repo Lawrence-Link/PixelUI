@@ -39,7 +39,7 @@ Its design focuses on **performance, low memory footprint, and easy extensibilit
 - **AppLauncher**: Implementation of IconView, coupled with AppSystem to acquire all registered apps.
 - **Popup**: PopupManagers, Popup base and interface, Popup derivations
 - **Focus**: Focus system for widget choosing.
-- **Blinker**: To achieve Non-blocking blink.
+- **BlinkState**: Deadline-driven, non-blocking visibility state without continuous drawing.
 
 ### Resource Strategy
 - Minimized dynamic memory allocation to avoid fragmentation.

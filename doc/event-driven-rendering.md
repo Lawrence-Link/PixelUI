@@ -62,11 +62,13 @@ is unchanged.
 
 When tickless is enabled, `handler(frameIntervalMs)` and
 `nextWakeupMs(frameIntervalMs)` return the earliest deadline across all
-managers:
+managers and registered UI deadline sources:
 
 - Animations and Popup transitions return the smaller of their remaining time
   and `frameIntervalMs`.
 - A static timed Popup and `CORO_DELAY` return their exact remaining time.
+- `BlinkState` returns its exact next toggle time and requests a frame only when
+  the final visible state changes.
 - Fade returns the remaining time to its next 40 ms step.
 - Continuous drawing returns `frameIntervalMs`.
 - Zero means immediately call `handler()` again; this is used when one manager
@@ -89,8 +91,8 @@ for (;;) {
 }
 ```
 
-Absolute Coroutine deadlines use wrap-safe half-range comparison and therefore
-must be less than `2^31` milliseconds into the future.
+Absolute deadlines use wrap-safe half-range comparison and therefore must be
+less than `2^31` milliseconds into the future.
 
 ## Refactoring plan
 
@@ -109,7 +111,9 @@ must be less than `2^31` milliseconds into the future.
 
 3. Deadline-based timers (implemented)
    - Give AnimationManager, PopupManager, and CoroutineScheduler a
-     `nextDeadline()` query.
+     `nextWakeupMs()` query.
+   - Aggregate intrusive, allocation-free UI deadline sources for discrete
+     state such as `BlinkState`.
    - Return the earliest one-shot delay from `handler()`.
    - Keep a configurable frame cadence only while smooth animation or explicit
      continuous drawing is active.

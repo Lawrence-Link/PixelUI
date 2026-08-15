@@ -25,30 +25,34 @@
  */
 
 #pragma once
+
+#include "core/scheduling/UiDeadlineScheduler.h"
 #include <stdint.h>
 
 class PixelUI;
 
-class Blinker {
+class BlinkState final : private UiDeadlineSource {
 public:
-    Blinker(PixelUI& ui, uint32_t interval_ms = 500);
+    explicit BlinkState(PixelUI& ui, uint32_t intervalMs = 500U);
+    ~BlinkState() override = default;
 
-    void start();              
-    void stop();    
-    void stopOnVisible(); 
+    void start();
+    void stop();
+    void stopWhenVisible();
+    void setInterval(uint32_t intervalMs);
 
-    void set_interval(uint32_t interval_ms);
-
-    void update();
-
-    bool is_visible() const;
-    bool is_running() const;
+    bool isVisible() const { return visible_; }
+    bool isRunning() const { return running_; }
+    uint32_t interval() const { return intervalMs_; }
 
 private:
-    PixelUI&   m_ui;
-    uint32_t   m_interval_ms;
-    uint32_t   m_last_toggle_ms;
-    bool       m_visible;
-    bool       m_running;
-    bool       m_stop_on_visible;
+    uint32_t nextWakeupMs(uint32_t currentTime) const override;
+    bool update(uint32_t currentTime) override;
+
+    PixelUI& ui_;
+    uint32_t intervalMs_;
+    uint32_t lastToggleMs_;
+    bool visible_ = true;
+    bool running_ = false;
+    bool stopWhenVisible_ = false;
 };

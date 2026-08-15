@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1500" height="1072" viewBox="0 0 1500 1072">
+  <defs>
+    <pattern id="delayGrid" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M12 0H0V12" fill="none" stroke="#544774" stroke-width="1"/>
+    </pattern>
+    <pattern id="animGrid" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M0 6H12M6 0V12" fill="none" stroke="#315d68" stroke-width="1"/>
+    </pattern>
+    <marker id="arrowWhite" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#f6f6f3"/>
+    </marker>
+    <marker id="arrowLime" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#98ff3d"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#9a7ce0"/>
+    </marker>
+    <marker id="arrowCyan" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#2fb4d6"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#f06a49"/>
+    </marker>
+    <style>
+      text { letter-spacing: 0; }
+      .sans { font-family: Inter, Helvetica, Arial, sans-serif; }
+      .mono { font-family: Menlo, Monaco, 'SFMono-Regular', monospace; }
+      .white { fill: #f6f6f3; }
+      .muted { fill: #9d9d9a; }
+      .lime { fill: #98ff3d; }
+      .purple { fill: #9a7ce0; }
+      .cyan { fill: #2fb4d6; }
+      .orange { fill: #f06a49; }
+      .hair { stroke: #4b4b49; stroke-width: 1.5; fill: none; }
+      .wire { stroke: #f6f6f3; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+
+  <image x="0" y="0" width="1500" height="1072" xlink:href="/Users/link/dev/PixelUI.wiki/images/doc_bg.png"/>
+  <rect x="1420" y="900" width="80" height="172" fill="#a1ff4b"/>
+
+  <!-- Header -->
+  <text class="sans white" x="72" y="91" font-size="50" font-weight="800">COROUTINE LIFECYCLE</text>
+  <rect x="72" y="112" width="330" height="7" fill="#98ff3d"/>
+  <text class="mono muted" x="72" y="157" font-size="20">OBJECT STATE / WAIT REASON / SCHEDULER REGISTRATION</text>
+  <text class="mono muted" x="72" y="188" font-size="15">A Coroutine owns its state; CoroutineScheduler stores only a non-owning pointer.</text>
+
+  <g transform="translate(1052 68)">
+    <text class="mono muted" x="0" y="0" font-size="13">STATE</text>
+    <text class="mono white" x="0" y="35" font-size="20" font-weight="700">4 VALUES</text>
+    <path d="M116 -10V42" class="hair"/>
+    <text class="mono muted" x="142" y="0" font-size="13">WAIT REASON</text>
+    <text class="mono white" x="142" y="35" font-size="20" font-weight="700">3 VALUES</text>
+  </g>
+
+  <!-- State machine -->
+  <text class="mono white" x="72" y="244" font-size="18" font-weight="700">COROUTINE OBJECT STATE</text>
+  <text class="mono muted" x="1294" y="244" font-size="14" text-anchor="end">transitions occur when the coroutine function yields</text>
+  <path d="M72 267H1294" class="hair"/>
+
+  <!-- reset arc: any state to CREATED -->
+  <path d="M1172 336V294H212V332" fill="none" stroke="#f6f6f3" stroke-width="2.5" marker-end="url(#arrowWhite)"/>
+  <rect x="575" y="278" width="326" height="31" fill="#000"/>
+  <text class="mono white" x="738" y="299" font-size="14" text-anchor="middle">reset() FROM ANY STATE → CREATED</text>
+
+  <!-- Construct -->
+  <g transform="translate(72 362)">
+    <circle cx="12" cy="38" r="8" fill="#f6f6f3"/>
+    <text class="mono muted" x="0" y="77" font-size="12">CONSTRUCT</text>
+    <path d="M30 38H78" class="wire" marker-end="url(#arrowWhite)"/>
+  </g>
+
+  <!-- Created -->
+  <g transform="translate(177 337)">
+    <path d="M0 0H230L246 16V108L230 124H0L-16 108V16Z" fill="#050505" stroke="#f6f6f3" stroke-width="3"/>
+    <text class="mono muted" x="115" y="36" font-size="12" text-anchor="middle">STATE</text>
+    <text class="mono white" x="115" y="76" font-size="27" font-weight="700" text-anchor="middle">CREATED</text>
+    <text class="mono muted" x="115" y="104" font-size="12" text-anchor="middle">pc = 0 / no wait</text>
+  </g>
+
+  <!-- Start arrow -->
+  <path d="M423 399H535" stroke="#98ff3d" stroke-width="3" marker-end="url(#arrowLime)"/>
+  <text class="mono lime" x="479" y="382" font-size="14" font-weight="700" text-anchor="middle">start()</text>
+
+  <!-- Running -->
+  <g transform="translate(560 323)">
+    <path d="M0 0H270L288 18V132L270 150H0L-18 132V18Z" fill="#10190a" stroke="#98ff3d" stroke-width="4"/>
+    <text class="mono lime" x="135" y="42" font-size="12" text-anchor="middle">STATE</text>
+    <text class="mono white" x="135" y="88" font-size="31" font-weight="700" text-anchor="middle">RUNNING</text>
+    <path d="M72 108H198" stroke="#98ff3d" stroke-width="4"/>
+    <text class="mono muted" x="135" y="135" font-size="12" text-anchor="middle">execute function_(context)</text>
+  </g>
+
+  <!-- Finish -->
+  <path d="M848 399H1004" stroke="#f06a49" stroke-width="3" marker-end="url(#arrowOrange)"/>
+  <text class="mono orange" x="926" y="382" font-size="14" font-weight="700" text-anchor="middle">CORO_END</text>
+  <g transform="translate(1028 337)">
+    <path d="M0 0H230L246 16V108L230 124H0L-16 108V16Z" fill="#1d0d09" stroke="#f06a49" stroke-width="3"/>
+    <text class="mono orange" x="115" y="36" font-size="12" text-anchor="middle">STATE</text>
+    <text class="mono white" x="115" y="76" font-size="27" font-weight="700" text-anchor="middle">FINISHED</text>
+    <text class="mono muted" x="115" y="104" font-size="12" text-anchor="middle">object remains alive</text>
+  </g>
+
+  <!-- Suspended / delay -->
+  <path d="M622 473C601 517 519 521 519 568" fill="none" stroke="#9a7ce0" stroke-width="3" marker-end="url(#arrowPurple)"/>
+  <text class="mono purple" x="465" y="515" font-size="14" font-weight="700">CORO_DELAY</text>
+  <g transform="translate(322 590)">
+    <rect x="0" y="0" width="386" height="132" fill="url(#delayGrid)" stroke="#9a7ce0" stroke-width="3"/>
+    <text class="mono purple" x="193" y="31" font-size="12" text-anchor="middle">STATE + WAIT REASON</text>
+    <text class="mono white" x="193" y="72" font-size="24" font-weight="700" text-anchor="middle">SUSPENDED / DELAY</text>
+    <text class="mono muted" x="193" y="104" font-size="13" text-anchor="middle">waitUntil = current time + ms</text>
+  </g>
+  <path d="M708 656C765 642 775 525 748 474" fill="none" stroke="#9a7ce0" stroke-width="3" marker-end="url(#arrowPurple)"/>
+  <text class="mono white" x="690" y="550" font-size="13" text-anchor="end">deadline reached</text>
+
+  <!-- Suspended / animation -->
+  <path d="M786 473C819 515 930 522 930 568" fill="none" stroke="#2fb4d6" stroke-width="3" marker-end="url(#arrowCyan)"/>
+  <text class="mono cyan" x="858" y="515" font-size="14" font-weight="700">CORO_WAIT_ANIMATION</text>
+  <g transform="translate(825 590)">
+    <rect x="0" y="0" width="420" height="132" fill="url(#animGrid)" stroke="#2fb4d6" stroke-width="3"/>
+    <text class="mono cyan" x="210" y="31" font-size="12" text-anchor="middle">STATE + WAIT REASON</text>
+    <text class="mono white" x="210" y="72" font-size="24" font-weight="700" text-anchor="middle">SUSPENDED / ANIMATION</text>
+    <text class="mono muted" x="210" y="104" font-size="13" text-anchor="middle">wait while any animation is active</text>
+  </g>
+  <path d="M825 656C759 628 737 527 717 474" fill="none" stroke="#2fb4d6" stroke-width="3" marker-end="url(#arrowCyan)"/>
+  <text class="mono white" x="850" y="550" font-size="13">animation count = 0</text>
+
+  <!-- Registration is separate from object state -->
+  <text class="mono white" x="72" y="794" font-size="18" font-weight="700">SCHEDULER REGISTRATION</text>
+  <text class="mono muted" x="1294" y="794" font-size="14" text-anchor="end">registration is not an object state</text>
+  <path d="M72 816H1294" class="hair"/>
+
+  <g transform="translate(192 858)">
+    <text class="mono white" x="0" y="0" font-size="16" font-weight="700">removeCoroutine() / clearAllCoroutines()</text>
+    <path d="M370 -6h64" class="wire" marker-end="url(#arrowWhite)"/>
+    <text class="mono white" x="458" y="0" font-size="16" font-weight="700">ERASE POINTER ONLY</text>
+    <text class="mono muted" x="458" y="28" font-size="13">Coroutine object state is unchanged</text>
+
+    <text class="mono orange" x="0" y="86" font-size="15" font-weight="700">FINISHED</text>
+    <path d="M92 80h64" stroke="#f06a49" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+    <text class="mono white" x="180" y="86" font-size="15">scheduler update()</text>
+    <path d="M342 80h64" stroke="#f06a49" stroke-width="2.5" marker-end="url(#arrowOrange)"/>
+    <text class="mono white" x="430" y="86" font-size="15">AUTO-ERASE POINTER</text>
+    <text class="mono muted" x="650" y="86" font-size="13">state stays FINISHED</text>
+  </g>
+
+  <g transform="translate(1025 852)">
+    <text class="mono muted" x="0" y="0" font-size="12">reset() writes</text>
+    <text class="mono white" x="0" y="27" font-size="14">state = CREATED</text>
+    <text class="mono white" x="0" y="50" font-size="14">pc = 0</text>
+    <text class="mono white" x="0" y="73" font-size="14">wait = cleared</text>
+    <text class="mono muted" x="0" y="103" font-size="11">localData[] is retained</text>
+  </g>
+</svg>

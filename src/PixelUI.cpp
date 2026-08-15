@@ -121,6 +121,8 @@ bool PixelUI::process() {
         pendingTickMs_.exchange(0U, etl::memory_order_relaxed);
     _currentTime += elapsedMs;
 
+    if (m_deadlineScheduler.update(_currentTime)) markDirty();
+
 #if PIXELUI_USE_ANIMATION
     const bool animationIsDue =
         m_animationManager.nextWakeupMs(_currentTime, 1U) == 0U;
@@ -314,6 +316,8 @@ void PixelUI::handleInput(InputEvent event) {
 bool PixelUI::needsHeartbeat() const {
     if (pendingTickMs_.load(etl::memory_order_relaxed) != 0U ||
         isFading_ || continousMode_) return true;
+    if (m_deadlineScheduler.nextWakeupMs(_currentTime) !=
+        PixelUITime::NO_WAKEUP) return true;
 #if PIXELUI_USE_ANIMATION
     if (m_animationManager.nextWakeupMs(_currentTime, 1U) !=
         PixelUITime::NO_WAKEUP) return true;
@@ -345,6 +349,9 @@ uint32_t PixelUI::calculateNextWakeupMs(uint32_t frameIntervalMs) const {
 
     uint32_t next = PixelUITime::NO_WAKEUP;
     const uint32_t currentTime = _currentTime;
+
+    next = PixelUITime::earlier(
+        next, m_deadlineScheduler.nextWakeupMs(currentTime));
 
     if (continousMode_) {
         next = frameIntervalMs;

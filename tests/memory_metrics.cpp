@@ -7,6 +7,8 @@
 #include "ui/Popup/PopupProgress.h"
 #include "ui/Popup/PopupValueDigits.h"
 #include "focus/focus.h"
+#include "blink/BlinkState.h"
+#include "core/scheduling/UiDeadlineScheduler.h"
 
 #include <stdio.h>
 
@@ -32,6 +34,10 @@ int main() {
            sizeof(AnimationManager), alignof(AnimationManager));
     printf("sizeof(PixelUI)=%zu alignof(PixelUI)=%zu\n",
            sizeof(PixelUI), alignof(PixelUI));
+    printf("sizeof(UiDeadlineScheduler)=%zu alignof(UiDeadlineScheduler)=%zu\n",
+           sizeof(UiDeadlineScheduler), alignof(UiDeadlineScheduler));
+    printf("sizeof(BlinkState)=%zu alignof(BlinkState)=%zu\n",
+           sizeof(BlinkState), alignof(BlinkState));
     printf("sizeof(PopupInfo)=%zu alignof(PopupInfo)=%zu\n",
            sizeof(PopupInfo), alignof(PopupInfo));
     printf("sizeof(PopupProgress)=%zu alignof(PopupProgress)=%zu\n",

@@ -34,6 +34,7 @@
 #include "ui/IDrawable.h"
 #include "core/CommonTypes.h"
 #include "core/canvas/Canvas.h"
+#include "core/scheduling/UiDeadlineScheduler.h"
 #include <etl/atomic.h>
 #include <etl/inplace_function.h>
 
@@ -55,6 +56,7 @@
 
 class Coroutine;
 class IWidget;
+class BlinkState;
 
 /**
  * @class PixelUI
@@ -357,6 +359,8 @@ protected:
     bool isFading() const { return isFading_; }
 
 private:
+    friend class BlinkState;
+
     uint32_t calculateNextWakeupMs(uint32_t frameIntervalMs) const;
 
     U8G2& u8g2_;
@@ -364,6 +368,7 @@ private:
     const uint16_t displayHeight_;
     const uint16_t displayBufferSize_;
     Canvas canvas_;
+    UiDeadlineScheduler m_deadlineScheduler;
 
 #if PIXELUI_USE_ANIMATION
     AnimationManager m_animationManager;

@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1500" height="1072" viewBox="0 0 1500 1072">
+  <defs>
+    <pattern id="freeGrid" width="18" height="18" patternUnits="userSpaceOnUse">
+      <path d="M18 0H0V18" fill="none" stroke="#303030" stroke-width="1"/>
+    </pattern>
+    <pattern id="padHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <path d="M0 0V8" stroke="#f5f5f5" stroke-width="3"/>
+    </pattern>
+    <marker id="arrowWhite" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#f5f5f5"/>
+    </marker>
+    <marker id="arrowLime" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#98ff3d"/>
+    </marker>
+    <style>
+      text { letter-spacing: 0; }
+      .sans { font-family: Inter, Helvetica, Arial, 'PingFang SC', sans-serif; }
+      .mono { font-family: Menlo, Monaco, 'SFMono-Regular', 'PingFang SC', monospace; }
+      .white { fill: #f6f6f3; }
+      .muted { fill: #9d9d9a; }
+      .lime { fill: #98ff3d; }
+      .hair { stroke: #4b4b49; stroke-width: 1.5; fill: none; }
+      .wire { stroke: #f6f6f3; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+
+  <image x="0" y="0" width="1500" height="1072" xlink:href="/Users/link/dev/PixelUI.wiki/images/doc_bg.png"/>
+
+  <!-- Remove the Chinese footer inherited from the supplied background. -->
+  <rect x="1420" y="900" width="80" height="172" fill="#a1ff4b"/>
+
+  <!-- Header -->
+  <text class="sans white" x="72" y="91" font-size="50" font-weight="800">FIXED APPLICATION ARENA</text>
+  <rect x="72" y="112" width="330" height="7" fill="#98ff3d"/>
+  <text class="mono muted" x="72" y="157" font-size="20">FIXED CAPACITY / VARIABLE-SIZE PACKING / LIFO LIFETIME</text>
+  <text class="mono muted" x="72" y="188" font-size="15">Applications are constructed directly inside ViewManager-owned storage.</text>
+
+  <g transform="translate(1010 70)">
+    <text class="mono muted" x="0" y="0" font-size="13">CAPACITY</text>
+    <text class="mono white" x="0" y="35" font-size="27" font-weight="700">4096 B</text>
+    <path d="M118 -10V42" class="hair"/>
+    <text class="mono muted" x="143" y="0" font-size="13">MAX ALIGN</text>
+    <text class="mono white" x="143" y="35" font-size="27" font-weight="700">64 B</text>
+    <path d="M258 -10V42" class="hair"/>
+    <text class="mono muted" x="283" y="0" font-size="13">MAX DEPTH</text>
+    <text class="mono white" x="283" y="35" font-size="27" font-weight="700">8</text>
+  </g>
+
+  <!-- Continuous arena -->
+  <text class="mono white" x="72" y="251" font-size="18" font-weight="700">ONE CONTINUOUS BYTE ARENA</text>
+  <text class="mono muted" x="1294" y="251" font-size="14" text-anchor="end">illustrative layout</text>
+  <g transform="translate(72 278)">
+    <rect x="0" y="0" width="1222" height="164" fill="url(#freeGrid)" stroke="#f6f6f3" stroke-width="3"/>
+    <rect x="3" y="3" width="240" height="158" fill="#167d9b"/>
+    <rect x="243" y="3" width="35" height="158" fill="url(#padHatch)"/>
+    <rect x="278" y="3" width="400" height="158" fill="#6750a4"/>
+    <rect x="678" y="3" width="132" height="158" fill="#d35d3f"/>
+    <text class="mono white" x="122" y="79" font-size="26" font-weight="700" text-anchor="middle">APP A</text>
+    <text class="mono white" x="122" y="108" font-size="13" text-anchor="middle">actual sizeof(T)</text>
+    <text class="mono white" x="261" y="82" font-size="12" font-weight="700" text-anchor="middle" transform="rotate(-90 261 82)">ALIGN PAD</text>
+    <text class="mono white" x="478" y="79" font-size="26" font-weight="700" text-anchor="middle">APP B</text>
+    <text class="mono white" x="478" y="108" font-size="13" text-anchor="middle">actual sizeof(T)</text>
+    <text class="mono white" x="744" y="79" font-size="23" font-weight="700" text-anchor="middle">APP C</text>
+    <text class="mono muted" x="1016" y="83" font-size="25" font-weight="700" text-anchor="middle">FREE</text>
+    <text class="mono muted" x="1016" y="112" font-size="13" text-anchor="middle">available for the next App</text>
+    <path d="M0 170v20M243 170v20M278 170v20M678 170v20M810 170v20M1222 170v20" stroke="#f6f6f3" stroke-width="2"/>
+    <text class="mono muted" x="0" y="214" font-size="13">0</text>
+    <text class="mono muted" x="1222" y="214" font-size="13" text-anchor="end">4096</text>
+    <path d="M810 197v42" stroke="#98ff3d" stroke-width="2.5" marker-end="url(#arrowLime)"/>
+    <text class="mono lime" x="810" y="264" font-size="15" font-weight="700" text-anchor="middle">CURRENT OFFSET</text>
+  </g>
+
+  <!-- Metadata -->
+  <text class="mono white" x="72" y="587" font-size="18" font-weight="700">METADATA × MAX_VIEW_DEPTH</text>
+  <text class="mono muted" x="1294" y="587" font-size="14" text-anchor="end">object boundaries are explicit</text>
+  <path d="M72 609H1294" class="hair"/>
+  <g transform="translate(108 654)">
+    <circle cx="0" cy="0" r="10" fill="#f6f6f3"/>
+    <text class="mono white" x="25" y="7" font-size="17">IApplication*</text>
+    <path d="M190 0H276" class="hair"/>
+    <rect x="286" y="-10" width="20" height="20" fill="#a8a8a4"/>
+    <text class="mono white" x="321" y="7" font-size="17">marker</text>
+    <path d="M425 0H511" class="hair"/>
+    <path d="M531 -11L542 0L531 11L520 0Z" fill="#676764"/>
+    <text class="mono white" x="556" y="7" font-size="17">end offset</text>
+    <path d="M704 0H790" class="hair"/>
+    <circle cx="810" cy="0" r="9" fill="none" stroke="#f6f6f3" stroke-width="3"/>
+    <text class="mono white" x="835" y="7" font-size="17">destroy thunk</text>
+  </g>
+
+  <!-- Operations -->
+  <g transform="translate(72 742)">
+    <text class="mono lime" x="0" y="0" font-size="17" font-weight="700">PUSH</text>
+    <text class="mono white" x="83" y="0" font-size="16">ALIGN</text>
+    <path d="M151 -6h42" class="wire" marker-end="url(#arrowWhite)"/>
+    <text class="mono white" x="216" y="0" font-size="16">CHECK</text>
+    <path d="M285 -6h42" class="wire" marker-end="url(#arrowWhite)"/>
+    <text class="mono white" x="350" y="0" font-size="16">PLACEMENT NEW</text>
+    <path d="M492 -6h42" class="wire" marker-end="url(#arrowWhite)"/>
+    <text class="mono white" x="557" y="0" font-size="16">COMMIT</text>
+    <text class="mono muted" x="0" y="33" font-size="13">capacity and alignment are checked before construction</text>
+
+    <text class="mono" x="744" y="0" font-size="17" font-weight="700" fill="#ff7456">POP</text>
+    <text class="mono white" x="811" y="0" font-size="16">DESTROY T</text>
+    <path d="M914 -6h42" class="wire" marker-end="url(#arrowWhite)"/>
+    <text class="mono white" x="980" y="0" font-size="16">RESTORE MARKER</text>
+    <text class="mono muted" x="744" y="33" font-size="13">only the top App can be released</text>
+  </g>
+
+  <!-- Why / measured example -->
+  <path d="M72 826H1294" class="hair"/>
+  <g transform="translate(72 870)">
+    <text class="sans white" x="120" y="0" font-size="24" font-weight="800">WHY IT MATTERS</text>
+    <text class="mono lime" x="120" y="43" font-size="15">01</text>
+    <text class="mono white" x="158" y="43" font-size="15">NO APP HEAP</text>
+    <text class="mono lime" x="120" y="77" font-size="15">02</text>
+    <text class="mono white" x="158" y="77" font-size="15">VARIABLE-SIZE PACKING</text>
+    <text class="mono lime" x="120" y="111" font-size="15">03</text>
+    <text class="mono white" x="158" y="111" font-size="15">DETERMINISTIC LIFO CLEANUP</text>
+
+    <g transform="translate(525 0)">
+      <text class="mono muted" x="0" y="0" font-size="13">CURRENT ARM64 DEBUG EXAMPLE</text>
+      <text class="mono white" x="0" y="43" font-size="20" font-weight="700">Launcher 544</text>
+      <text class="mono lime" x="165" y="43" font-size="20">+</text>
+      <text class="mono white" x="196" y="43" font-size="20" font-weight="700">List 1432</text>
+      <text class="mono lime" x="331" y="43" font-size="20">+</text>
+      <text class="mono white" x="362" y="43" font-size="20" font-weight="700">About 64</text>
+      <text class="mono muted" x="0" y="79" font-size="14">= 2040 B used / 2056 B free</text>
+      <rect x="0" y="101" width="635" height="13" fill="#242424"/>
+      <rect x="0" y="101" width="316" height="13" fill="#98ff3d"/>
+      <text class="mono muted" x="635" y="136" font-size="12" text-anchor="end">re-measure for each target ABI</text>
+    </g>
+  </g>
+</svg>

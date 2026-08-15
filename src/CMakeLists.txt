@@ -12,6 +12,7 @@ add_library(pixelui STATIC
     core/app/app_system.cpp
     core/app/ApplicationStack.cpp
     core/canvas/Canvas.cpp
+    core/scheduling/UiDeadlineScheduler.cpp
     core/animation/animation.cpp
     core/ViewManager/ViewManager.cpp
     core/coroutine/Coroutine.cpp
@@ -38,7 +39,7 @@ add_library(pixelui STATIC
     widgets/curve_chart/curve_chart.cpp
 
     focus/focus.cpp
-    blinker/Blinker.cpp
+    blink/BlinkState.cpp
     
 )
 

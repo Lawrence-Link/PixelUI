@@ -9,9 +9,17 @@
 namespace PixelUITime {
 
 constexpr uint32_t NO_WAKEUP = UINT32_MAX;
+constexpr uint32_t MAX_DEADLINE_INTERVAL = UINT32_MAX / 2U;
 
 inline uint32_t normalizeInterval(uint32_t intervalMs) {
     return (intervalMs == 0U) ? 1U : intervalMs;
+}
+
+inline uint32_t normalizeDeadlineInterval(uint32_t intervalMs) {
+    intervalMs = normalizeInterval(intervalMs);
+    return (intervalMs > MAX_DEADLINE_INTERVAL)
+        ? MAX_DEADLINE_INTERVAL
+        : intervalMs;
 }
 
 /* Absolute deadlines must be less than 2^31 ms into the future. */
