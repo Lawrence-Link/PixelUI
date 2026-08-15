@@ -229,11 +229,11 @@ int main() {
         if (manager.launch(next, &second) != ViewManager::LaunchResult::TransitionInProgress) return 33;
 
         for (int step = 0; step < 3; ++step) {
-            ui.Heartbeat(40);
+            ui.heartbeat(40);
             ui.renderer();
             if (!log.equals("EP")) return 34;
         }
-        ui.Heartbeat(40);
+        ui.heartbeat(40);
         ui.renderer();
         if (!log.equals("EPE") || manager.isTransitioning() ||
             ui.activeAnimationCount() != 1U) return 35;

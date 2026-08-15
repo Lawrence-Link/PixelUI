@@ -129,7 +129,7 @@ int main() {
             !pixelIsSet(transitionDisplay, 4, 5) ||
             transitionUi.getCanvas().camera().x() != -5) return 18;
 
-        transitionUi.Heartbeat(150U);
+        transitionUi.heartbeat(150U);
         if (!transitionUi.renderer() ||
             !pixelIsSet(transitionDisplay, 5, 5) ||
             pixelIsSet(transitionDisplay, 10, 5) ||

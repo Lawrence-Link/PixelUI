@@ -147,7 +147,7 @@ int main() {
     if (unregisteredParent.addChild(focusRoot)) return 19;
     for (int expected = 1; expected <= 7; ++expected) {
         ui.handleInput(InputEvent::RIGHT);
-        ui.Heartbeat(100);
+        ui.heartbeat(100);
         ui.renderer();
         ui.handleInput(InputEvent::SELECT);
         if (selectionLog[expected - 1] != expected) return 20;
@@ -160,7 +160,7 @@ int main() {
     focusRoot.setEnabled(true);
     child4.setVisible(true);
     ui.handleInput(InputEvent::RIGHT);
-    ui.Heartbeat(100);
+    ui.heartbeat(100);
     ui.renderer();
     if (!focusRoot.removeChild(child1)) return 23;
     ui.handleInput(InputEvent::SELECT);
@@ -184,7 +184,7 @@ int main() {
     FocusManager secondManager(ui);
     if (!firstManager.addWidget(&detachRoot)) return 28;
     firstManager.moveNext();
-    ui.Heartbeat(100);
+    ui.heartbeat(100);
     ui.renderer();
     firstManager.selectCurrent();
     if (selectionCount != 8U) return 29;
@@ -234,7 +234,7 @@ int main() {
     if (animatedBrace.onSelect() || !braceSelected || !animatedBrace.isFocusable()) return 43;
 
     animatedBrace.onLoad();
-    ui.Heartbeat(600);
+    ui.heartbeat(600);
     ui.process();
     animatedBrace.draw();
     if (braceChild.screenX != 6 || braceChild.screenY != 7) return 44;

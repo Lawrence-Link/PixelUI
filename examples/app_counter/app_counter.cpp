@@ -127,7 +127,6 @@ void APP_COUNTER::draw() {
         canvas.drawStr(17, 60, "CPM");
         canvas.setFont(u8g2_font_profont11_tr);
         canvas.drawStr(3, 18, "MAX_VAL");
-        canvas.drawFrame(48, 0, 79, 63);
         canvas.drawStr(3, 49, "AVG_VAL");
     }
     histogram.draw();

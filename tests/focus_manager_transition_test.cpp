@@ -62,21 +62,23 @@ int main() {
     ui.handleInput(InputEvent::RIGHT);
     if (ui.activeAnimationCount() != 4U) return 1;
 
-    ui.Heartbeat(100);
+    ui.heartbeat(100);
     ui.renderer();
     if (ui.activeAnimationCount() != 0U) return 2;
 
     ui.handleInput(InputEvent::SELECT);
     if (!widget.isActive() || widget.selectCount != 1 || widget.activateCount != 1) return 3;
+    if (ui.activeAnimationCount() != 0U) return 11;
 
     ui.handleInput(InputEvent::BACK);
     if (widget.isActive() || widget.inputCount != 1 || widget.deactivateCount != 1) return 4;
 
-    ui.Heartbeat(2501);
+    ui.heartbeat(2501);
+    ui.markDirty();
     ui.renderer();
     if (ui.activeAnimationCount() != 4U) return 5;
 
-    ui.Heartbeat(100);
+    ui.heartbeat(100);
     ui.renderer();
     if (ui.activeAnimationCount() != 0U) return 6;
 
@@ -84,7 +86,7 @@ int main() {
     if (widget.selectCount != 1 || widget.activateCount != 1) return 7;
 
     ui.handleInput(InputEvent::RIGHT);
-    ui.Heartbeat(100);
+    ui.heartbeat(100);
     ui.renderer();
     ui.handleInput(InputEvent::SELECT);
     if (!widget.isActive() || widget.activateCount != 2) return 8;

@@ -30,7 +30,7 @@ int main() {
         });
 
     popup.update(ui.getCurrentTime());
-    ui.Heartbeat(100);
+    ui.heartbeat(100);
     popup.update(ui.getCurrentTime());
     display.clearBuffer();
     popup.draw();
@@ -52,7 +52,7 @@ int main() {
         }
     }
 
-    ui.Heartbeat(200);
+    ui.heartbeat(200);
     popup.update(ui.getCurrentTime());
 
     uint8_t unscrolledFrame[1024] = {};

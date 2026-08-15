@@ -4,7 +4,7 @@
 namespace {
 
 void advance(PopupManager& manager, PixelUI& ui, uint32_t milliseconds) {
-    ui.Heartbeat(milliseconds);
+    ui.heartbeat(milliseconds);
     manager.updatePopups(ui.getCurrentTime());
 }
 

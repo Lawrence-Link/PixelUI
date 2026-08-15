@@ -307,7 +307,7 @@ public:
     void markDirty();
 
     /**
-     * @brief Returns true when time-driven UI work still needs Heartbeat calls.
+     * @brief Returns true when time-driven UI work still needs heartbeat calls.
      *
      * An event loop may stop its periodic UI timer while this returns false and
      * wake it again when an input/data event starts an animation, Popup, fade,

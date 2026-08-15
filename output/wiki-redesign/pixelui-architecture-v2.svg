@@ -21,7 +21,7 @@
   <text class="tiny" x="905" y="61" text-anchor="end">time, input and pixels meet in one loop</text>
 
   <!-- time source -->
-  <text class="small" x="42" y="116">Heartbeat(ms)</text>
+  <text class="small" x="42" y="116">heartbeat(ms)</text>
   <path d="M44 152h32l9-28 16 57 17-44 14 15h46" fill="none" stroke="#ff3b30" stroke-width="4" stroke-linejoin="bevel"/>
   <text class="tiny" x="44" y="202">time + update flag</text>
   <path class="wire" d="M181 152C242 152 270 133 338 148" marker-end="url(#arrow)"/>

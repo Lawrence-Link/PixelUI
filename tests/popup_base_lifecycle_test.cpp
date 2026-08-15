@@ -39,47 +39,47 @@ int main() {
     if (!popup.update(ui.getCurrentTime())) return 1;
     if (ui.activeAnimationCount() != 0U) return 2;
 
-    ui.Heartbeat(300);
+    ui.heartbeat(300);
     if (!popup.update(ui.getCurrentTime()) || popup.shownCount != 1) return 3;
 
-    ui.Heartbeat(100);
+    ui.heartbeat(100);
     if (!popup.handleInput(InputEvent::RIGHT) || popup.contentInputCount != 1) return 4;
     if (popup.closingCount != 0) return 5;
 
-    ui.Heartbeat(900);
+    ui.heartbeat(900);
     if (!popup.update(ui.getCurrentTime()) || popup.closingCount != 0) return 6;
 
-    ui.Heartbeat(101);
+    ui.heartbeat(101);
     if (!popup.update(ui.getCurrentTime()) || popup.closingCount != 1) return 7;
 
-    ui.Heartbeat(299);
+    ui.heartbeat(299);
     if (!popup.update(ui.getCurrentTime())) return 8;
-    ui.Heartbeat(1);
+    ui.heartbeat(1);
     if (popup.update(ui.getCurrentTime())) return 9;
 
     TestPopup inputClosedPopup(ui, 0);
     if (!inputClosedPopup.update(ui.getCurrentTime())) return 10;
-    ui.Heartbeat(300);
+    ui.heartbeat(300);
     if (!inputClosedPopup.update(ui.getCurrentTime())) return 11;
     if (!inputClosedPopup.handleInput(InputEvent::BACK)) return 12;
     if (inputClosedPopup.closingCount != 1) return 13;
-    ui.Heartbeat(300);
+    ui.heartbeat(300);
     if (inputClosedPopup.update(ui.getCurrentTime())) return 14;
 
     TestPopup drawingPopup(ui, 0);
     if (!drawingPopup.update(ui.getCurrentTime())) return 15;
     for (uint16_t elapsed = 1; elapsed <= 300; ++elapsed) {
-        ui.Heartbeat(1);
+        ui.heartbeat(1);
         if (!drawingPopup.update(ui.getCurrentTime())) return 16;
         drawingPopup.draw();
     }
     if (!drawingPopup.handleInput(InputEvent::BACK)) return 17;
     for (uint16_t elapsed = 1; elapsed < 300; ++elapsed) {
-        ui.Heartbeat(1);
+        ui.heartbeat(1);
         if (!drawingPopup.update(ui.getCurrentTime())) return 18;
         drawingPopup.draw();
     }
-    ui.Heartbeat(1);
+    ui.heartbeat(1);
     if (drawingPopup.update(ui.getCurrentTime())) return 19;
 
     return 0;

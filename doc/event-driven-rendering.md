@@ -42,10 +42,10 @@ The embedded target must provide an ISR-safe, native 32-bit atomic operation
 for `etl::atomic<uint32_t>`. Configure `setTaskNotifyFromISR()` before enabling
 the timer interrupt, and do not replace its callback or context while that
 interrupt can run. When task notification is the wake-up mechanism, inject
-time through `tickFromISR()` only; mixing it with `Heartbeat()` can accumulate
+time through `tickFromISR()` only; mixing it with `heartbeat()` can accumulate
 time without producing the notification that the blocked UI task expects.
 
-The legacy `Heartbeat(ms)` API remains available for non-ISR hosts. It only
+The legacy `heartbeat(ms)` API remains available for non-ISR hosts. It only
 accumulates time; manager updates still happen in `process()` or, for backward
 compatibility, at the beginning of `renderer()`.
 

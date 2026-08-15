@@ -121,7 +121,7 @@ int main() {
     ui.tickFromISR(50U);
     if (!ui.process() || !ui.renderer() || value != 100 || refreshCount != 4) return 15;
     if (ui.needsHeartbeat()) return 16;
-    ui.Heartbeat(16U);
+    ui.heartbeat(16U);
     if (ui.renderer() || refreshCount != 4) return 17;
 
     // Continuous mode is an explicit opt-in to one frame per render pass.

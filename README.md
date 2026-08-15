@@ -43,7 +43,7 @@ Its design focuses on **performance, low memory footprint, and easy extensibilit
 
 ### Resource Strategy
 - Minimized dynamic memory allocation to avoid fragmentation.
-- Logic (`Heartbeat`) and rendering (`renderer`) fully separated.
+- Logic (`heartbeat`) and rendering (`renderer`) fully separated.
 
 ## 📦 Getting Started
 

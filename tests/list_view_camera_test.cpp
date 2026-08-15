@@ -13,7 +13,7 @@ public:
 };
 
 void finishAnimations(PixelUI& ui) {
-    ui.Heartbeat(400U);
+    ui.heartbeat(400U);
     ui.process();
 }
 

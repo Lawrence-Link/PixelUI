@@ -256,6 +256,7 @@ void FocusManager::selectCurrent() {
         m_activeWidget = m_currentWidget;
         m_activeWidget->onActivate(m_ui.getCurrentTime());
         enterIdle(false);
+        return;
     }
     const FocusBox target = m_currentWidget->getFocusBox();
     m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
