@@ -46,18 +46,10 @@ PixelUI ui(display);
 
 MainWindow* g_mainWindow = nullptr;
 
-void threadDelay(uint32_t ms) {
-    QThread::msleep(ms);
-}
-
 class EmulatorThread : public EmuWorker {
 public:
     void grandLoop() override { 
-        ui.setDelayFunction(threadDelay);
-
-        #if (USE_STATIC_APP_REGISTER_ENABLED == 0) // If not using static app linking, register Apps manually
         registerApps();
-        #endif
 
         ui.begin();
         AppLauncher::launch(ui, *ui.getViewManagerPtr());

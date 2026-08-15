@@ -8,5 +8,4 @@
 using InputCallback = etl::inplace_function<bool(InputEvent), CALLBACK_STORAGE_SIZE>;
 using VoidCallback = etl::inplace_function<void(), CALLBACK_STORAGE_SIZE>;
 using ValueCallback = etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE>;
-using DelayFunction = void (*)(uint32_t);
 using IsrTaskNotifyFunction = void (*)(void* context);

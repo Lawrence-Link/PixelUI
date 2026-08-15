@@ -26,11 +26,9 @@
 
 #include "app_registry.h"
 
-#if (USE_STATIC_APP_REGISTER_ENABLED == 0)
-
 void registerApps() {
-    auto& app_man = AppManager::getInstance(); // acquire for global AppManager singleton..
-    
+    auto& app_man = AppManager::getInstance();
+
     app_man.registerApp(counter_app);
     app_man.registerApp(cube_demo_app);
     app_man.registerApp(about_app);
@@ -43,5 +41,3 @@ void registerApps() {
     app_man.registerApp(pixel_clock_app);
     app_man.registerApp(parent_child_demo_app);
 }
-
-#endif

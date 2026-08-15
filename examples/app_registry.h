@@ -26,8 +26,6 @@
 
 #pragma once
 
-#if (USE_STATIC_APP_REGISTER_ENABLED == 0)
-
 #include "core/app/app_system.h"
 
 extern AppItem counter_app;
@@ -42,5 +40,3 @@ extern AppItem greenhouse_app;
 extern AppItem pixel_clock_app;
 extern AppItem parent_child_demo_app;
 void registerApps();
-
-#endif

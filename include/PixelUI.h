@@ -208,8 +208,7 @@ public:
     }
     // Backward-compatible spelling retained for existing applications.
     void setContinousDraw(bool isEnabled) { setContinuousDraw(isEnabled); }
-    void setDelayFunction(DelayFunction func) {if (func) m_func_delay = func; }
-    
+
     // TBD:
     // void setDebugPrintFunction(void (*func)(const char*)) { if (func) m_func_debug_print = func; }
 
@@ -395,7 +394,6 @@ private:
     VoidCallback m_render_request_callback = nullptr;
     IsrTaskNotifyFunction m_taskNotifyFromISR_ = nullptr;
     void* m_taskNotifyContext_ = nullptr;
-    DelayFunction m_func_delay = nullptr;
     InputCallback inputCallback_ = nullptr;
 
     bool isContinousRefreshEnabled() const { return continousMode_; }
