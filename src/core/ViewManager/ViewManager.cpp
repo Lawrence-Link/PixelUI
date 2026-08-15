@@ -58,7 +58,7 @@ void ViewManager::attachInputRouter() {
 }
 
 ViewManager::~ViewManager() {
-    m_isTransitioning.store(true, etl::memory_order_relaxed);
+    m_isTransitioning = true;
     m_ui.setDrawable(nullptr);
     m_ui.clearInputCallback();
     clearNonOwningReferences();

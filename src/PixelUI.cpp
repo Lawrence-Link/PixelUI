@@ -98,7 +98,7 @@ void PixelUI::begin() { }
  * @brief Compatibility wrapper for hosts that inject ticks outside an ISR.
  */
 void PixelUI::heartbeat(uint32_t ms) {
-    pendingTickMs_.fetch_add(ms, etl::memory_order_release);
+    pendingTickMs_.fetch_add(ms, etl::memory_order_relaxed);
 }
 
 void PixelUI::setTaskNotifyFromISR(IsrTaskNotifyFunction function, void* context) {
@@ -110,7 +110,7 @@ void PixelUI::tickFromISR(uint32_t elapsedMs) {
     if (elapsedMs == 0U) return;
 
     const uint32_t previous =
-        pendingTickMs_.fetch_add(elapsedMs, etl::memory_order_acq_rel);
+        pendingTickMs_.fetch_add(elapsedMs, etl::memory_order_relaxed);
     if (previous == 0U && m_taskNotifyFromISR_ != nullptr) {
         m_taskNotifyFromISR_(m_taskNotifyContext_);
     }
@@ -118,7 +118,7 @@ void PixelUI::tickFromISR(uint32_t elapsedMs) {
 
 bool PixelUI::process() {
     const uint32_t elapsedMs =
-        pendingTickMs_.exchange(0U, etl::memory_order_acq_rel);
+        pendingTickMs_.exchange(0U, etl::memory_order_relaxed);
     _currentTime += elapsedMs;
 
 #if PIXELUI_USE_ANIMATION
@@ -160,13 +160,10 @@ void PixelUI::setRenderRequestCallback(VoidCallback function) {
 }
 
 void PixelUI::markDirty() {
-    bool expected = false;
-    if (isDirty_.compare_exchange_strong(
-            expected,
-            true,
-            etl::memory_order_acq_rel,
-            etl::memory_order_acquire) &&
-        m_render_request_callback) {
+    if (isDirty_) return;
+
+    isDirty_ = true;
+    if (m_render_request_callback) {
         m_render_request_callback();
     }
 }
@@ -315,7 +312,7 @@ void PixelUI::handleInput(InputEvent event) {
  * Handles optional fading effects and calls the refresh callback if set.
  */
 bool PixelUI::needsHeartbeat() const {
-    if (pendingTickMs_.load(etl::memory_order_acquire) != 0U ||
+    if (pendingTickMs_.load(etl::memory_order_relaxed) != 0U ||
         isFading_ || continousMode_) return true;
 #if PIXELUI_USE_ANIMATION
     if (m_animationManager.nextWakeupMs(_currentTime, 1U) !=
@@ -342,8 +339,7 @@ uint32_t PixelUI::nextWakeupMs(uint32_t periodicTickMs) const {
 }
 
 uint32_t PixelUI::calculateNextWakeupMs(uint32_t frameIntervalMs) const {
-    if (pendingTickMs_.load(etl::memory_order_acquire) != 0U ||
-        isDirty_.load(etl::memory_order_acquire)) {
+    if (pendingTickMs_.load(etl::memory_order_relaxed) != 0U || isDirty_) {
         return 0U;
     }
 
@@ -375,7 +371,7 @@ uint32_t PixelUI::calculateNextWakeupMs(uint32_t frameIntervalMs) const {
 }
 
 bool PixelUI::hasPendingFrame() const {
-    return isDirty_.load(etl::memory_order_acquire) || isFading_ || continousMode_;
+    return isDirty_ || isFading_ || continousMode_;
 }
 
 bool PixelUI::renderer() {
@@ -387,12 +383,12 @@ bool PixelUI::renderer() {
 
     if (isContinousRefreshEnabled()) markDirty();
 
-    if (!isFading_ && !isDirty_.load(etl::memory_order_acquire)) return false;
+    if (!isFading_ && !isDirty_) return false;
 
     if (!isFading_) {
         // Consume the request before drawing so an invalidation raised by draw()
         // remains pending for the next pass instead of being lost.
-        isDirty_.store(false, etl::memory_order_release);
+        isDirty_ = false;
         u8g2_.clearBuffer();
         canvas_.beginFrame();
         if (currentDrawable_) currentDrawable_->draw();
@@ -408,7 +404,7 @@ bool PixelUI::renderer() {
         return true;
     } else {
         if (m_fadeStep == 0) {
-            isDirty_.store(false, etl::memory_order_release);
+            isDirty_ = false;
             u8g2_.clearBuffer();
             canvas_.beginFrame();
             if (currentDrawable_) currentDrawable_->draw();
@@ -425,7 +421,7 @@ bool PixelUI::renderer() {
         if (m_fadeStep >= 1 && m_fadeStep <= 4) {
             if (getCurrentTime() - m_lastFadeTime < 40) return false;
 
-            isDirty_.store(false, etl::memory_order_release);
+            isDirty_ = false;
             uint8_t *buf_ptr = u8g2_.getBufferPtr();
             const uint16_t buf_len = displayBufferSize_;
             switch (m_fadeStep) {
