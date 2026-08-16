@@ -108,7 +108,7 @@ public:
         display.drawHLine(42, 37, 80);
 
         display.setFont(PIXELUI_FONT_SMALL);
-        display.drawStr(43, 50, "VERSION beta 0.3.1");
+        display.drawStr(43, 50, "VERSION beta 0.4");
 
         display.setFont(PIXELUI_FONT_TINY);
         display.drawStr(43, 61, "BSD-2  /  L. LINK");
