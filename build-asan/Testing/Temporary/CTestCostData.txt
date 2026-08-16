@@ -1,0 +1,20 @@
+application_stack_test 3 0.204707
+view_manager_lifecycle_test 3 0.314599
+chart_buffer_test 3 0.349289
+value_binding_test 3 0.272728
+numeric_components_test 3 0.258795
+animation_inline_test 3 0.321191
+popup_base_lifecycle_test 3 0.340843
+popup_pool_test 3 0.340881
+popup_value_digits_test 3 0.335205
+popup_progress_test 3 0.348967
+num_scroll_test 3 0.332982
+icon_view_layout_test 3 0.336789
+focus_manager_transition_test 3 0.351431
+widget_tree_test 3 0.344561
+label_font_test 3 0.341767
+render_scheduling_test 3 0.338509
+blink_state_test 3 0.343892
+canvas_camera_test 3 0.331532
+list_view_camera_test 3 0.323721
+---

@@ -13,39 +13,78 @@ int32_t PopupValueDigits::maximumValue(uint8_t digitCount) {
 }
 
 PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
+                                   ValueEditSession& session, uint8_t digitCount,
+                                   const char* title, uint16_t duration)
+    : PopupBase(ui, width, height, duration),
+      title_(title),
+      ownedSession_(0),
+      session_(&session),
+      digitCount_(isValidDigitCount(digitCount) ? digitCount : 1U),
+      focusManager_(ui) {
+    initializeDigits();
+}
+
+PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
+                                   ValueEditorBinding binding, uint8_t digitCount,
+                                   const char* title, uint16_t duration,
+                                   ValueCallback callback, ValueEditPolicy policy)
+    : PopupBase(ui, width, height, duration),
+      title_(title),
+      compatibilityCallback_(etl::move(callback)),
+      ownedSession_(binding, policy),
+      session_(&ownedSession_),
+      digitCount_(isValidDigitCount(digitCount) ? digitCount : 1U),
+      focusManager_(ui) {
+    initializeDigits();
+}
+
+PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
                                    int32_t& value, uint8_t digitCount,
                                    const char* title, uint16_t duration,
                                    ValueCallback callback)
     : PopupBase(ui, width, height, duration),
-      value_(value),
       title_(title),
+      compatibilityCallback_(etl::move(callback)),
+      ownedSession_(
+          ValueEditorBinding::reference(value),
+          ValueEditPolicy::CommitOnConfirm),
+      session_(&ownedSession_),
       digitCount_(isValidDigitCount(digitCount) ? digitCount : 1U),
-      focusManager_(ui),
-      callback_(etl::move(callback)) {
+      focusManager_(ui) {
+    initializeDigits();
+}
+
+void PopupValueDigits::initializeDigits() {
+    NumericRange::tryCreate(0, 9, 1, digitRange_);
     const int32_t maximum = maximumValue(digitCount_);
-    if (value_ < 0) value_ = 0;
-    if (value_ > maximum) value_ = maximum;
+    const int32_t sourceValue = session_ != nullptr && session_->valid()
+        ? session_->draftValue()
+        : 0;
+    const int32_t displayedValue = sourceValue < 0
+        ? 0
+        : sourceValue > maximum ? maximum : sourceValue;
 
     const int32_t totalWidth = digitCount_ * DIGIT_WIDTH + (digitCount_ - 1U) * DIGIT_GAP;
-    const int32_t startX = (ui.getDisplayWidth() - totalWidth) / 2;
+    const int32_t startX = (ui().getDisplayWidth() - totalWidth) / 2;
     const int32_t digitY = title_ && title_[0] != '\0'
-        ? ui.getDisplayHeight() / 2
-        : (ui.getDisplayHeight() - DIGIT_HEIGHT) / 2;
+        ? ui().getDisplayHeight() / 2
+        : (ui().getDisplayHeight() - DIGIT_HEIGHT) / 2;
 
     int32_t divisor = 1;
     for (uint8_t i = 1; i < digitCount_; ++i) divisor *= 10;
     for (uint8_t index = 0; index < digitCount_; ++index) {
         NumScroll* digit = digitPool_.create(
-            ui,
+            ui(),
             static_cast<uint16_t>(startX + index * (DIGIT_WIDTH + DIGIT_GAP)),
             static_cast<uint16_t>(digitY),
             static_cast<uint16_t>(DIGIT_WIDTH),
-            static_cast<uint16_t>(DIGIT_HEIGHT));
+            static_cast<uint16_t>(DIGIT_HEIGHT),
+            digitRange_,
+            NumericFormatter::integer(DIGIT_FORMAT));
+        if (digit == nullptr) continue;
         digits_[index] = digit;
-        digit->setRange(0, 9);
-        digit->setFixedIntDigits(1);
         digit->setPresentation(NumScroll::Presentation::Bare);
-        digit->setValueImmediate((value_ / divisor) % 10);
+        digit->setValueImmediate((displayedValue / divisor) % 10);
         digit->onLoadNoAnim();
         focusManager_.addWidget(digit);
         divisor /= 10;
@@ -54,7 +93,6 @@ PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
 
 PopupValueDigits::~PopupValueDigits() {
     focusManager_.clear();
-    ui().clearAllAnimations();
     for (uint8_t i = 0; i < digitCount_; ++i) {
         if (digits_[i]) {
             digitPool_.destroy(digits_[i]);
@@ -72,12 +110,39 @@ int32_t PopupValueDigits::collectValue() const {
     return result;
 }
 
-void PopupValueDigits::synchronizeValue() {
+bool PopupValueDigits::synchronizeValue() {
+    if (session_ == nullptr || !session_->valid()) return false;
     const int32_t newValue = collectValue();
-    if (newValue == value_) return;
-    value_ = newValue;
-    if (callback_) callback_(value_);
+    if (newValue == session_->draftValue()) return true;
+    if (!session_->setDraftValue(newValue)) return false;
+    if (compatibilityCallback_ && session_->policy() == ValueEditPolicy::Live) {
+        compatibilityCallback_(newValue);
+    }
     ui().markDirty();
+    return true;
+}
+
+bool PopupValueDigits::commitEditing() {
+    if (!synchronizeValue()) return false;
+    const bool changed = session_->draftValue() != session_->originalValue();
+    if (!session_->commit()) return false;
+    if (changed && compatibilityCallback_ &&
+        session_->policy() == ValueEditPolicy::CommitOnConfirm) {
+        compatibilityCallback_(session_->draftValue());
+    }
+    return true;
+}
+
+bool PopupValueDigits::cancelEditing() {
+    if (session_ == nullptr) return false;
+    const bool changed = session_->draftValue() != session_->originalValue();
+    const int32_t original = session_->originalValue();
+    if (!session_->cancel()) return false;
+    if (changed && compatibilityCallback_ &&
+        session_->policy() == ValueEditPolicy::Live) {
+        compatibilityCallback_(original);
+    }
+    return true;
 }
 
 void PopupValueDigits::drawContent(const PopupContentBounds& bounds) {
@@ -107,17 +172,21 @@ bool PopupValueDigits::handleContentInput(InputEvent event) {
     if (activeWidget) {
         if (event == InputEvent::BACK) {
             focusManager_.clearActiveWidget();
-            ui().markDirty();
+            if (cancelEditing()) requestClose();
             return true;
         }
-        if (activeWidget->handleEvent(event)) focusManager_.clearActiveWidget();
-        synchronizeValue();
+        const bool finished = activeWidget->handleEvent(event);
+        if (!synchronizeValue()) return true;
+        if (finished) {
+            focusManager_.clearActiveWidget();
+            if (commitEditing()) requestClose();
+        }
         return true;
     }
 
     switch (event) {
         case InputEvent::BACK:
-            requestClose();
+            if (cancelEditing()) requestClose();
             break;
         case InputEvent::RIGHT:
             focusManager_.moveNext();

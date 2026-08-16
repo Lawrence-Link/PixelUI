@@ -41,6 +41,7 @@ static const unsigned char image_Icon_Clock_bits[] = {0xf0,0xff,0x0f,0xfc,0xe7,0
 class TimeSetting : public IApplication {
 private:
     PixelUI& m_ui;
+    IntegerFormat twoDigits_{2U, nullptr};
     NumScroll num_h, num_m, num_s;
     Clock clock;
     TextButton button_sync;
@@ -109,15 +110,15 @@ public:
 
         num_h.setRange(0,23);
         num_h.setValue(0);
-        num_h.setFixedIntDigits(2);
+        num_h.setFormatter(NumericFormatter::integer(twoDigits_));
 
         num_m.setRange(0,59);
         num_m.setValue(0);
-        num_m.setFixedIntDigits(2);
+        num_m.setFormatter(NumericFormatter::integer(twoDigits_));
 
         num_s.setRange(0,59);
         num_s.setValue(0);
-        num_s.setFixedIntDigits(2);
+        num_s.setFormatter(NumericFormatter::integer(twoDigits_));
 
         clock.setHour(2);
         clock.setMinute(3);

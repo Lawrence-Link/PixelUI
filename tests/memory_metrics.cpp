@@ -12,6 +12,33 @@
 
 #include <stdio.h>
 
+namespace {
+
+enum class LegacyRequestType : uint8_t {
+    None,
+    Info,
+    Progress,
+    ValueDigits,
+};
+
+struct LegacyPopupRequestLayout {
+    LegacyRequestType type = LegacyRequestType::None;
+    uint16_t width = 0;
+    uint16_t height = 0;
+    uint16_t duration = 0;
+    const char* text = nullptr;
+    const char* title = nullptr;
+    int32_t* value = nullptr;
+    int32_t minValue = 0;
+    int32_t maxValue = 0;
+    const uint8_t* font = nullptr;
+    ValueCallback callback;
+    bool legacyProgressDisplayFlag = false;
+    uint8_t digitCount = 0;
+};
+
+} // namespace
+
 int main() {
     printf("sizeof(ApplicationStack)=%zu\n", sizeof(ApplicationStack));
     printf("alignof(ApplicationStack)=%zu\n", alignof(ApplicationStack));
@@ -46,6 +73,13 @@ int main() {
            sizeof(PopupValueDigits), alignof(PopupValueDigits));
     printf("sizeof(PopupManager)=%zu alignof(PopupManager)=%zu\n",
            sizeof(PopupManager), alignof(PopupManager));
+    printf("sizeof(LegacyPopupRequestLayout)=%zu\n",
+           sizeof(LegacyPopupRequestLayout));
+    printf("sizeof(RequestEnvelope)=%zu sizeof(InfoRequest)=%zu\n",
+           sizeof(RequestEnvelope), sizeof(InfoRequest));
+    printf("sizeof(ProgressRequest)=%zu sizeof(ValueDigitsRequest)=%zu\n",
+           sizeof(ProgressRequest), sizeof(ValueDigitsRequest));
+    printf("sizeof(PopupRequest)=%zu\n", sizeof(PopupRequest));
     printf("arena=%zu metadata_and_padding=%zu\n",
            APPLICATION_ARENA_SIZE,
            sizeof(ApplicationStack) - APPLICATION_ARENA_SIZE);

@@ -27,6 +27,75 @@
 #include "ui/ListView/ListView.h"
 #include "core/animation/animation.h"
 
+ListView::~ListView() {
+    cancelAllOwnedAnimations();
+}
+
+void ListView::cancelLoadAnimations() {
+    for (AnimationHandle handle : loadAnimations_) m_ui.cancelAnimation(handle);
+    loadAnimations_.clear();
+}
+
+void ListView::cancelToggleAnimation() {
+    m_ui.cancelAnimation(switchAnimState_.handle);
+    switchAnimState_ = {};
+}
+
+int32_t ListView::toggleBoxXFor(const ListItem& item) const {
+        const bool* toggle = item.accessory.toggleValue();
+    if (toggle == nullptr) return 0;
+    return switchAnimState_.item == &item
+        ? switchAnimState_.boxX
+        : (*toggle ? 7 : 0);
+}
+
+void ListView::clearNonInitialAnimations() {
+    for (AnimationHandle handle : viewAnimations_) m_ui.cancelAnimation(handle);
+    viewAnimations_.clear();
+}
+
+void ListView::cancelAllOwnedAnimations() {
+    clearNonInitialAnimations();
+    cancelLoadAnimations();
+    cancelToggleAnimation();
+}
+
+bool ListView::animateOwned(
+    int32_t& value, int32_t target, uint32_t duration,
+    EasingType easing, PROTECTION protection) {
+    if (viewAnimations_.full()) {
+        value = target;
+        return false;
+    }
+    AnimationHandle handle = INVALID_ANIMATION_HANDLE;
+    if (!m_ui.animate(
+            value, target, duration, easing, protection, &handle)) {
+        value = target;
+        return false;
+    }
+    viewAnimations_.push_back(handle);
+    return true;
+}
+
+bool ListView::animateOwnedCallback(
+    int32_t start, int32_t target, uint32_t duration,
+    EasingType easing, ValueCallback callback, PROTECTION protection) {
+    if (viewAnimations_.full()) {
+        if (callback) callback(target);
+        return false;
+    }
+    ValueCallback fallback = callback;
+    AnimationHandle handle = INVALID_ANIMATION_HANDLE;
+    if (!m_ui.animateCallback(
+            start, target, duration, easing, etl::move(callback),
+            protection, &handle)) {
+        if (fallback) fallback(target);
+        return false;
+    }
+    viewAnimations_.push_back(handle);
+    return true;
+}
+
 /**
  * @brief Called when the ListView is entered.
  * @param exitCallback Callback function to call on exit.
@@ -36,6 +105,7 @@
  */
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
+    cancelAllOwnedAnimations();
 
     Canvas& canvas = m_ui.getCanvas();
     canvas.setFont(PIXELUI_FONT_TEXT);
@@ -54,17 +124,9 @@ void ListView::onEnter(ExitCallback exitCallback){
         itemLoadAnimations_[i] = 0;
     }
 
-    // Initialize switch animations
-    for (int i = 0; i <= m_itemLength; i++) {
-        bool* toggle = m_itemList[i].accessory.toggleValue();
-        if (toggle != nullptr) {
-            switchAnimStates_[i].boxX = *toggle ? 7 : 0;
-            switchAnimStates_[i].isAnimating = false;
-        }
-    }
-    
     // Animate scrollbar
-    m_ui.animate(animation_pixel_dots, 32, 400, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+    animateOwned(animation_pixel_dots, m_ui.getDisplayHeight() / 2, 400,
+                 EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     
     startLoadAnimation();
     scrollToTarget();
@@ -77,6 +139,7 @@ void ListView::onEnter(ExitCallback exitCallback){
  * clears the PROTECTED marks and sets `isInitialLoad_` to false.
  */
 void ListView::startLoadAnimation() {
+    cancelLoadAnimations();
     isInitialLoad_ = true;
     int maxVisible = etl::min(visibleItemCount_ + 1, (int32_t)(m_itemLength + 1));
 
@@ -87,25 +150,25 @@ void ListView::startLoadAnimation() {
             this->itemLoadAnimations_[i] = value;
             if (isLastAnimation && value >= FIXED_POINT_ONE) { 
                 this->isInitialLoad_ = false;
-                this->m_ui.clearAnimationProtection();
             }
         };
 
-        m_ui.animateCallback(
+        AnimationHandle handle = INVALID_ANIMATION_HANDLE;
+        const bool started = m_ui.animateCallback(
             0,
             FIXED_POINT_ONE,
             duration,
             EasingType::EASE_IN_OUT_CUBIC,
             callback,
-            PROTECTION::PROTECTED);
+            PROTECTION::NOT_PROTECTED,
+            &handle);
+        if (started && !loadAnimations_.full()) {
+            loadAnimations_.push_back(handle);
+        } else if (!started) {
+            itemLoadAnimations_[i] = FIXED_POINT_ONE;
+            if (isLastAnimation) isInitialLoad_ = false;
+        }
     }
-}
-
-/**
- * @brief Clears all unprotected animations.
- */
-void ListView::clearNonInitialAnimations() {
-    m_ui.clearUnprotectedAnimations();
 }
 
 /**
@@ -142,9 +205,12 @@ void ListView::updateScrollPosition() {
     if (newTopIndex == topVisibleIndex_) return;
 
     topVisibleIndex_ = newTopIndex;
-    m_ui.animateCanvasTo(topVisibleIndex_ * rowHeight, 350,
-                         EasingType::EASE_OUT_CUBIC,
-                         PROTECTION::PROTECTED);
+    const int32_t targetY = topVisibleIndex_ * rowHeight;
+    const int32_t startY = m_ui.getCanvas().camera().storedY();
+    animateOwnedCallback(
+        startY, targetY, 350, EasingType::EASE_OUT_CUBIC,
+        [this](int32_t value) { m_ui.getCanvas().camera().setY(value); },
+        PROTECTION::PROTECTED);
 }
 
 /**
@@ -175,10 +241,19 @@ void ListView::scrollToTarget(){
     Canvas& canvas = m_ui.getCanvas();
     int32_t targetCursorY = topMargin_ + currentCursor * (FontHeight + spacing_) - 1;
     
-    m_ui.animate(CursorY, targetCursorY, 150, EasingType::EASE_IN_OUT_CUBIC);
-    m_ui.animate(CursorWidth, canvas.getUTF8Width(m_itemList[currentCursor].title) + 6, 500, EasingType::EASE_OUT_CUBIC);
-    m_ui.animate(progress_bar_top, ((int64_t)currentCursor * 64) / (m_itemLength + 1) + 1, 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
-    m_ui.animate(progress_bar_bottom, ((int64_t)1 * 64) / (m_itemLength + 1), 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    const int32_t displayHeight = m_ui.getDisplayHeight();
+    animateOwned(CursorY, targetCursorY, 150, EasingType::EASE_IN_OUT_CUBIC);
+    animateOwned(CursorWidth,
+                 canvas.getUTF8Width(m_itemList[currentCursor].title) + 6,
+                 500, EasingType::EASE_OUT_CUBIC);
+    animateOwned(progress_bar_top,
+                 static_cast<int32_t>(
+                     (static_cast<int64_t>(currentCursor) * displayHeight) /
+                     (m_itemLength + 1)) + 1,
+                 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    animateOwned(progress_bar_bottom,
+                 displayHeight / (m_itemLength + 1),
+                 400, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
 }
 
 /**
@@ -213,7 +288,7 @@ void ListView::selectCurrent(){
     if (currentCursor == 0) { returnToPreviousContext(); return; }
 
     if (m_itemList[currentCursor].nextList){  
-        m_ui.clearAllAnimations();
+        cancelAllOwnedAnimations();
         m_history_stack.push_back(etl::make_pair(etl::make_pair(m_itemList, m_itemLength), currentCursor));
         // Guard against underflow if nextListLength is zero
         int32_t nextLen = m_itemList[currentCursor].nextListLength;
@@ -225,7 +300,7 @@ void ListView::selectCurrent(){
         m_ui.markFading();
         startLoadAnimation();
         scrollToTarget();
-        // return;
+        return;
     }
 
     if (bool* switchValPtr =
@@ -233,20 +308,28 @@ void ListView::selectCurrent(){
         bool currentState = *switchValPtr;
         int32_t endX = currentState ? 0 : 7;
 
-        int32_t targetIndex = currentCursor;
-        switchAnimStates_[targetIndex].isAnimating = true;
+        ListItem* const targetItem = &m_itemList[currentCursor];
+        cancelToggleAnimation();
+        switchAnimState_.item = targetItem;
+        switchAnimState_.boxX = currentState ? 7 : 0;
+        *switchValPtr = !currentState;
 
-        auto callback = [this, targetIndex](int32_t value) { switchAnimStates_[targetIndex].boxX = value; };
-        m_ui.animateCallback(
-            switchAnimStates_[targetIndex].boxX,
+        auto callback = [this, targetItem, endX](int32_t value) {
+            if (switchAnimState_.item == targetItem) {
+                switchAnimState_.boxX = value;
+                if (value == endX) switchAnimState_ = {};
+            }
+        };
+        if (!m_ui.animateCallback(
+            switchAnimState_.boxX,
             endX,
             200,
             EasingType::EASE_IN_OUT_CUBIC,
             callback,
-            PROTECTION::PROTECTED);
-
-        *switchValPtr = !currentState;
-        // return;
+            PROTECTION::PROTECTED,
+            &switchAnimState_.handle)) {
+            switchAnimState_ = {};
+        }
     }
 
     if (m_itemList[currentCursor].pFunc) { 
@@ -262,7 +345,7 @@ void ListView::selectCurrent(){
  */
 void ListView::returnToPreviousContext() {
     if (!m_history_stack.empty()){
-        m_ui.clearAllAnimations();
+        cancelAllOwnedAnimations();
         auto parent_state = m_history_stack.back();
         m_history_stack.pop_back();
         m_itemList = parent_state.first.first;
@@ -341,8 +424,8 @@ void ListView::drawCursor() {
  * @brief Called when resuming ListView.
  */
 void ListView::onResume() {
+    cancelLoadAnimations();
     isInitialLoad_ = false;
-    m_ui.clearAnimationProtection();
 }
 
 /**
@@ -357,6 +440,7 @@ void ListView::onPause() {
  * Saves state and clears animations.
  */
 void ListView::onExit() {
+    cancelAllOwnedAnimations();
     onSave();
 }
 
@@ -396,9 +480,7 @@ void ListView::draw() {
                     canvas.drawRFrame(
                         m_ui.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
                     const int32_t currentSwitchBoxX =
-                        switchAnimStates_.count(itemIndex)
-                            ? switchAnimStates_[itemIndex].boxX
-                            : (*toggle ? 7 : 0);
+                        toggleBoxXFor(m_itemList[itemIndex]);
                     canvas.drawRBox(
                         m_ui.getDisplayWidth() - 42 + currentSwitchBoxX,
                         itemY - 9,
@@ -438,15 +520,7 @@ void ListView::draw() {
     }
 
     // Draw progress bar and cursor
-    canvas.rawDisplay().drawVLine(126, progress_bar_top, progress_bar_bottom);
+    canvas.rawDisplay().drawVLine(
+        m_ui.getDisplayWidth() - 2, progress_bar_top, progress_bar_bottom);
     drawCursor();
-}
-
-/**
- * @brief Get the visible item index on screen from screen coordinate.
- * @param screenIndex Index on screen.
- * @return Actual item index in the list.
- */
-int ListView::getVisibleItemIndex(int screenIndex) {
-    return topVisibleIndex_ + screenIndex;
 }

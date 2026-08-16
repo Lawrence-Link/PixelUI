@@ -176,7 +176,8 @@ bool PixelUI::animateCallback(
     uint32_t duration,
     EasingType easing,
     ValueCallback callback,
-    PROTECTION protection) {
+    PROTECTION protection,
+    AnimationHandle* handle) {
 #if PIXELUI_USE_ANIMATION
     const bool added = m_animationManager.emplace(
         startValue,
@@ -185,7 +186,8 @@ bool PixelUI::animateCallback(
         easing,
         etl::move(callback),
         protection,
-        getCurrentTime());
+        getCurrentTime(),
+        handle);
     if (added) markDirty();
     return added;
 #else
@@ -193,6 +195,7 @@ bool PixelUI::animateCallback(
     (void)duration;
     (void)easing;
     (void)protection;
+    if (handle != nullptr) *handle = INVALID_ANIMATION_HANDLE;
     if (callback) callback(endValue);
     return true;
 #endif
@@ -202,7 +205,8 @@ bool PixelUI::animateCallback(
  * @brief Animate a single integer value with optional protection
  */
 bool PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
-                      EasingType easing, PROTECTION prot) {
+                      EasingType easing, PROTECTION prot,
+                      AnimationHandle* handle) {
 
     return animateCallback(
         value,
@@ -210,7 +214,8 @@ bool PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
         duration,
         easing,
         [&value](int32_t currentValue) { value = currentValue; },
-        prot);
+        prot,
+        handle);
 }
 
 bool PixelUI::scrollCanvasBy(int32_t deltaY) {
@@ -455,22 +460,56 @@ bool PixelUI::renderer() {
 /**
  * @brief Show a progress popup
  */
-bool PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue,
-                                const char* title, uint16_t width, uint16_t height,
-                                uint16_t duration, ValueCallback update_cb,
-                                bool use_apparent_val) {
+bool PixelUI::showPopupProgress(
+    ValueEditorBinding binding, const NumericRange& range,
+    NumericFormatter formatter, const char* title,
+    uint16_t width, uint16_t height, uint16_t duration,
+    ValueEditPolicy policy) {
 #if PIXELUI_USE_POPUP_PROGRESS
-    if (minValue >= maxValue) return false;
-    if (width < 50) width = 50; 
+    if (!binding.valid()) return false;
+    if (width < 50) width = 50;
     if (width > 120) width = 120;
-    if (height < 30) height = 30; 
+    if (height < 30) height = 30;
     if (height > 60) height = 60;
-    if (duration > 30000) duration = 30000; 
+    if (duration > 30000) duration = 30000;
     if (duration < 1000) duration = 1000;
 
     if (m_popupManager.enqueueProgress(
-            width, height, value, minValue, maxValue, title,
-            duration, etl::move(update_cb), use_apparent_val)) {
+            width, height, binding, range, formatter, title, duration,
+            nullptr, policy)) {
+        markDirty();
+        return true;
+    }
+    return false;
+#else
+    (void)binding;
+    (void)range;
+    (void)formatter;
+    (void)title;
+    (void)width;
+    (void)height;
+    (void)duration;
+    (void)policy;
+    return false;
+#endif
+}
+
+bool PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue,
+                                const char* title, uint16_t width, uint16_t height,
+                                uint16_t duration, ValueCallback update_cb) {
+#if PIXELUI_USE_POPUP_PROGRESS
+    NumericRange range;
+    if (!NumericRange::tryCreate(minValue, maxValue, 1, range)) return false;
+    if (width < 50) width = 50;
+    if (width > 120) width = 120;
+    if (height < 30) height = 30;
+    if (height > 60) height = 60;
+    if (duration > 30000) duration = 30000;
+    if (duration < 1000) duration = 1000;
+    if (m_popupManager.enqueueProgress(
+            width, height, ValueEditorBinding::reference(value), range,
+            NumericFormatter{}, title, duration, etl::move(update_cb),
+            ValueEditPolicy::CommitOnConfirm)) {
         markDirty();
         return true;
     }
@@ -484,7 +523,6 @@ bool PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxVal
     (void)height;
     (void)duration;
     (void)update_cb;
-    (void)use_apparent_val;
     return false;
 #endif
 }
@@ -515,6 +553,41 @@ bool PixelUI::showPopupInfo(const char* text, const char* title,
 /**
  * @brief Show a fixed-width value editor popup
  */
+bool PixelUI::showPopupValueDigits(
+    ValueEditorBinding binding, uint8_t digitCount,
+    const char* title, uint16_t width, uint16_t height,
+    uint16_t duration, ValueEditPolicy policy) {
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
+    if (!binding.valid() || !PopupValueDigits::isValidDigitCount(digitCount)) {
+        return false;
+    }
+    const uint16_t contentWidth = static_cast<uint16_t>(
+        digitCount * 12U + (digitCount - 1U) * 2U + 12U);
+    if (width < contentWidth) width = contentWidth;
+    if (width > 120) width = 120;
+    if (height < 40) height = 40;
+    if (height > 60) height = 60;
+    if (duration > 30000) duration = 30000;
+    if (duration < 1000) duration = 1000;
+    if (m_popupManager.enqueueValueDigits(
+            width, height, binding, digitCount, title, duration,
+            nullptr, policy)) {
+        markDirty();
+        return true;
+    }
+    return false;
+#else
+    (void)binding;
+    (void)digitCount;
+    (void)title;
+    (void)width;
+    (void)height;
+    (void)duration;
+    (void)policy;
+    return false;
+#endif
+}
+
 bool PixelUI::showPopupValueDigits(int32_t& value, uint8_t digitCount,
                                    const char* title, uint16_t width,
                                    uint16_t height, uint16_t duration,

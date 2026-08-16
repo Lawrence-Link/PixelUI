@@ -25,6 +25,7 @@ public:
 
     constexpr Binding() = default;
 
+    // object and suffix are non-owning and must outlive every format() call.
     static constexpr Binding custom(
         const void* object,
         FormatFunction formatter,

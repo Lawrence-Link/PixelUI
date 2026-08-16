@@ -39,7 +39,6 @@ constexpr size_t APPLICATION_ARENA_MAX_ALIGNMENT = PIXELUI_APPLICATION_ARENA_MAX
 constexpr int MAX_ICONVIEW_ITEMS = PIXELUI_MAX_ICONVIEW_ITEMS;
 constexpr int CALLBACK_STORAGE_SIZE = PIXELUI_CALLBACK_STORAGE_SIZE;
 constexpr int MAX_APPVIEW_SLOT_NUM = PIXELUI_MAX_APPVIEW_SLOT_NUM;
-constexpr int MAX_LISTVIEW_SLOT_NUM = PIXELUI_MAX_LISTVIEW_SLOT_NUM;
 constexpr int MAX_LISTITEM_NAME_NUM = PIXELUI_MAX_LISTITEM_NAME_NUM;
 constexpr int LISTVIEW_ITEMS_PER_PAGE = PIXELUI_LISTVIEW_ITEMS_PER_PAGE;
 constexpr int MAX_LISTVIEW_DEPTH = PIXELUI_MAX_LISTVIEW_DEPTH;
@@ -57,7 +56,6 @@ static_assert(CALLBACK_STORAGE_SIZE > 0, "Callback storage must not be empty");
 static_assert(MAX_TEXT_LENGTH > 0, "Text capacity must be positive");
 static_assert(MAX_APPVIEW_SLOT_NUM > 0, "AppView capacity must be positive");
 static_assert(MAX_ICONVIEW_ITEMS > 0, "IconView capacity must be positive");
-static_assert(MAX_LISTVIEW_SLOT_NUM > 0, "ListView capacity must be positive");
 static_assert(MAX_LISTITEM_NAME_NUM > 0, "List item text capacity must be positive");
 static_assert(LISTVIEW_ITEMS_PER_PAGE > 0, "ListView page size must be positive");
 static_assert(MAX_LISTVIEW_DEPTH > 0, "ListView depth must be positive");

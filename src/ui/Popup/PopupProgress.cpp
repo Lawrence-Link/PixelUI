@@ -1,178 +1,142 @@
 /*
  * Copyright (C) 2025 Lawrence Link
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "ui/Popup/PopupProgress.h"
 #include "PixelUI.h"
-#include <stdio.h>
-#include <inttypes.h>
 
-/**
- * @brief Construct a progress popup
- * @param ui Reference to the PixelUI instance
- * @param width Popup width in pixels
- * @param height Popup height in pixels
- * @param value Reference to the integer value being tracked
- * @param minValue Minimum allowable value
- * @param maxValue Maximum allowable value
- * @param title Optional title string
- * @param duration Display duration in ms
- * @param cb_function Optional callback invoked when value changes
- *
- * Initializes a progress popup and links it to a value reference.
- */
-PopupProgress::PopupProgress(PixelUI& ui, uint16_t width, uint16_t height, 
-                            int32_t& value, int32_t minValue, int32_t maxValue,
-                            const char* title, uint16_t duration,
-                            etl::inplace_function<void(int32_t value), CALLBACK_STORAGE_SIZE> cb_function,
-                            bool UseApparentVal)
+PopupProgress::PopupProgress(
+    PixelUI& ui, uint16_t width, uint16_t height,
+    const NumericRange& range, NumericFormatter formatter,
+    ValueEditSession& session, const char* title, uint16_t duration)
     : PopupBase(ui, width, height, duration),
-      _value(value), _minValue(minValue), _maxValue(maxValue), _title(title), m_cb(cb_function), use_apparent_val(UseApparentVal)
-{
-}
+      range_(range),
+      defaultPercentage_{&range_, "%"},
+      formatter_(formatter.valid()
+          ? formatter
+          : NumericFormatter::percentage(defaultPercentage_)),
+      title_(title),
+      ownedSession_(0),
+      session_(&session) {}
 
-/**
- * @brief Format the value as "current/max" string
- * @param buffer Destination buffer
- * @param bufferSize Size of the buffer
- */
-void PopupProgress::formatValue(char* buffer, size_t bufferSize) const {
-    if (buffer && bufferSize > 0) {
-        snprintf(buffer, bufferSize, "%ld/%ld", (long)_value, (long)_maxValue);
+PopupProgress::PopupProgress(
+    PixelUI& ui, uint16_t width, uint16_t height,
+    const NumericRange& range, NumericFormatter formatter,
+    ValueEditorBinding binding, const char* title, uint16_t duration,
+    ValueCallback callback, ValueEditPolicy policy)
+    : PopupBase(ui, width, height, duration),
+      range_(range),
+      defaultPercentage_{&range_, "%"},
+      formatter_(formatter.valid()
+          ? formatter
+          : NumericFormatter::percentage(defaultPercentage_)),
+      title_(title),
+      compatibilityCallback_(etl::move(callback)),
+      ownedSession_(binding, policy),
+      session_(&ownedSession_) {}
+
+PopupProgress::PopupProgress(
+    PixelUI& ui, uint16_t width, uint16_t height,
+    const NumericRange& range, NumericFormatter formatter,
+    int32_t initialValue, const char* title, uint16_t duration)
+    : PopupBase(ui, width, height, duration),
+      range_(range),
+      defaultPercentage_{&range_, "%"},
+      formatter_(formatter.valid()
+          ? formatter
+          : NumericFormatter::percentage(defaultPercentage_)),
+      title_(title),
+      ownedSession_(initialValue),
+      session_(&ownedSession_) {}
+
+bool PopupProgress::updateDraft(int32_t value) {
+    if (session_ == nullptr || !session_->valid()) return false;
+    value = range_.clamp(value);
+    if (value == session_->draftValue()) return true;
+    if (!session_->setDraftValue(value)) return false;
+    if (compatibilityCallback_ && session_->policy() == ValueEditPolicy::Live) {
+        compatibilityCallback_(value);
     }
+    resetAutoCloseTimer();
+    ui().markDirty();
+    return true;
 }
 
-/**
- * @brief Format the value as a percentage string
- * @param buffer Destination buffer
- * @param bufferSize Size of the buffer
- *
- * Clamps the value between min and max and outputs "0-100%".
- */
-void PopupProgress::formatValueAsPercentage(char* buffer, size_t bufferSize) const {
-    if (!buffer || bufferSize == 0) return;
-    
-    if (_maxValue > _minValue) {
-        float progress = (float)(_value - _minValue) / (float)(_maxValue - _minValue);
-        progress = (progress < 0.0f) ? 0.0f : ((progress > 1.0f) ? 1.0f : progress);
-
-        int percentage = (int)(progress * 100.0f + 0.5f);
-
-        if (percentage > 100) percentage = 100;
-
-        snprintf(buffer, bufferSize, "%d%%", percentage);
-    } else {
-        snprintf(buffer, bufferSize, "0%%");
+bool PopupProgress::commitEditing() {
+    if (session_ == nullptr) return false;
+    const bool changed = session_->draftValue() != session_->originalValue();
+    if (!session_->commit()) return false;
+    if (changed && compatibilityCallback_ &&
+        session_->policy() == ValueEditPolicy::CommitOnConfirm) {
+        compatibilityCallback_(session_->draftValue());
     }
+    return true;
 }
 
-/**
- * @brief Draw the popup content (title, progress bar, percentage)
- * @param centerX X-coordinate of popup center
- * @param centerY Y-coordinate of popup center
- * @param currentWidth Current width of popup box
- * @param currentHeight Current height of popup box
- *
- * Uses U8G2 to render a horizontal progress bar and optional title.
- * Fills the progress proportionally and displays numeric percentage below.
- */
+bool PopupProgress::cancelEditing() {
+    if (session_ == nullptr) return false;
+    const bool changed = session_->draftValue() != session_->originalValue();
+    const int32_t original = session_->originalValue();
+    if (!session_->cancel()) return false;
+    if (changed && compatibilityCallback_ &&
+        session_->policy() == ValueEditPolicy::Live) {
+        compatibilityCallback_(original);
+    }
+    return true;
+}
+
 void PopupProgress::drawContent(const PopupContentBounds& bounds) {
-    U8G2& u8g2 = ui().getU8G2();
-    
-    // draw title centered above the bar
-    if (_title && strlen(_title) > 0) {
-        u8g2.setFont(PIXELUI_FONT_TEXT);
-        int16_t titleWidth = u8g2.getUTF8Width(_title);
-        u8g2.drawUTF8(bounds.centerX - titleWidth / 2, bounds.centerY - 7, _title);
+    U8G2& display = ui().getU8G2();
+    if (title_ != nullptr && title_[0] != '\0') {
+        display.setFont(PIXELUI_FONT_TEXT);
+        const int16_t titleWidth = display.getUTF8Width(title_);
+        display.drawUTF8(bounds.centerX - titleWidth / 2,
+                         bounds.centerY - 7, title_);
     }
-    
-    // configure progress bar dimensions
-    int16_t barWidth = bounds.width - 20;
-    int16_t barHeight = 8;
-    int16_t barX = bounds.centerX - barWidth / 2;
-    int16_t barY = bounds.centerY - 3;
-    
-    // draw the bar frame
-    u8g2.drawFrame(barX, barY, barWidth, barHeight);
-    
-    // calculate and fill the progress
-    if (_maxValue > _minValue) {
-        float progress = (float)(_value - _minValue) / (float)(_maxValue - _minValue);
-        progress = (progress < 0.0f) ? 0.0f : ((progress > 1.0f) ? 1.0f : progress);
-        int16_t fillWidth = (int16_t)(progress * (barWidth - 2));
-        
-        if (fillWidth > 0) {
-            u8g2.drawBox(barX + 1, barY + 1, fillWidth, barHeight - 2);
+
+    const int32_t barWidth = bounds.width > 20 ? bounds.width - 20 : 0;
+    constexpr int32_t barHeight = 8;
+    const int32_t barX = bounds.centerX - barWidth / 2;
+    const int32_t barY = bounds.centerY - 3;
+    if (barWidth > 0) display.drawFrame(barX, barY, barWidth, barHeight);
+
+    const int32_t value = session_ != nullptr ? session_->draftValue() : 0;
+    if (barWidth > 2) {
+        const uint32_t fillWidth = normalizeToExtent(
+            range_, value, static_cast<uint32_t>(barWidth - 2));
+        if (fillWidth != 0U) {
+            display.drawBox(barX + 1, barY + 1,
+                            static_cast<int32_t>(fillWidth), barHeight - 2);
         }
     }
-    
-    // draw percentage text below the bar
-    
-    char percentBuffer[16];
-    if (!use_apparent_val) {
-        formatValueAsPercentage(percentBuffer, sizeof(percentBuffer));
-    } else {
-        snprintf(percentBuffer, sizeof(percentBuffer), "%" PRId32, _value);
+
+    char valueBuffer[32]{};
+    if (formatter_.format(value, valueBuffer, sizeof(valueBuffer))) {
+        const int16_t textWidth = display.getStrWidth(valueBuffer);
+        display.drawStr(bounds.centerX - textWidth / 2,
+                        bounds.centerY + 17, valueBuffer);
     }
-    int16_t percentWidth = u8g2.getStrWidth(percentBuffer);
-    u8g2.drawStr(bounds.centerX - percentWidth / 2, bounds.centerY + 17, percentBuffer);
 }
 
-/**
- * @brief Handle user input for the progress popup
- * @param event Input event
- * @return true if event is consumed
- *
- * RIGHT/LEFT increments or decrements the value, invoking the callback if set.
- * SELECT triggers the closing animation.
- * Resets the auto-close timer whenever value changes.
- */
 bool PopupProgress::handleContentInput(InputEvent event) {
+    if (session_ == nullptr || !session_->valid()) return false;
     switch (event) {
         case InputEvent::RIGHT:
-            if (_value < _maxValue) {
-                _value++;
-                if (m_cb) m_cb(_value);
-                resetAutoCloseTimer();
-                ui().markDirty();
+            if (range_.canIncrement(session_->draftValue())) {
+                updateDraft(range_.incremented(session_->draftValue()));
             }
             return true;
-
         case InputEvent::LEFT:
-            if (_value > _minValue) {
-                _value--;
-                if (m_cb) m_cb(_value);
-                resetAutoCloseTimer();
-                ui().markDirty();
+            if (range_.canDecrement(session_->draftValue())) {
+                updateDraft(range_.decremented(session_->draftValue()));
             }
             return true;
-
         case InputEvent::SELECT:
-            requestClose();
+            if (commitEditing()) requestClose();
             return true;
-
+        case InputEvent::BACK:
+            if (cancelEditing()) requestClose();
+            return true;
         default:
             return false;
     }

@@ -31,11 +31,12 @@
 #include "config.h"
 #include "core/CommonTypes.h"
 
-// fixed-point shift bits to support fractional values in integer arithmetic
-// eg. SHIFT_BITS = 12 means 0.5f is represented as 0.5 * (1 << 12) = 2048
+// Fixed-point shift bits used by easing and popup transitions.
 #define SHIFT_BITS 12
 #define FIXED_POINT_ONE (1 << SHIFT_BITS)
-#define FLOAT_TO_FIXED(f) ((int32_t)((f) * FIXED_POINT_ONE))
+
+using AnimationHandle = uint32_t;
+constexpr AnimationHandle INVALID_ANIMATION_HANDLE = 0U;
 
 /**
  * @class EasingCalculator
@@ -100,9 +101,11 @@ private:
  */
 class CallbackAnimation : public Animation {
 public:
-    CallbackAnimation(int32_t startVal, int32_t endVal, uint32_t duration, EasingType easing,
+    CallbackAnimation(AnimationHandle handle,
+                      int32_t startVal, int32_t endVal, uint32_t duration, EasingType easing,
                       etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE> updateCallback)
         : Animation(duration, easing),
+          _handle(handle),
           _startVal(startVal),
           _endVal(endVal),
           _updateCallback(updateCallback) {}
@@ -110,17 +113,24 @@ public:
     bool update(uint32_t currentTime) {
         bool isRunning = Animation::update(currentTime);
         if (_updateCallback) { 
-            int32_t delta = _endVal - _startVal;
-            int32_t currentValue = _startVal + ((int64_t)delta * _progress) / FIXED_POINT_ONE;
+            const int64_t delta =
+                static_cast<int64_t>(_endVal) - _startVal;
+            const int32_t currentValue = static_cast<int32_t>(
+                static_cast<int64_t>(_startVal) +
+                (delta * _progress) / FIXED_POINT_ONE);
             _updateCallback(currentValue);
         }
         return isRunning;
     }
 
 private:
+    AnimationHandle _handle;
     int32_t _startVal;
     int32_t _endVal;
     etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE> _updateCallback;
+
+public:
+    AnimationHandle handle() const { return _handle; }
 };
 
 /**
@@ -139,7 +149,9 @@ public:
         EasingType easing,
         UpdateCallback callback,
         PROTECTION protection,
-        uint32_t currentTime);
+        uint32_t currentTime,
+        AnimationHandle* handle = nullptr);
+    bool cancel(AnimationHandle handle);
     void update(uint32_t currentTime);
     void clear();
     void clearUnprotected();
@@ -149,5 +161,8 @@ public:
     uint32_t nextWakeupMs(uint32_t currentTime, uint32_t frameIntervalMs) const;
 
 private:
+    AnimationHandle nextHandle();
+
     etl::vector<CallbackAnimation, MAX_ANIMATION_COUNT> _animations;
+    AnimationHandle nextHandle_ = 1U;
 };

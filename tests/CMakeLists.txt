@@ -26,6 +26,11 @@ target_link_libraries(value_binding_test PRIVATE pixelui)
 target_compile_definitions(value_binding_test PRIVATE ETL_NO_STL)
 add_test(NAME value_binding_test COMMAND value_binding_test)
 
+add_executable(numeric_components_test numeric_components_test.cpp)
+target_link_libraries(numeric_components_test PRIVATE pixelui)
+target_compile_definitions(numeric_components_test PRIVATE ETL_NO_STL)
+add_test(NAME numeric_components_test COMMAND numeric_components_test)
+
 add_executable(
     animation_inline_test
     animation_inline_test.cpp
@@ -61,6 +66,33 @@ add_executable(
 target_link_libraries(popup_value_digits_test PRIVATE pixelui u8g2_c)
 target_compile_definitions(popup_value_digits_test PRIVATE ETL_NO_STL)
 add_test(NAME popup_value_digits_test COMMAND popup_value_digits_test)
+
+add_executable(
+    popup_progress_test
+    popup_progress_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc/U8g2lib.cpp
+)
+target_link_libraries(popup_progress_test PRIVATE pixelui u8g2_c)
+target_compile_definitions(popup_progress_test PRIVATE ETL_NO_STL)
+add_test(NAME popup_progress_test COMMAND popup_progress_test)
+
+add_executable(
+    num_scroll_test
+    num_scroll_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc/U8g2lib.cpp
+)
+target_link_libraries(num_scroll_test PRIVATE pixelui u8g2_c)
+target_compile_definitions(num_scroll_test PRIVATE ETL_NO_STL)
+add_test(NAME num_scroll_test COMMAND num_scroll_test)
+
+add_executable(
+    icon_view_layout_test
+    icon_view_layout_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../third_party/u8g2/cppsrc/U8g2lib.cpp
+)
+target_link_libraries(icon_view_layout_test PRIVATE pixelui u8g2_c)
+target_compile_definitions(icon_view_layout_test PRIVATE ETL_NO_STL)
+add_test(NAME icon_view_layout_test COMMAND icon_view_layout_test)
 
 add_executable(
     focus_manager_transition_test
@@ -150,6 +182,11 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
     )
     target_compile_options(
+        numeric_components_test
+        PRIVATE
+            "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
+    )
+    target_compile_options(
         animation_inline_test
         PRIVATE
             "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
@@ -166,6 +203,21 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
     target_compile_options(
         popup_value_digits_test
+        PRIVATE
+            "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
+    )
+    target_compile_options(
+        popup_progress_test
+        PRIVATE
+            "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
+    )
+    target_compile_options(
+        num_scroll_test
+        PRIVATE
+            "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
+    )
+    target_compile_options(
+        icon_view_layout_test
         PRIVATE
             "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
     )

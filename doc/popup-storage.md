@@ -23,10 +23,13 @@ larger Popup type increases this one slot, rather than every queue entry.
 
 ## Non-owning request data
 
-Requests retain non-owning text/title pointers, referenced values, font
-pointers, and callback captures. These targets must remain valid while the
-request is pending and throughout its active lifetime. Queueing extends that
-required lifetime compared with immediate construction.
+Requests retain non-owning text/title/font pointers, `ValueEditorBinding`
+contexts, `NumericFormatter` contexts, and any references inside callback
+captures. These targets must remain valid while the request is pending and
+throughout its active lifetime. An injected `ValueEditSession` must likewise
+outlive a directly constructed Popup. Queueing extends that required lifetime
+compared with immediate construction. Calling `clearPopups()` ends the pending
+and active use before a shorter-lived owner is destroyed.
 
 `ViewManager` clears the active Popup and all pending requests before an App is
 destroyed. Code outside that lifecycle boundary must apply the same rule when
@@ -41,11 +44,11 @@ the current dispatch returns.
 
 ## Animation cleanup
 
-`PopupValueDigits` can start animations that reference internal `NumScroll`
-members. Its destructor currently clears all animations before its pool slot is
-released. This prevents stale member references, but may also stop unrelated
-application animations. Owner-scoped animation cancellation would remove that
-side effect at the cost of additional animation metadata.
+`PopupValueDigits`, its `NumScroll` children, `ListView`, `IconView`, and
+`FocusManager` retain only their own animation handles. Destruction and state
+replacement cancel those handles without clearing animations owned by other
+components. If animation capacity is exhausted, each component synchronizes
+its affected geometry to the stable final state.
 
 Use `showPopupValueDigits()` and pass a digit count from `1` through
 `MAX_INT_FIXED_WIDTH`.

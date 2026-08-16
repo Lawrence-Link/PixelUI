@@ -25,8 +25,31 @@
  */
 
 #include "ui/IconView/IconView.h"
+#include "core/NumericFormatter.h"
 #include <etl/algorithm.h>
-#include <stdio.h>
+
+IconViewLayout calculateIconViewLayout(
+    int32_t displayWidth, int32_t displayHeight) {
+    constexpr int32_t iconWidth = 24;
+    constexpr int32_t iconHeight = 24;
+    IconViewLayout layout;
+    layout.centerX = displayWidth / 2;
+    layout.selectorY = (displayHeight - 4) / 2;
+    layout.iconY = layout.selectorY - iconHeight / 2;
+    const int32_t available = displayWidth - 3 * iconWidth;
+    layout.iconSpacing = available > 0 ? available / 4 : 0;
+    layout.progressY = displayHeight > 15 ? displayHeight - 15 : 0;
+    layout.statusBaseline = displayHeight > 4 ? displayHeight - 4 : 0;
+    layout.selectedTitleBaseline = displayHeight > 2 ? displayHeight - 2 : 0;
+    const int32_t firstSlot =
+        layout.centerX - (3 * iconWidth) / 2 - layout.iconSpacing;
+    layout.slotPositionsX = {
+        firstSlot,
+        firstSlot + iconWidth + layout.iconSpacing,
+        firstSlot + 2 * (iconWidth + layout.iconSpacing),
+    };
+    return layout;
+}
 
 /**
  * @brief Construct an IconView instance and initialize slot positions.
@@ -34,6 +57,33 @@
  */
 IconView::IconView(PixelUI& ui, const uint8_t * font) : ui_(ui), font_title(font) {
     initializeSlotPositions();
+    scrollOffset_ = -ui_.getDisplayWidth();
+    animation_selector_coord_x = ui_.getDisplayWidth();
+    animation_item_title_Y = ui_.getDisplayHeight() + 6;
+}
+
+IconView::~IconView() {
+    cancelOwnAnimations();
+}
+
+void IconView::cancelOwnAnimations() {
+    for (AnimationHandle& handle : animationHandles_) {
+        ui_.cancelAnimation(handle);
+        handle = INVALID_ANIMATION_HANDLE;
+    }
+}
+
+bool IconView::animateOwned(
+    AnimationSlot slot, int32_t& value, int32_t target,
+    uint32_t duration, EasingType easing, PROTECTION protection) {
+    AnimationHandle& handle = animationHandles_[static_cast<size_t>(slot)];
+    ui_.cancelAnimation(handle);
+    handle = INVALID_ANIMATION_HANDLE;
+    if (!ui_.animate(value, target, duration, easing, protection, &handle)) {
+        value = target;
+        return false;
+    }
+    return true;
 }
 
 // -----------------------------------------------------------------------------
@@ -46,11 +96,17 @@ IconView::IconView(PixelUI& ui, const uint8_t * font) : ui_(ui), font_title(font
  */
 void IconView::onEnter(ExitCallback exitCallback) {
     IApplication::onEnter(exitCallback);  // Store the exit callback.
-    scrollOffset_ = -128;
+    cancelOwnAnimations();
+    initializeSlotPositions();
+    scrollOffset_ = -ui_.getDisplayWidth();
 
     // Start entry animations for visual transition.
-    ui_.animate(animation_pixel_dots, 63, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-    ui_.animate(animation_selector_length, selector_length, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+    animateOwned(AnimationSlot::PixelDots, animation_pixel_dots,
+                 (ui_.getDisplayWidth() - 2) / 2, 700,
+                 EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+    animateOwned(AnimationSlot::SelectorLength, animation_selector_length,
+                 selector_length, 700, EasingType::EASE_IN_OUT_CUBIC,
+                 PROTECTION::PROTECTED);
     scrollToIndex(currentIndex_);
     ui_.markDirty();  // Trigger initial redraw.
 }
@@ -60,8 +116,10 @@ void IconView::onEnter(ExitCallback exitCallback) {
  */
 void IconView::onResume() {
     animation_scroll_bar = 0;
-    scrollOffset_ -= 50;
-    ui_.animate(animation_pixel_dots, 63, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+    scrollOffset_ -= iconWidth_ + 2 * iconSpacing_;
+    animateOwned(AnimationSlot::PixelDots, animation_pixel_dots,
+                 (ui_.getDisplayWidth() - 2) / 2, 300,
+                 EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     updateProgressBar();
     scrollToIndex(currentIndex_);
     ui_.markDirty();
@@ -72,7 +130,7 @@ void IconView::onResume() {
  */
 void IconView::onPause() {
     ui_.markFading();
-    ui_.clearAllAnimations();
+    cancelOwnAnimations();
     animation_selector_length = selector_length;
 }
 
@@ -96,7 +154,9 @@ bool IconView::handleInput(InputEvent event) {
  */
 void IconView::draw() {
     if (!title_.empty()) drawTitle();
-    drawSelector(animation_selector_coord_x, 30, animation_selector_length);
+    drawSelector(
+        animation_selector_coord_x, layout_.selectorY,
+        animation_selector_length);
     drawHorizontalIconList();
     if (progressBarEnabled_) drawProgressBar();
     if (statusTextEnabled_) drawStatusText();
@@ -173,32 +233,36 @@ void IconView::selectCurrentItem() {
  * @note This method triggers selector and scroll animations.
  */
 void IconView::scrollToIndex(int newIndex) {
-    int totalItems = items_.size();
+    const int32_t totalItems = static_cast<int32_t>(items_.size());
     if (totalItems == 0) return;
 
-    // Clear any unprotected animation to avoid overlapping effects.
-    ui_.clearUnprotectedAnimations();
-
     // Determine target slot position for current index.
-    int targetSlot;
+    int32_t targetSlot;
     if (newIndex == 0 && totalItems > 1) targetSlot = 0;
     else if (newIndex == totalItems - 1 && totalItems > 1) targetSlot = 2;
     else targetSlot = 1;
     
     // Compute target scroll offset.
-    float targetSelectorX = slotPositionsX_[targetSlot] + 0.5 * iconWidth_;
-    float iconTargetCenterX = slotPositionsX_[targetSlot] + iconWidth_ / 2.0f;
-    float iconOriginalCenterX = newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2.0f;
-    float targetScrollOffset = iconTargetCenterX - iconOriginalCenterX;
+    const int32_t targetSelectorX =
+        slotPositionsX_[targetSlot] + iconWidth_ / 2;
+    const int32_t iconTargetCenterX = targetSelectorX;
+    const int32_t iconOriginalCenterX =
+        newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2;
+    const int32_t targetScrollOffset =
+        iconTargetCenterX - iconOriginalCenterX;
 
     // Animate selector and scroll transitions.
-    ui_.animate(animation_selector_coord_x, targetSelectorX, 550, EasingType::EASE_OUT_CUBIC);
-    ui_.animate(scrollOffset_, targetScrollOffset, 350, EasingType::EASE_OUT_CUBIC);
+    animateOwned(AnimationSlot::SelectorX, animation_selector_coord_x,
+                 targetSelectorX, 550, EasingType::EASE_OUT_CUBIC);
+    animateOwned(AnimationSlot::Scroll, scrollOffset_, targetScrollOffset,
+                 350, EasingType::EASE_OUT_CUBIC);
     
     // Animate selected item title rise effect.
     if (selectedItemTitleEnabled_) {
-        animation_item_title_Y = 70;
-        ui_.animate(animation_item_title_Y, 62, 300, EasingType::EASE_OUT_CUBIC);
+        animation_item_title_Y = ui_.getDisplayHeight() + 6;
+        animateOwned(AnimationSlot::ItemTitle, animation_item_title_Y,
+                     layout_.selectedTitleBaseline, 300,
+                     EasingType::EASE_OUT_CUBIC);
     }
     
     currentIndex_ = newIndex;
@@ -211,8 +275,11 @@ void IconView::scrollToIndex(int newIndex) {
  */
 void IconView::updateProgressBar() {
     if (progressBarEnabled_ && !items_.empty()) {
-        float progress = (static_cast<float>(currentIndex_ + 1)) / items_.size();
-        ui_.animate(animation_scroll_bar, progress * ui_.getDisplayWidth(), 300, EasingType::EASE_OUT_QUAD);
+        const int32_t target = static_cast<int32_t>(
+            (static_cast<int64_t>(currentIndex_ + 1) * ui_.getDisplayWidth()) /
+            static_cast<int32_t>(items_.size()));
+        animateOwned(AnimationSlot::Progress, animation_scroll_bar, target,
+                     300, EasingType::EASE_OUT_QUAD);
     }
 }
 
@@ -236,9 +303,9 @@ void IconView::drawTitle() {
 void IconView::drawProgressBar() {
     Canvas& display = ui_.getCanvas();
     for (int i = 0; i <= static_cast<int>(animation_pixel_dots); i++) {
-        display.drawPixel(i * 2, 49);
+        display.drawPixel(i * 2, layout_.progressY);
     }
-    display.drawHLine(0, 49, animation_scroll_bar);
+    display.drawHLine(0, layout_.progressY, animation_scroll_bar);
 }
 
 /**
@@ -247,10 +314,13 @@ void IconView::drawProgressBar() {
 void IconView::drawStatusText() {
     if (items_.empty()) return;
     Canvas& display = ui_.getCanvas();
-    char statusText[32];
-    snprintf(statusText, sizeof(statusText), "%d/%d", currentIndex_ + 1, (int)items_.size());
+    char statusText[16]{};
+    FixedBufferWriter writer(statusText, sizeof(statusText));
+    if (!writer.appendInteger(currentIndex_ + 1) || !writer.append("/") ||
+        !writer.appendInteger(static_cast<int32_t>(items_.size())) ||
+        !writer.finish()) return;
     display.setFont(PIXELUI_FONT_TINY);
-    display.drawStr(2, 60, statusText);
+    display.drawStr(2, layout_.statusBaseline, statusText);
 }
 
 /**
@@ -278,11 +348,12 @@ void IconView::drawHorizontalIconList() {
     }
     
     // Determine visible range based on current scroll position.
-    int startIndex = getVisibleStartIndex();
-    int endIndex = getVisibleEndIndex();
+    const int32_t startIndex = getVisibleStartIndex();
+    const int32_t endIndex = getVisibleEndIndex();
 
-    for (int i = startIndex; i <= endIndex && i < static_cast<int>(items_.size()); ++i) {
-        int iconX = calculateIconX(i);
+    for (int32_t i = startIndex;
+         i <= endIndex && i < static_cast<int32_t>(items_.size()); ++i) {
+        const int32_t iconX = calculateIconX(i);
         drawIcon(items_[i], iconX, iconY_);
     }
 }
@@ -293,7 +364,7 @@ void IconView::drawHorizontalIconList() {
  * @param x X coordinate of icon.
  * @param y Y coordinate of icon.
  */
-void IconView::drawIcon(const IconItem& item, int x, int y) {
+void IconView::drawIcon(const IconItem& item, int32_t x, int32_t y) {
     Canvas& display = ui_.getCanvas();
     if (item.bitmap) {
         // Center 24x24 bitmap within icon area.
@@ -310,12 +381,12 @@ void IconView::drawIcon(const IconItem& item, int x, int y) {
  * @brief Precompute X-coordinates for icon slots based on display width.
  */
 void IconView::initializeSlotPositions() {
-    iconSpacing_ = (ui_.getDisplayWidth() - 3 * iconWidth_) * 0.25f;
-    float firstSlotX = centerX_ - 1.5f * iconWidth_ - iconSpacing_;
-    slotPositionsX_.clear();
-    slotPositionsX_.push_back(firstSlotX);
-    slotPositionsX_.push_back(firstSlotX + iconWidth_ + iconSpacing_);
-    slotPositionsX_.push_back(firstSlotX + iconWidth_ * 2 + iconSpacing_ * 2);
+    layout_ = calculateIconViewLayout(
+        ui_.getDisplayWidth(), ui_.getDisplayHeight());
+    centerX_ = layout_.centerX;
+    iconY_ = layout_.iconY;
+    iconSpacing_ = layout_.iconSpacing;
+    slotPositionsX_ = layout_.slotPositionsX;
 }
 
 /**
@@ -324,9 +395,9 @@ void IconView::initializeSlotPositions() {
  * @param y Y coordinate of selector center.
  * @param length Total side length of the selector square.
  */
-void IconView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
+void IconView::drawSelector(int32_t x, int32_t y, int32_t length) {
     Canvas& display = ui_.getCanvas();
-    int half_length = 0.5 * length;
+    const int32_t half_length = length / 2;
 
     // Draw corner-style selector lines.
     display.drawLine(x - half_length + 1, y - half_length, x - half_length + 5, y - half_length);
@@ -344,7 +415,7 @@ void IconView::drawSelector(uint32_t x, uint32_t y, uint32_t length) {
  * @param index Index of the icon.
  * @return Computed X coordinate.
  */
-int IconView::calculateIconX(int index) {
+int32_t IconView::calculateIconX(int32_t index) const {
     return (index * (iconWidth_ + iconSpacing_)) + scrollOffset_;
 }
 
@@ -352,9 +423,9 @@ int IconView::calculateIconX(int index) {
  * @brief Determine first visible icon index based on scroll offset.
  * @return Index of the first visible icon.
  */
-int IconView::getVisibleStartIndex() {
-    int leftmostX = -iconWidth_;
-    for (int i = 0; i < static_cast<int>(items_.size()); ++i) {
+int32_t IconView::getVisibleStartIndex() const {
+    const int32_t leftmostX = -iconWidth_;
+    for (int32_t i = 0; i < static_cast<int32_t>(items_.size()); ++i) {
         if (calculateIconX(i) >= leftmostX) return etl::max(0, i - 1);
     }
     return 0;
@@ -364,10 +435,12 @@ int IconView::getVisibleStartIndex() {
  * @brief Determine last visible icon index based on scroll offset.
  * @return Index of the last visible icon.
  */
-int IconView::getVisibleEndIndex() {
-    int rightmostX = 128 + iconWidth_;
-    for (int i = static_cast<int>(items_.size()) - 1; i >= 0; --i) {
-        if (calculateIconX(i) <= rightmostX) return etl::min(static_cast<int>(items_.size()) - 1, i + 1);
+int32_t IconView::getVisibleEndIndex() const {
+    const int32_t rightmostX = ui_.getDisplayWidth() + iconWidth_;
+    for (int32_t i = static_cast<int32_t>(items_.size()) - 1; i >= 0; --i) {
+        if (calculateIconX(i) <= rightmostX) {
+            return etl::min(static_cast<int32_t>(items_.size()) - 1, i + 1);
+        }
     }
-    return static_cast<int>(items_.size()) - 1;
+    return static_cast<int32_t>(items_.size()) - 1;
 }

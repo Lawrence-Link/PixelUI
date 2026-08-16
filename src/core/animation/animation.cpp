@@ -27,7 +27,6 @@
 #include "core/animation/animation.h"
 #include "core/TimeUtils.h"
 
-// Convert float multiplication to integer multiplication and bit shift
 #define MUL_FIXED(a, b) ((int64_t)(a) * (b) >> SHIFT_BITS)
 
 /**
@@ -82,27 +81,27 @@ int32_t EasingCalculator::easeOutBounce(int32_t t) {
     #define FIXED_DIV(a, b) ((int64_t)(a) * FIXED_POINT_ONE / (b))
     #define FIXED_MUL(a, b) ((int64_t)(a) * (b) / FIXED_POINT_ONE)
 
-    const int32_t n1 = FLOAT_TO_FIXED(7.5625f);
-    const int32_t d1 = FLOAT_TO_FIXED(2.75f);
+    constexpr int32_t n1 = FIXED_POINT_ONE * 121 / 16;
+    constexpr int32_t d1 = FIXED_POINT_ONE * 11 / 4;
     
     if (t < FIXED_DIV(FIXED_POINT_ONE, d1)) 
     {
         return FIXED_MUL(n1, FIXED_MUL(t, t));
     } 
-    else if (t < FIXED_DIV(FLOAT_TO_FIXED(2.0f), d1))
+    else if (t < FIXED_DIV(2 * FIXED_POINT_ONE, d1))
     {
-        t -= FIXED_DIV(FLOAT_TO_FIXED(1.5f), d1);
-        return FIXED_MUL(n1, FIXED_MUL(t, t)) + FLOAT_TO_FIXED(0.75f);
+        t -= FIXED_DIV(3 * FIXED_POINT_ONE / 2, d1);
+        return FIXED_MUL(n1, FIXED_MUL(t, t)) + 3 * FIXED_POINT_ONE / 4;
     }
-    else if (t < FIXED_DIV(FLOAT_TO_FIXED(2.5f), d1))
+    else if (t < FIXED_DIV(5 * FIXED_POINT_ONE / 2, d1))
     {
-        t -= FIXED_DIV(FLOAT_TO_FIXED(2.25f), d1);
-        return FIXED_MUL(n1, FIXED_MUL(t, t)) + FLOAT_TO_FIXED(0.9375f);
+        t -= FIXED_DIV(9 * FIXED_POINT_ONE / 4, d1);
+        return FIXED_MUL(n1, FIXED_MUL(t, t)) + 15 * FIXED_POINT_ONE / 16;
     }
     else 
     {
-        t -= FIXED_DIV(FLOAT_TO_FIXED(2.625f), d1);
-        return FIXED_MUL(n1, FIXED_MUL(t, t)) + FLOAT_TO_FIXED(0.984375f);
+        t -= FIXED_DIV(21 * FIXED_POINT_ONE / 8, d1);
+        return FIXED_MUL(n1, FIXED_MUL(t, t)) + 63 * FIXED_POINT_ONE / 64;
     }
 }
 
@@ -169,12 +168,16 @@ bool AnimationManager::emplace(
     EasingType easing,
     UpdateCallback callback,
     PROTECTION protection,
-    uint32_t currentTime) {
+    uint32_t currentTime,
+    AnimationHandle* handle) {
+    if (handle != nullptr) *handle = INVALID_ANIMATION_HANDLE;
     if (_animations.full() || !callback) {
         return false;
     }
 
+    const AnimationHandle assignedHandle = nextHandle();
     CallbackAnimation& animation = _animations.emplace_back(
+        assignedHandle,
         startValue,
         endValue,
         duration,
@@ -182,7 +185,25 @@ bool AnimationManager::emplace(
         etl::move(callback));
     animation.setProtected(protection == PROTECTION::PROTECTED);
     animation.start(currentTime);
+    if (handle != nullptr) *handle = assignedHandle;
     return true;
+}
+
+AnimationHandle AnimationManager::nextHandle() {
+    AnimationHandle candidate = nextHandle_++;
+    if (nextHandle_ == INVALID_ANIMATION_HANDLE) ++nextHandle_;
+    if (candidate == INVALID_ANIMATION_HANDLE) candidate = nextHandle_++;
+    return candidate;
+}
+
+bool AnimationManager::cancel(AnimationHandle handle) {
+    if (handle == INVALID_ANIMATION_HANDLE) return false;
+    for (auto iterator = _animations.begin(); iterator != _animations.end(); ++iterator) {
+        if (iterator->handle() != handle) continue;
+        _animations.erase(iterator);
+        return true;
+    }
+    return false;
 }
 
 /*

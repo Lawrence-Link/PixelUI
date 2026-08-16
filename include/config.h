@@ -66,7 +66,6 @@
 #define PIXELUI_CALLBACK_STORAGE_SIZE           32
 #define PIXELUI_MAX_APPVIEW_SLOT_NUM            10
 #define PIXELUI_MAX_ICONVIEW_ITEMS              11
-#define PIXELUI_MAX_LISTVIEW_SLOT_NUM           30
 #define PIXELUI_MAX_LISTITEM_NAME_NUM           30
 #define PIXELUI_LISTVIEW_ITEMS_PER_PAGE          4
 #define PIXELUI_MAX_LISTVIEW_DEPTH               6

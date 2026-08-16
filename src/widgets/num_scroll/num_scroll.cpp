@@ -26,24 +26,33 @@
 
 #include "widgets/num_scroll/num_scroll.h"
 #include "PixelUI.h"
-#include <stdio.h>
 #include "config.h"
-#include <etl/string.h>
 
 /**
  * @brief Constructor for NumScroll widget.
  * @param ui Reference to PixelUI instance for rendering and animation.
  */
 NumScroll::NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h) : 
+    NumScroll(ui, x, y, w, h, NumericRange{}, NumericFormatter::integer()) {}
+
+NumScroll::NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h,
+                     const NumericRange& range, NumericFormatter formatter) :
     m_ui(ui),
     m_x(x),
     m_y(y),
     m_w(w),
-    m_h(h)
+    m_h(h),
+    range_(range),
+    formatter_(formatter.valid() ? formatter : NumericFormatter::integer())
  {
+    m_current_value = range_.clamp(m_current_value);
     setFocusable(true);
     updateGeometry();
  }
+
+NumScroll::~NumScroll() {
+    cancelOwnAnimations();
+}
 
 void NumScroll::updateGeometry() {
     if (presentation_ == Presentation::Bare) {
@@ -58,6 +67,7 @@ void NumScroll::updateGeometry() {
  * @brief Initialize widget with animation.
  */
 void NumScroll::onLoad() {
+    cancelOwnAnimations();
     m_anim_offset = 0;
     m_is_active = false;
 
@@ -66,17 +76,32 @@ void NumScroll::onLoad() {
 
     updateGeometry();
 
-    // Animate size from 0 to margin size
-    m_ui.animate(anim_w, anim_h,
-                 m_w, m_h,
-                 200, EasingType::EASE_OUT_CUBIC,
-                 PROTECTION::PROTECTED);
+    const int32_t targetWidth = m_w;
+    const int32_t targetHeight = m_h;
+    const bool sizeStarted = m_ui.animateCallback(
+        0, FIXED_POINT_ONE, 200, EasingType::EASE_OUT_CUBIC,
+        [this, targetWidth, targetHeight](int32_t progress) {
+            // Round both dimensions to nearest from one shared fixed-point phase.
+            anim_w = static_cast<int32_t>(
+                (static_cast<int64_t>(targetWidth) * progress +
+                 FIXED_POINT_ONE / 2) / FIXED_POINT_ONE);
+            anim_h = static_cast<int32_t>(
+                (static_cast<int64_t>(targetHeight) * progress +
+                 FIXED_POINT_ONE / 2) / FIXED_POINT_ONE);
+        },
+        PROTECTION::PROTECTED, &sizeAnimation_);
+    if (!sizeStarted) {
+        cancelOwnAnimations();
+        anim_w = m_w;
+        anim_h = m_h;
+    }
 }
 
 /**
  * @brief Initialize widget without animation (immediate size).
  */
 void NumScroll::onLoadNoAnim() {
+    cancelOwnAnimations();
     m_anim_offset = 0;
     m_is_active = false;
 
@@ -94,8 +119,18 @@ void NumScroll::onLoadNoAnim() {
  * @brief Clean up widget resources when offloaded.
  */
 void NumScroll::onOffload() {
-    m_ui.clearUnprotectedAnimations();
+    cancelOwnAnimations();
+    m_anim_offset = 0;
+    anim_w = m_w;
+    anim_h = m_h;
     m_is_active = false;
+}
+
+void NumScroll::cancelOwnAnimations() {
+    m_ui.cancelAnimation(valueAnimation_);
+    m_ui.cancelAnimation(sizeAnimation_);
+    valueAnimation_ = INVALID_ANIMATION_HANDLE;
+    sizeAnimation_ = INVALID_ANIMATION_HANDLE;
 }
 
 /**
@@ -157,6 +192,7 @@ Canvas& NumScroll::display() { return m_ui.getCanvas(); }
 
 void NumScroll::drawSelf(const WidgetRenderContext& context) {
     Canvas& u8g2 = m_ui.getCanvas();
+    if (anim_w <= 0 || anim_h <= 0) return;
 
     // Compute animated drawing area (centered)
     int32_t draw_x = context.originX + m_x + (m_w - anim_w) / 2;
@@ -207,16 +243,17 @@ void NumScroll::drawSelf(const WidgetRenderContext& context) {
     u8g2.setFont(PIXELUI_FONT_NUMERIC);
 
     const int digit_height = 16;
-    char buffer[16];
+    char buffer[32];
 
     // Draw current value with one previous and one next value for scroll effect
     for (int i = -1; i <= 1; i++) {
-        int32_t value = m_current_value + i;
-        if (value < m_min_value) value = m_min_value;
-        if (value > m_max_value) value = m_max_value;
+        const int32_t value = i < 0
+            ? range_.decremented(m_current_value)
+            : i > 0
+                ? range_.incremented(m_current_value)
+                : m_current_value;
 
-        // Format value for fixed digits if applicable
-        formatValue(value, buffer, sizeof(buffer));
+        if (!formatValue(value, buffer, sizeof(buffer))) continue;
 
         int text_width = u8g2.getStrWidth(buffer);
         int y_pos = center_y + (i * digit_height) + m_anim_offset;
@@ -234,20 +271,18 @@ void NumScroll::drawSelf(const WidgetRenderContext& context) {
  * @param min_val Minimum allowed value.
  * @param max_val Maximum allowed value.
  */
-void NumScroll::setRange(int32_t min_val, int32_t max_val) {
-    if (min_val <= max_val) {
-        m_min_value = min_val;
-        m_max_value = max_val;
+void NumScroll::setRange(const NumericRange& range) {
+    range_ = range;
+    m_current_value = range_.clamp(m_current_value);
+    m_anim_offset = 0;
+    m_ui.markDirty();
+}
 
-        if (m_current_value < m_min_value) {
-            m_current_value = m_min_value;
-        }
-        if (m_current_value > m_max_value) {
-            m_current_value = m_max_value;
-        }
-
-        m_ui.markDirty();
-    }
+bool NumScroll::setRange(int32_t minValue, int32_t maxValue, int32_t step) {
+    NumericRange range;
+    if (!NumericRange::tryCreate(minValue, maxValue, step, range)) return false;
+    setRange(range);
+    return true;
 }
 
 /**
@@ -255,8 +290,7 @@ void NumScroll::setRange(int32_t min_val, int32_t max_val) {
  * @param val New value to set.
  */
 void NumScroll::setValue(int32_t val) {
-    if (val < m_min_value) val = m_min_value;
-    if (val > m_max_value) val = m_max_value;
+    val = range_.clamp(val);
 
     if (val != m_current_value) {
         animateToValue(val);
@@ -264,9 +298,9 @@ void NumScroll::setValue(int32_t val) {
 }
 
 void NumScroll::setValueImmediate(int32_t val) {
-    if (val < m_min_value) val = m_min_value;
-    if (val > m_max_value) val = m_max_value;
-    m_current_value = val;
+    m_ui.cancelAnimation(valueAnimation_);
+    valueAnimation_ = INVALID_ANIMATION_HANDLE;
+    m_current_value = range_.clamp(val);
     m_anim_offset = 0;
     m_ui.markDirty();
 }
@@ -275,8 +309,8 @@ void NumScroll::setValueImmediate(int32_t val) {
  * @brief Increment the value by one step if not exceeding max.
  */
 void NumScroll::incrementValue() {
-    if (m_current_value < m_max_value) {
-        animateToValue(m_current_value + 1);
+    if (range_.canIncrement(m_current_value)) {
+        animateToValue(range_.incremented(m_current_value));
     }
 }
 
@@ -284,8 +318,8 @@ void NumScroll::incrementValue() {
  * @brief Decrement the value by one step if not below min.
  */
 void NumScroll::decrementValue() {
-    if (m_current_value > m_min_value) {
-        animateToValue(m_current_value - 1);
+    if (range_.canDecrement(m_current_value)) {
+        animateToValue(range_.decremented(m_current_value));
     }
 }
 
@@ -294,17 +328,25 @@ void NumScroll::decrementValue() {
  * @param new_value Target numeric value.
  */
 void NumScroll::animateToValue(int32_t new_value) {
-    int32_t diff = new_value - m_current_value;
-    if (diff == 0) return;
+    new_value = range_.clamp(new_value);
+    if (new_value == m_current_value) return;
 
+    const bool increasing = new_value > m_current_value;
+    m_ui.cancelAnimation(valueAnimation_);
+    valueAnimation_ = INVALID_ANIMATION_HANDLE;
     m_current_value = new_value;
 
     const int digit_height = 16;
-    int32_t start_offset = (diff > 0) ? digit_height : -digit_height;
+    const int32_t start_offset = increasing ? digit_height : -digit_height;
 
     // Start animation offset and animate to zero
     m_anim_offset = start_offset;
-    m_ui.animate(m_anim_offset, 0, 200, EasingType::EASE_OUT_QUAD);
+    if (!m_ui.animate(
+            m_anim_offset, 0, 200, EasingType::EASE_OUT_QUAD,
+            PROTECTION::NOT_PROTECTED, &valueAnimation_)) {
+        m_anim_offset = 0;
+        valueAnimation_ = INVALID_ANIMATION_HANDLE;
+    }
 
     m_ui.markDirty();
 }
@@ -315,12 +357,7 @@ void NumScroll::animateToValue(int32_t new_value) {
  * @param buffer Destination buffer.
  * @param buf_size Size of buffer.
  */
-void NumScroll::formatValue(int32_t value, char* buffer, size_t buf_size) const {
-    if (m_fixed_digits > 0) {
-        char fmt[8];
-        snprintf(fmt, sizeof(fmt), "%%0%dd", m_fixed_digits); // e.g. "%03d"
-        snprintf(buffer, buf_size, fmt, (int)value);
-    } else {
-        snprintf(buffer, buf_size, "%d", (int)value);
-    }
+bool NumScroll::formatValue(
+    int32_t value, char* buffer, size_t bufferSize) const {
+    return formatter_.format(value, buffer, bufferSize);
 }

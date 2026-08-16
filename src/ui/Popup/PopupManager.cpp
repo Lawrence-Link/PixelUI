@@ -11,7 +11,11 @@ PopupManager::~PopupManager() {
     clearPopups();
 }
 
-bool PopupManager::enqueue(Request&& request) {
+bool PopupManager::validEnvelope(const RequestEnvelope& envelope) {
+    return envelope.width != 0U && envelope.height != 0U;
+}
+
+bool PopupManager::enqueue(PopupRequest&& request) {
     if (dispatching_ || (getPopupCounts() >= MAX_POPUP_NUM)) {
         return false;
     }
@@ -27,59 +31,68 @@ bool PopupManager::enqueue(Request&& request) {
 bool PopupManager::enqueueInfo(uint16_t width, uint16_t height,
                                const char* text, const char* title,
                                uint16_t duration, const uint8_t* font) {
-    if (text == nullptr) {
-        return false;
-    }
-
-    Request request;
-    request.type = RequestType::Info;
-    request.width = width;
-    request.height = height;
-    request.duration = duration;
-    request.text = text;
-    request.title = title;
-    request.font = font;
+    const RequestEnvelope envelope{width, height, duration};
+    if (!validEnvelope(envelope) || text == nullptr || font == nullptr) return false;
+    PopupRequest request{InfoRequest{envelope, text, title, font}};
     return enqueue(etl::move(request));
 }
 #endif
 
 #if PIXELUI_USE_POPUP_PROGRESS
 bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
+                                   ValueEditorBinding binding,
+                                   const NumericRange& range,
+                                   NumericFormatter formatter,
+                                   const char* title, uint16_t duration,
+                                   ValueCallback callback,
+                                   ValueEditPolicy policy) {
+    const RequestEnvelope envelope{width, height, duration};
+    int32_t currentValue = 0;
+    if (!validEnvelope(envelope) || !binding.read(currentValue)) return false;
+    PopupRequest request{ProgressRequest{
+        envelope, policy, range, formatter, binding, title,
+        etl::move(callback)}};
+    return enqueue(etl::move(request));
+}
+
+bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
                                    int32_t& value, int32_t minValue,
                                    int32_t maxValue, const char* title,
-                                   uint16_t duration, ValueCallback callback,
-                                   bool useApparentValue) {
-    Request request;
-    request.type = RequestType::Progress;
-    request.width = width;
-    request.height = height;
-    request.duration = duration;
-    request.title = title;
-    request.value = &value;
-    request.minValue = minValue;
-    request.maxValue = maxValue;
-    request.callback = etl::move(callback);
-    request.useApparentValue = useApparentValue;
-    return enqueue(etl::move(request));
+                                   uint16_t duration, ValueCallback callback) {
+    NumericRange range;
+    if (!NumericRange::tryCreate(minValue, maxValue, 1, range)) return false;
+    return enqueueProgress(
+        width, height, ValueEditorBinding::reference(value), range,
+        NumericFormatter{}, title, duration, etl::move(callback),
+        ValueEditPolicy::CommitOnConfirm);
 }
 #endif
 
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
 bool PopupManager::enqueueValueDigits(uint16_t width, uint16_t height,
+                                      ValueEditorBinding binding,
+                                      uint8_t digitCount,
+                                      const char* title, uint16_t duration,
+                                      ValueCallback callback,
+                                      ValueEditPolicy policy) {
+    const RequestEnvelope envelope{width, height, duration};
+    int32_t currentValue = 0;
+    if (!validEnvelope(envelope) ||
+        !PopupValueDigits::isValidDigitCount(digitCount) ||
+        !binding.read(currentValue)) return false;
+    PopupRequest request{ValueDigitsRequest{
+        envelope, digitCount, policy, binding, title, etl::move(callback)}};
+    return enqueue(etl::move(request));
+}
+
+bool PopupManager::enqueueValueDigits(uint16_t width, uint16_t height,
                                       int32_t& value, uint8_t digitCount,
                                       const char* title, uint16_t duration,
                                       ValueCallback callback) {
-    if (!PopupValueDigits::isValidDigitCount(digitCount)) return false;
-    Request request;
-    request.type = RequestType::ValueDigits;
-    request.width = width;
-    request.height = height;
-    request.duration = duration;
-    request.title = title;
-    request.value = &value;
-    request.digitCount = digitCount;
-    request.callback = etl::move(callback);
-    return enqueue(etl::move(request));
+    return enqueueValueDigits(
+        width, height, ValueEditorBinding::reference(value), digitCount,
+        title, duration, etl::move(callback),
+        ValueEditPolicy::CommitOnConfirm);
 }
 #endif
 
@@ -88,39 +101,39 @@ void PopupManager::activateNext() {
         return;
     }
 
-    Request request = etl::move(requests_.front());
+    PopupRequest request = etl::move(requests_.front());
     requests_.pop();
 
     dispatching_ = true;
-    switch (request.type) {
-#if PIXELUI_USE_POPUP_INFO
-        case RequestType::Info:
-            active_ = activePool_.create<PopupInfo>(
-                ui_, request.width, request.height, request.text,
-                request.title, request.duration, request.font);
-            break;
-#endif
-#if PIXELUI_USE_POPUP_PROGRESS
-        case RequestType::Progress:
-            active_ = activePool_.create<PopupProgress>(
-                ui_, request.width, request.height, *request.value,
-                request.minValue, request.maxValue, request.title,
-                request.duration, etl::move(request.callback),
-                request.useApparentValue);
-            break;
-#endif
-#if PIXELUI_USE_POPUP_VALUE_DIGITS
-        case RequestType::ValueDigits:
-            active_ = activePool_.create<PopupValueDigits>(
-                ui_, request.width, request.height, *request.value, request.digitCount,
-                request.title, request.duration, etl::move(request.callback));
-            break;
-#endif
-        case RequestType::None:
-            break;
-    }
+    etl::visit([this](auto& payload) { activate(payload); }, request);
     dispatching_ = false;
 }
+
+#if PIXELUI_USE_POPUP_INFO
+void PopupManager::activate(InfoRequest& request) {
+    active_ = activePool_.create<PopupInfo>(
+        ui_, request.envelope.width, request.envelope.height, request.text,
+        request.title, request.envelope.duration, request.font);
+}
+#endif
+
+#if PIXELUI_USE_POPUP_PROGRESS
+void PopupManager::activate(ProgressRequest& request) {
+    active_ = activePool_.create<PopupProgress>(
+        ui_, request.envelope.width, request.envelope.height,
+        request.range, request.formatter, request.binding, request.title,
+        request.envelope.duration, etl::move(request.callback), request.policy);
+}
+#endif
+
+#if PIXELUI_USE_POPUP_VALUE_DIGITS
+void PopupManager::activate(ValueDigitsRequest& request) {
+    active_ = activePool_.create<PopupValueDigits>(
+        ui_, request.envelope.width, request.envelope.height,
+        request.binding, request.digitCount, request.title,
+        request.envelope.duration, etl::move(request.callback), request.policy);
+}
+#endif
 
 void PopupManager::destroyActive() {
     if (active_ == nullptr) {

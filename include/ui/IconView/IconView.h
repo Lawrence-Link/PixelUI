@@ -31,9 +31,11 @@
 #include <etl/inplace_function.h>
 #include <etl/string.h>
 #include <etl/vector.h>
+#include <etl/array.h>
 
 // A generic interface for an icon-based item.
 struct IconItem {
+    // All pointers are non-owning and must outlive every IconView copy of this item.
     const char* title;
     const uint8_t* bitmap;
     void* userData; // Used to store type-specific data.
@@ -42,15 +44,31 @@ struct IconItem {
         : title(t), bitmap(b), userData(data) {}
 };
 
-// Callback function type definitions.
 using IconItemList = etl::vector<IconItem, MAX_ICONVIEW_ITEMS>;
+// The callback object is owned; references captured by it are non-owning.
 using SelectionCallback = etl::inplace_function<void(int index, const IconItem& item), CALLBACK_STORAGE_SIZE>;
+
+struct IconViewLayout {
+    int32_t centerX = 0;
+    int32_t selectorY = 0;
+    int32_t iconY = 0;
+    int32_t iconSpacing = 0;
+    int32_t progressY = 0;
+    int32_t statusBaseline = 0;
+    int32_t selectedTitleBaseline = 0;
+    etl::array<int32_t, 3> slotPositionsX{};
+};
+
+// All division uses integer truncation toward zero. Inputs are non-negative
+// display dimensions, so this is an explicit floor rule; odd leftovers stay on
+// the right/bottom edge.
+IconViewLayout calculateIconViewLayout(int32_t displayWidth, int32_t displayHeight);
 
 // IconView is now a complete, standalone view component.
 class IconView : public IApplication {
 public:
     IconView(PixelUI& ui, const uint8_t * font = PIXELUI_FONT_TEXT);
-    ~IconView() = default;
+    ~IconView() override;
 
     // --- IApplication Interface Implementation ---
     void draw() override;
@@ -76,11 +94,11 @@ private:
     
     // Title-related members.
     etl::string<MAX_TEXT_LENGTH> title_;
-    int titleY_ = 10;
+    int32_t titleY_ = 10;
     const uint8_t * font_title = NULL;
     
     // State.
-    int currentIndex_ = 0;
+    int32_t currentIndex_ = 0;
     
     // Toggles for UI elements.
     bool progressBarEnabled_ = false;
@@ -88,25 +106,41 @@ private:
     bool selectedItemTitleEnabled_ = false;
 
     // Animation variables.
-    int32_t scrollOffset_ = -128;
-    int32_t animation_selector_coord_x = 128;
+    int32_t scrollOffset_ = 0;
+    int32_t animation_selector_coord_x = 0;
     int32_t animation_selector_length = 10;
     int32_t selector_length = 30;
-    int32_t animation_item_title_Y = 70;
+    int32_t animation_item_title_Y = 0;
     int32_t animation_pixel_dots = 0;
     int32_t animation_scroll_bar = 0;
     
     // Layout parameters.
-    int iconWidth_ = 24;
-    int iconHeight_ = 24;
-    int iconSpacing_ = 14;
-    int centerX_ = 64;
-    int iconY_ = 18;
+    int32_t iconWidth_ = 24;
+    int32_t iconHeight_ = 24;
+    int32_t iconSpacing_ = 14;
+    int32_t centerX_ = 0;
+    int32_t iconY_ = 0;
+    IconViewLayout layout_{};
     
-    etl::vector<float, 3> slotPositionsX_;
+    etl::array<int32_t, 3> slotPositionsX_{};
+    enum class AnimationSlot : uint8_t {
+        PixelDots,
+        SelectorLength,
+        SelectorX,
+        Scroll,
+        ItemTitle,
+        Progress,
+        Count,
+    };
+    etl::array<AnimationHandle, static_cast<size_t>(AnimationSlot::Count)>
+        animationHandles_{};
     
     // --- Private Methods ---
     void initializeSlotPositions();
+    void cancelOwnAnimations();
+    bool animateOwned(AnimationSlot slot, int32_t& value, int32_t target,
+                      uint32_t duration, EasingType easing,
+                      PROTECTION protection = PROTECTION::NOT_PROTECTED);
     void navigateLeft();
     void navigateRight();
     void selectCurrentItem();
@@ -115,14 +149,14 @@ private:
 
     // Drawing logic.
     void drawTitle();
-    void drawSelector(uint32_t x, uint32_t y, uint32_t length);
+    void drawSelector(int32_t x, int32_t y, int32_t length);
     void drawHorizontalIconList();
-    void drawIcon(const IconItem& item, int x, int y);
+    void drawIcon(const IconItem& item, int32_t x, int32_t y);
     void drawProgressBar();
     void drawStatusText();
     void drawSelectedItemTitle();
     
-    int calculateIconX(int index);
-    int getVisibleStartIndex();
-    int getVisibleEndIndex();
+    int32_t calculateIconX(int32_t index) const;
+    int32_t getVisibleStartIndex() const;
+    int32_t getVisibleEndIndex() const;
 };

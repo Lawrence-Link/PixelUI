@@ -27,6 +27,9 @@
 #pragma once
 
 #include "../IWidget.h"
+#include "core/NumericFormatter.h"
+#include "core/NumericRange.h"
+#include "core/animation/animation.h"
 
 /**
  * @class NumScroll
@@ -44,7 +47,9 @@ public:
     };
 
     NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    ~NumScroll() = default;
+    NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h,
+              const NumericRange& range, NumericFormatter formatter);
+    ~NumScroll() override;
 
     void onLoad() override;
     void onLoadNoAnim();
@@ -58,12 +63,14 @@ public:
         updateGeometry();
     }
 
-    void setRange(int32_t min_val, int32_t max_val);
+    void setRange(const NumericRange& range);
+    bool setRange(int32_t minValue, int32_t maxValue, int32_t step = 1);
+    // Any non-null formatter context must outlive this NumScroll.
+    void setFormatter(NumericFormatter formatter) { formatter_ = formatter; }
     void setValue(int32_t val);
     void setValueImmediate(int32_t val);
     int32_t getValue() const { return m_current_value; }
 
-    void setFixedIntDigits(uint8_t digits) { m_fixed_digits = digits; }
     void setPresentation(Presentation presentation) {
         presentation_ = presentation;
         updateGeometry();
@@ -83,15 +90,16 @@ private:
     uint16_t m_h = 16;
 
     int32_t m_current_value = 0;
-    int32_t m_min_value = 0;
-    int32_t m_max_value = 99;
-    uint8_t m_fixed_digits = 0; 
+    NumericRange range_{};
+    NumericFormatter formatter_ = NumericFormatter::integer();
     Presentation presentation_ = Presentation::Framed;
 
     int32_t m_anim_offset = 0;
     
     int32_t anim_w = 0;
     int32_t anim_h = 0;
+    AnimationHandle valueAnimation_ = INVALID_ANIMATION_HANDLE;
+    AnimationHandle sizeAnimation_ = INVALID_ANIMATION_HANDLE;
 
     static constexpr uint32_t TIMEOUT_MS = 5000;
 
@@ -102,6 +110,7 @@ private:
     void decrementValue();
     void animateToValue(int32_t new_value);
     void updateGeometry();
+    void cancelOwnAnimations();
 
-    void formatValue(int32_t value, char* buffer, size_t buf_size) const;
+    bool formatValue(int32_t value, char* buffer, size_t bufferSize) const;
 };

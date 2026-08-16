@@ -34,14 +34,32 @@ void FocusManager::enterIdle(bool clearSelection) {
 
 void FocusManager::beginFocusAnimation(IWidget* widget) {
     if (!widget) return;
+    cancelOwnAnimations();
     m_currentWidget = widget;
     m_state = State::ANIMATING;
     last_focus_change_time = m_ui.getCurrentTime();
     m_target_focus_box = widget->getFocusBox();
-    m_ui.animate(m_current_focus_box.x, m_target_focus_box.x, 100, EasingType::EASE_OUT_QUAD);
-    m_ui.animate(m_current_focus_box.y, m_target_focus_box.y, 100, EasingType::EASE_OUT_QUAD);
-    m_ui.animate(m_current_focus_box.w, m_target_focus_box.w, 100, EasingType::EASE_OUT_QUAD);
-    m_ui.animate(m_current_focus_box.h, m_target_focus_box.h, 100, EasingType::EASE_OUT_QUAD);
+    const bool xStarted = m_ui.animate(
+        m_current_focus_box.x, m_target_focus_box.x, 100,
+        EasingType::EASE_OUT_QUAD, PROTECTION::NOT_PROTECTED,
+        &animationHandles_[0]);
+    const bool yStarted = m_ui.animate(
+        m_current_focus_box.y, m_target_focus_box.y, 100,
+        EasingType::EASE_OUT_QUAD, PROTECTION::NOT_PROTECTED,
+        &animationHandles_[1]);
+    const bool wStarted = m_ui.animate(
+        m_current_focus_box.w, m_target_focus_box.w, 100,
+        EasingType::EASE_OUT_QUAD, PROTECTION::NOT_PROTECTED,
+        &animationHandles_[2]);
+    const bool hStarted = m_ui.animate(
+        m_current_focus_box.h, m_target_focus_box.h, 100,
+        EasingType::EASE_OUT_QUAD, PROTECTION::NOT_PROTECTED,
+        &animationHandles_[3]);
+    if (!xStarted || !yStarted || !wStarted || !hStarted) {
+        cancelOwnAnimations();
+        m_current_focus_box = m_target_focus_box;
+        enterFocused(false);
+    }
 }
 
 void FocusManager::enterFocused(bool synchronizeBox) {
@@ -58,13 +76,27 @@ void FocusManager::enterFocused(bool synchronizeBox) {
 }
 
 void FocusManager::beginShrinkAnimation() {
+    cancelOwnAnimations();
     m_state = State::ANIMATING_SHRINK;
     const int32_t centerX = m_current_focus_box.x + m_current_focus_box.w / 2;
     const int32_t centerY = m_current_focus_box.y + m_current_focus_box.h / 2;
-    m_ui.animate(m_current_focus_box.w, 0, 100, EasingType::EASE_IN_QUAD);
-    m_ui.animate(m_current_focus_box.h, 0, 100, EasingType::EASE_IN_QUAD);
-    m_ui.animate(m_current_focus_box.x, centerX, 100, EasingType::EASE_IN_QUAD);
-    m_ui.animate(m_current_focus_box.y, centerY, 100, EasingType::EASE_IN_QUAD);
+    const bool wStarted = m_ui.animate(
+        m_current_focus_box.w, 0, 100, EasingType::EASE_IN_QUAD,
+        PROTECTION::NOT_PROTECTED, &animationHandles_[0]);
+    const bool hStarted = m_ui.animate(
+        m_current_focus_box.h, 0, 100, EasingType::EASE_IN_QUAD,
+        PROTECTION::NOT_PROTECTED, &animationHandles_[1]);
+    const bool xStarted = m_ui.animate(
+        m_current_focus_box.x, centerX, 100, EasingType::EASE_IN_QUAD,
+        PROTECTION::NOT_PROTECTED, &animationHandles_[2]);
+    const bool yStarted = m_ui.animate(
+        m_current_focus_box.y, centerY, 100, EasingType::EASE_IN_QUAD,
+        PROTECTION::NOT_PROTECTED, &animationHandles_[3]);
+    if (!wStarted || !hStarted || !xStarted || !yStarted) {
+        cancelOwnAnimations();
+        m_current_focus_box = {centerX, centerY, 0, 0};
+        enterIdle(true);
+    }
 }
 
 bool FocusManager::isRegisteredRoot(const IWidget* widget) const {
@@ -191,6 +223,7 @@ void FocusManager::onWidgetDestroyed(IWidget& widget) {
 }
 
 void FocusManager::resetState() {
+    cancelOwnAnimations();
     if (m_activeWidget) m_activeWidget->onDeactivate();
     m_activeWidget = nullptr;
     m_current_focus_box = {0, 64, 0, 0};
@@ -204,6 +237,13 @@ void FocusManager::clear() {
         if (root) root->setTreeObserver(nullptr);
     }
     roots_.clear();
+}
+
+void FocusManager::cancelOwnAnimations() {
+    for (AnimationHandle& handle : animationHandles_) {
+        m_ui.cancelAnimation(handle);
+        handle = INVALID_ANIMATION_HANDLE;
+    }
 }
 
 void FocusManager::clearActiveWidget() {
@@ -238,14 +278,12 @@ void FocusManager::checkActiveWidgetTimeout() {
 void FocusManager::moveNext() {
     IWidget* next = nextFocusable(m_currentWidget);
     if (!next || next == m_currentWidget) return;
-    m_ui.clearUnprotectedAnimations();
     beginFocusAnimation(next);
 }
 
 void FocusManager::movePrev() {
     IWidget* previous = previousFocusable(m_currentWidget);
     if (!previous || previous == m_currentWidget) return;
-    m_ui.clearUnprotectedAnimations();
     beginFocusAnimation(previous);
 }
 
@@ -258,11 +296,7 @@ void FocusManager::selectCurrent() {
         enterIdle(false);
         return;
     }
-    const FocusBox target = m_currentWidget->getFocusBox();
-    m_ui.animate(m_current_focus_box.x, target.x, 100, EasingType::EASE_OUT_QUAD);
-    m_ui.animate(m_current_focus_box.y, target.y, 100, EasingType::EASE_OUT_QUAD);
-    m_ui.animate(m_current_focus_box.w, target.w, 100, EasingType::EASE_OUT_QUAD);
-    m_ui.animate(m_current_focus_box.h, target.h, 100, EasingType::EASE_OUT_QUAD);
+    beginFocusAnimation(m_currentWidget);
 }
 
 void FocusManager::draw() {

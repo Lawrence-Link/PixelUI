@@ -127,8 +127,12 @@ public:
      * @param duration Duration of the animation.
      * @param easing Easing function to use.
      * @param prot Protection status.
+     * @note value must outlive completion or cancellation of the animation.
      */
-    bool animate(int32_t& value, int32_t targetValue, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
+    bool animate(int32_t& value, int32_t targetValue, uint32_t duration,
+                 EasingType easing = EasingType::LINEAR,
+                 PROTECTION prot = PROTECTION::NOT_PROTECTED,
+                 AnimationHandle* handle = nullptr);
     
     /**
      * @brief Creates and starts a two-value animation.
@@ -139,16 +143,29 @@ public:
      * @param duration Duration of the animation.
      * @param easing Easing function to use.
      * @param prot Protection status.
+     * @note x and y must outlive completion or explicit global cleanup.
      */
     bool animate(int32_t& x, int32_t& y, int32_t targetX, int32_t targetY, uint32_t duration, EasingType easing = EasingType::LINEAR, PROTECTION prot = PROTECTION::NOT_PROTECTED);
     
+    // The callback object is owned by the animation; references captured by it
+    // must outlive completion or cancellation.
     bool animateCallback(
         int32_t startValue,
         int32_t endValue,
         uint32_t duration,
         EasingType easing,
         ValueCallback callback,
-        PROTECTION protection = PROTECTION::NOT_PROTECTED);
+        PROTECTION protection = PROTECTION::NOT_PROTECTED,
+        AnimationHandle* handle = nullptr);
+
+    bool cancelAnimation(AnimationHandle handle) {
+#if PIXELUI_USE_ANIMATION
+        return m_animationManager.cancel(handle);
+#else
+        (void)handle;
+        return false;
+#endif
+    }
     
     /**
      * @brief Clears all unprotected animations.
@@ -256,20 +273,38 @@ public:
      * @param height Popup height.
      * @param duration Display duration.
      * @return true if the request was accepted.
+     * @note text and title are non-owning and must outlive pending and active use.
      */
     bool showPopupInfo(const char* text, const char* title = "", uint16_t width = 80,
                        uint16_t height = 30, uint16_t duration = 3000);
 
     /**
      * @brief Shows a fixed-width integer editor.
-     * @param value Value to edit.
+     * @param binding Non-owning read/write/notification boundary.
      * @param digitCount Number of editable digits (1..MAX_INT_FIXED_WIDTH).
      * @param title Optional title.
      * @param width Popup width.
      * @param height Popup height.
      * @param duration Display duration.
-     * @param update_cb function callback when value changed.
+     * @param policy Live writes each edit; CommitOnConfirm writes only on SELECT.
      * @return true if the request was accepted.
+     * @note Binding contexts and title must outlive pending and active use.
+     */
+    bool showPopupValueDigits(
+        ValueEditorBinding binding,
+        uint8_t digitCount,
+        const char* title = "",
+        uint16_t width = 80,
+        uint16_t height = 40,
+        uint16_t duration = 3000,
+        ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm);
+
+    /**
+     * @brief Compatibility adapter for a referenced integer.
+     *
+     * The value and references captured by update_cb must outlive pending and
+     * active use. This adapter uses CommitOnConfirm: SELECT writes and notifies;
+     * BACK discards the draft without invoking update_cb.
      */
     bool showPopupValueDigits(
         int32_t& value,
@@ -282,16 +317,33 @@ public:
     
     /**
      * @brief Shows a progress popup.
-     * @param value A reference to the progress value.
-     * @param minValue Minimum value.
-     * @param maxValue Maximum value.
+     * @param binding Non-owning read/write/notification boundary.
+     * @param range Range and step used for editing and bar normalization.
+     * @param formatter Value presentation policy.
      * @param title Optional title.
      * @param width Popup width.
      * @param height Popup height.
      * @param duration Display duration.
-     * @param update_cb function callback when value changed.
-     * @param use_apparent_val Don't display the "%"
+     * @param policy Live writes each edit; CommitOnConfirm writes only on SELECT.
      * @return true if the request was accepted.
+     * @note Binding/formatter contexts and title must outlive pending and active use.
+     */
+    bool showPopupProgress(
+        ValueEditorBinding binding,
+        const NumericRange& range,
+        NumericFormatter formatter,
+        const char* title,
+        uint16_t width = 100,
+        uint16_t height = 40,
+        uint16_t duration = 3000,
+        ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm);
+
+    /**
+     * @brief Compatibility adapter using step 1 and percentage formatting.
+     *
+     * The value and references captured by update_cb must outlive pending and
+     * active use. This adapter uses CommitOnConfirm: SELECT writes and notifies;
+     * BACK restores the original value without invoking update_cb.
      */
     bool showPopupProgress(int32_t& value,
         int32_t minValue, 
@@ -300,7 +352,7 @@ public:
         uint16_t width = 100, 
         uint16_t height = 40, 
         uint16_t duration = 3000,
-        ValueCallback update_cb = nullptr, bool use_apparent_val = false);
+        ValueCallback update_cb = nullptr);
 
     /**
      * @brief Marks the display buffer as dirty, forcing a redraw.

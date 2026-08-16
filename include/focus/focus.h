@@ -1,6 +1,8 @@
 #pragma once
 
 #include "widgets/IWidget.h"
+#include "core/animation/animation.h"
+#include <etl/array.h>
 #include <etl/vector.h>
 #include "config.h"
 
@@ -21,6 +23,7 @@ private:
     } m_state = State::IDLE;
 
     etl::vector<IWidget*, MAX_ONSCREEN_WIDGET_NUM> roots_;
+    etl::array<AnimationHandle, 4> animationHandles_{};
 
     void enterIdle(bool clearSelection);
     void beginFocusAnimation(IWidget* widget);
@@ -38,6 +41,7 @@ private:
     IWidget* nextFocusable(IWidget* widget) const;
     IWidget* previousFocusable(IWidget* widget) const;
     size_t focusableCount() const;
+    void cancelOwnAnimations();
     void onWidgetSubtreeDetaching(IWidget& subtree) override;
     void onWidgetDestroyed(IWidget& widget) override;
 

@@ -33,7 +33,6 @@
 #include "core/animation/animation.h"
 #include "core/app/IApplication.h"
 #include "core/ValueBinding.h"
-#include "etl/map.h"
 #include <stdint.h>
 
 class ListItemAccessory {
@@ -45,6 +44,7 @@ public:
         Value,
     };
 
+    // Accessory targets are non-owning and must outlive the containing ListView.
     static constexpr ListItemAccessory text(const char* text) {
         ListItemAccessory accessory;
         accessory.kind_ = Kind::Text;
@@ -120,6 +120,7 @@ struct ListItem{
     mutable char title[MAX_LISTITEM_NAME_NUM]; // The display title of the item. 'mutable' allows it to be changed even if the struct is 'const'.
     ListItem * nextList = nullptr;                       // Pointer to a sub-menu (another list).
     int32_t nextListLength = 0;                     // The number of items in the sub-menu. (signed to avoid mixed-signedness)
+    // The callback object is owned; references captured by it are non-owning.
     VoidCallback pFunc = nullptr;               // A function to execute when the item is selected.
     ListItemAccessory accessory{};
     bool use_fade = false; // Whether render fade animation when navigate to new app.
@@ -129,11 +130,12 @@ struct ListItem{
 class ListView : public IApplication {
 public:
     // Constructor to initialize the list view with a UI handler and a list of items.
-    // NOTE: length is an int (signed) to match internal usage of indices and avoid
-    // signed/unsigned comparison warnings.
+    // itemList, every submenu, accessory target, and callback capture are
+    // non-owning and must remain valid for this ListView's lifetime.
+    // NOTE: length is signed to match internal indices.
     ListView(PixelUI& ui, ListItem *itemList, int length)
         : IApplication(true), m_ui(ui), m_itemList(itemList), m_itemLength(length - 1) {}
-    ~ListView() = default;
+    ~ListView() override;
 
     // --- Application Lifecycle and Input Handlers ---
     void draw() override;
@@ -151,15 +153,23 @@ public:
     PixelUI& getUI() { return m_ui; }
     
     PixelUI& m_ui; // Reference to the main UI class.
+protected:
+    int32_t toggleBoxXFor(const ListItem& item) const;
+
 private:
     ListItem* m_itemList;
     int32_t m_itemLength; // signed index length (last index). Avoid mixing signed/unsigned.
     
     struct SwitchAnimState {
-    int32_t boxX = 0;
-    bool isAnimating = false;
-};
-    etl::map<int, SwitchAnimState, MAX_LISTVIEW_SLOT_NUM> switchAnimStates_;
+        ListItem* item = nullptr;
+        int32_t boxX = 0;
+        AnimationHandle handle = INVALID_ANIMATION_HANDLE;
+    } switchAnimState_;
+
+    static constexpr size_t MAX_VIEW_ANIMATIONS = 6U;
+    static constexpr size_t MAX_LOAD_ANIMATIONS = LISTVIEW_ITEMS_PER_PAGE + 1U;
+    etl::vector<AnimationHandle, MAX_VIEW_ANIMATIONS> viewAnimations_;
+    etl::vector<AnimationHandle, MAX_LOAD_ANIMATIONS> loadAnimations_;
 
     // --- Layout and Spacing Variables ---
     uint8_t spacing_ = 7;
@@ -182,18 +192,7 @@ private:
     int32_t itemLoadAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1]; // Tracks animation progress for each item.
     bool isInitialLoad_ = true;
     int32_t animation_pixel_dots = 0;
-    int32_t animation_scroll_bar = 0;
     
-    // --- Transition Animation Variables ---
-    bool isTransitioning_ = false;
-    int32_t transitionProgress_ = 0;
-    int32_t selectedItemForTransition_ = -1;
-    int32_t itemExitAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1]; // Animations for items leaving the screen.
-    int32_t itemEnterAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1]; // Animations for items entering the screen.
-    int32_t selectedItemY_ = 0;
-    ListItem* oldItemList_ = nullptr;
-    int32_t oldItemLength_ = 0;
-    int32_t oldTopVisibleIndex_ = 0;
     // --- Progress Bar Variables ---
     int32_t progress_bar_top = 0;
     int32_t progress_bar_bottom = 0;
@@ -208,8 +207,6 @@ private:
     void scrollToTarget();
     void updateScrollPosition();
     void startLoadAnimation();
-    void startTransitionAnimation(int selectedItemIndex);
-    int getVisibleItemIndex(int screenIndex);
     bool shouldScroll(int newCursor);
     int32_t calculateItemY(int itemIndex);
     
@@ -217,6 +214,15 @@ private:
     void returnToPreviousContext();
 
     void clearNonInitialAnimations();
+    void cancelLoadAnimations();
+    void cancelToggleAnimation();
+    void cancelAllOwnedAnimations();
+    bool animateOwned(int32_t& value, int32_t target, uint32_t duration,
+                      EasingType easing,
+                      PROTECTION protection = PROTECTION::NOT_PROTECTED);
+    bool animateOwnedCallback(int32_t start, int32_t target, uint32_t duration,
+                              EasingType easing, ValueCallback callback,
+                              PROTECTION protection = PROTECTION::NOT_PROTECTED);
     
     int32_t currentCursor = 0; // The index of the currently selected item. (signed)
 };
