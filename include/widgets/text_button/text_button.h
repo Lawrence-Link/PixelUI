@@ -57,6 +57,7 @@ public:
 
     // IWidget overrides
     void onLoad() override;
+    void onLoadNoAnim();
     void onOffload() override;
     bool onSelect() override;
 

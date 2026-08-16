@@ -286,16 +286,16 @@ public:
      * @param width Popup width.
      * @param height Popup height.
      * @param duration Display duration.
-     * @param policy Live writes each edit; CommitOnConfirm writes only on SELECT.
-     * @return true if the request was accepted.
+     * @param policy Live writes each edit; CommitOnConfirm writes only on OK.
+     * @return true if the binding, digit count, layout, and queue accept the request.
      * @note Binding contexts and title must outlive pending and active use.
      */
     bool showPopupValueDigits(
         ValueEditorBinding binding,
         uint8_t digitCount,
         const char* title = "",
-        uint16_t width = 80,
-        uint16_t height = 40,
+        uint16_t width = 100,
+        uint16_t height = 56,
         uint16_t duration = 3000,
         ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm);
 
@@ -303,15 +303,15 @@ public:
      * @brief Compatibility adapter for a referenced integer.
      *
      * The value and references captured by update_cb must outlive pending and
-     * active use. This adapter uses CommitOnConfirm: SELECT writes and notifies;
-     * BACK discards the draft without invoking update_cb.
+     * active use. This adapter uses CommitOnConfirm: the OK button writes and
+     * notifies; CANCEL or BACK discards the draft without invoking update_cb.
      */
     bool showPopupValueDigits(
         int32_t& value,
         uint8_t digitCount,
         const char* title = "", 
-        uint16_t width = 80, 
-        uint16_t height = 40,
+        uint16_t width = 100,
+        uint16_t height = 56,
         uint16_t duration = 3000,
         ValueCallback update_cb = nullptr);
     

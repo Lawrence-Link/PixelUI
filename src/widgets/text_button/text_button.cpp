@@ -45,6 +45,14 @@ void TextButton::onLoad() {
                  PROTECTION::PROTECTED);
 }
 
+void TextButton::onLoadNoAnim() {
+    anim_x = m_x;
+    anim_y = m_y;
+    anim_w = m_w;
+    anim_h = m_h;
+    m_ui.markDirty();
+}
+
 /**
  * @brief Clean up widget resources when offloaded.
  */

@@ -1024,6 +1024,7 @@
   /Users/link/dev/PixelUI/include/ui/Popup/PopupValueDigits.h \
   /Users/link/dev/PixelUI/include/widgets/IWidget.h \
   /Users/link/dev/PixelUI/include/widgets/num_scroll/num_scroll.h \
+  /Users/link/dev/PixelUI/include/widgets/text_button/text_button.h \
   /Users/link/dev/PixelUI/simulator/u8g2_wrapper.h \
   /Users/link/dev/PixelUI/third_party/etl/include/etl/absolute.h \
   /Users/link/dev/PixelUI/third_party/etl/include/etl/algorithm.h \

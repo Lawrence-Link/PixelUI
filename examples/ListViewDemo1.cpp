@@ -51,7 +51,7 @@ ListItem ItemList[10] = {
     ListItem{.title ="- Sub Menu", .nextList = sub_CathyFlower, .nextListLength = 3},
     ListItem{.title ="- Bool State", .accessory = ListItemAccessory::toggle(bool_state)},
     ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value))},
-    ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 40, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value_4_digits))},
+    ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 56, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value_4_digits))},
     ListItem{.title ="- Progress"},
     ListItem{.title ="- Anytone"},
     ListItem{.title ="- Potato"},

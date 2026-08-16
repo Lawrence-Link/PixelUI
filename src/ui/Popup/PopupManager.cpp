@@ -78,7 +78,8 @@ bool PopupManager::enqueueValueDigits(uint16_t width, uint16_t height,
     const RequestEnvelope envelope{width, height, duration};
     int32_t currentValue = 0;
     if (!validEnvelope(envelope) ||
-        !PopupValueDigits::isValidDigitCount(digitCount) ||
+        !PopupValueDigits::isValidLayout(width, height, digitCount) ||
+        width > ui_.getDisplayWidth() || height > ui_.getDisplayHeight() ||
         !binding.read(currentValue)) return false;
     PopupRequest request{ValueDigitsRequest{
         envelope, digitCount, policy, binding, title, etl::move(callback)}};

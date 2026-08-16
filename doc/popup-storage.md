@@ -51,4 +51,7 @@ components. If animation capacity is exhausted, each component synchronizes
 its affected geometry to the stable final state.
 
 Use `showPopupValueDigits()` and pass a digit count from `1` through
-`MAX_INT_FIXED_WIDTH`.
+`MAX_INT_FIXED_WIDTH`. SELECT on an active digit only finishes editing that
+digit, so focus can move to another digit. The popup commits only through its
+OK button. CANCEL, BACK, timeout, and destruction cancel an unfinished session;
+for `ValueEditPolicy::Live`, cancellation restores the original value.

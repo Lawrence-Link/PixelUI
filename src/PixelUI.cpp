@@ -558,14 +558,12 @@ bool PixelUI::showPopupValueDigits(
     const char* title, uint16_t width, uint16_t height,
     uint16_t duration, ValueEditPolicy policy) {
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
-    if (!binding.valid() || !PopupValueDigits::isValidDigitCount(digitCount)) {
+    if (!binding.valid() ||
+        !PopupValueDigits::isValidLayout(width, height, digitCount) ||
+        width > getDisplayWidth() || height > getDisplayHeight()) {
         return false;
     }
-    const uint16_t contentWidth = static_cast<uint16_t>(
-        digitCount * 12U + (digitCount - 1U) * 2U + 12U);
-    if (width < contentWidth) width = contentWidth;
     if (width > 120) width = 120;
-    if (height < 40) height = 40;
     if (height > 60) height = 60;
     if (duration > 30000) duration = 30000;
     if (duration < 1000) duration = 1000;
@@ -593,12 +591,11 @@ bool PixelUI::showPopupValueDigits(int32_t& value, uint8_t digitCount,
                                    uint16_t height, uint16_t duration,
                                    ValueCallback update_cb) {
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
-    if (!PopupValueDigits::isValidDigitCount(digitCount)) return false;
-    const uint16_t contentWidth = static_cast<uint16_t>(
-        digitCount * 12U + (digitCount - 1U) * 2U + 12U);
-    if (width < contentWidth) width = contentWidth;
+    if (!PopupValueDigits::isValidLayout(width, height, digitCount) ||
+        width > getDisplayWidth() || height > getDisplayHeight()) {
+        return false;
+    }
     if (width > 120) width = 120;
-    if (height < 40) height = 40;
     if (height > 60) height = 60;
     if (duration > 30000) duration = 30000; 
     if (duration < 1000) duration = 1000;

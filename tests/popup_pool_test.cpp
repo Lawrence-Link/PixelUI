@@ -19,6 +19,8 @@ void finishActive(PopupManager& manager, PixelUI& ui) {
 
 int main() {
     U8G2 display;
+    u8g2_Setup_ssd1306_128x64_noname_f(
+        display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
     PopupManager manager(ui);
     int32_t firstValue = 10;
@@ -84,10 +86,25 @@ int main() {
     // Destroying PopupValueDigits invokes its derived cleanup before reuse.
     int32_t animatedValue = 0;
     if (!ui.animate(animatedValue, 10, 1000)) return 20;
-    if (!manager.enqueueValueDigits(80, 40, firstValue, 4, "Digits", 0)) return 21;
+    if (manager.enqueueValueDigits(
+            1, 56, firstValue, 4, "Too small", 0)) return 21;
+    if (!manager.enqueueValueDigits(100, 56, firstValue, 4, "Digits", 0)) return 22;
     manager.clearPopups();
-    if ((ui.activeAnimationCount() != 1U) || manager.hasActivePopup()) return 22;
+    if ((ui.activeAnimationCount() != 1U) || manager.hasActivePopup()) return 23;
     ui.clearAllAnimations();
+
+    // The public adapter rejects a layout that cannot contain its action row;
+    // its new defaults provide a valid layout.
+    if (ui.showPopupValueDigits(firstValue, 4, "Digits", 100, 40, 0)) return 24;
+    if (!ui.showPopupValueDigits(firstValue, 4)) return 25;
+    ui.clearPopups();
+
+    U8G2 compactDisplay;
+    u8g2_Setup_ssd1306_96x40_f(
+        compactDisplay.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
+    PixelUI compactUi(compactDisplay);
+    int32_t compactValue = 0;
+    if (compactUi.showPopupValueDigits(compactValue, 4)) return 26;
 
     // Timed completion also advances the FIFO.
     if (!manager.enqueueInfo(80, 30, "Timed", "", 1) ||
@@ -117,7 +134,7 @@ int main() {
             80, 30, mixedProgress, 0, 10, "Progress", 0,
             etl::move(progressCallback)) ||
         !manager.enqueueValueDigits(
-            80, 40, mixedDigits, 4, "Digits", 0,
+            100, 56, mixedDigits, 4, "Digits", 0,
             etl::move(digitsCallback))) return 26;
     if (progressCallback || digitsCallback || manager.getPopupCounts() != 3U) {
         return 27;
@@ -141,6 +158,11 @@ int main() {
     manager.handleTopPopupInput(InputEvent::RIGHT);
     manager.handleTopPopupInput(InputEvent::SELECT);
     manager.handleTopPopupInput(InputEvent::RIGHT);
+    manager.handleTopPopupInput(InputEvent::SELECT); // finish first digit
+    manager.handleTopPopupInput(InputEvent::RIGHT);
+    manager.handleTopPopupInput(InputEvent::RIGHT);
+    manager.handleTopPopupInput(InputEvent::RIGHT);
+    manager.handleTopPopupInput(InputEvent::RIGHT);  // OK
     manager.handleTopPopupInput(InputEvent::SELECT);
     if (mixedDigits != 1042 || digitsCallbackCount != 1 ||
         manager.pendingCount() != 0U) return 30;
