@@ -40,7 +40,8 @@ struct ListItemExtra{
     char* text = nullptr;
     bool* switchValue = nullptr; // Pointer to a boolean value for a switch.
     int32_t* intValue = nullptr;     // Pointer to an integer value for a slider or counter.
-    float* float_dot1f_Value = nullptr;
+    // Signed fixed-point value in tenths: 123 is rendered as 12.3.
+    int32_t* fixedPoint1Value = nullptr;
 };
 
 // Represents a single item in a list view.
@@ -49,7 +50,7 @@ struct ListItem{
     ListItem * nextList = nullptr;                       // Pointer to a sub-menu (another list).
     int32_t nextListLength = 0;                     // The number of items in the sub-menu. (signed to avoid mixed-signedness)
     VoidCallback pFunc = nullptr;               // A function to execute when the item is selected.
-    ListItemExtra extra = {nullptr,nullptr};                       // Extra data for dynamic UI elements.
+    ListItemExtra extra{};                       // Extra data for dynamic UI elements.
     bool use_fade = false; // Whether render fade animation when navigate to new app.
 };
 

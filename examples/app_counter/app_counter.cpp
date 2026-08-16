@@ -3,10 +3,18 @@
 
 #include "app_counter.h"
 
-#include <cmath>
-
 #include "PixelUI.h"
 #include "app_resources.h"
+
+namespace {
+
+constexpr ChartValue CURVE_SAMPLES[] = {
+    3000, 3296, 3565, 3783, 3932, 3997, 3974,
+    3863, 3675, 3427, 3141, 2842, 2557, 2312,
+    2128, 2022, 2004, 2074, 2228, 2449, 2721,
+};
+
+} // namespace
 
 APP_COUNTER::APP_COUNTER(PixelUI& ui, void* parameter) :
     m_ui(ui),
@@ -72,7 +80,8 @@ void APP_COUNTER::draw() {
         case LoadState::HISTO_LOADING:
             histogram.onLoad();
             for (int i = 0; i <= 100; ++i) {
-                histogram.addData(std::sin(0.3 * i) + 3);
+                histogram.addData(
+                    CURVE_SAMPLES[i % (sizeof(CURVE_SAMPLES) / sizeof(CURVE_SAMPLES[0]))]);
             }
             icon_sounding.onLoad();
             icon_alarm.onLoad();

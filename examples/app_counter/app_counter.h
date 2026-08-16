@@ -9,6 +9,7 @@
 #include "counter_reading_widget.h"
 #include "widgets/brace/brace.h"
 #include "widgets/curve_chart/curve_chart.h"
+#include "widgets/histogram/histogram.h"
 #include "widgets/icon_button/icon_button.h"
 
 class PixelUI;
@@ -32,8 +33,8 @@ private:
     };
 
     PixelUI& m_ui;
-    float histogramBuffer[76]{};
-    CurveChart histogram;
+    ChartValue histogramBuffer[76]{};
+    Histogram histogram;
     Brace brace;
     CounterReadingWidget brace_content;
     IconButton icon_battery;

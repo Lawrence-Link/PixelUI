@@ -43,4 +43,7 @@ if(BUILD_SIMULATOR)
     endif()
 endif()
 
-target_compile_options(pixelui PUBLIC -fno-exceptions -fno-rtti)
+# PixelUI does not throw exceptions. RTTI is intentionally left to the firmware
+# toolchain because public PixelUI base classes are derived by consumer code;
+# mixing an RTTI-disabled library with RTTI-enabled derived classes is invalid.
+target_compile_options(pixelui PRIVATE -fno-exceptions)

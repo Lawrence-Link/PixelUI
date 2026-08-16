@@ -39,7 +39,7 @@ public:
         uint16_t pos_y,
         uint16_t size_w,
         uint16_t size_h,
-        float (&buffer)[N],
+        ChartValue (&buffer)[N],
         ChartExpandSize<ExpandedWidth, ExpandedHeight>,
         EXPAND_BASE base,
         const char* label = nullptr)
@@ -79,17 +79,17 @@ public:
 
     bool isExpanded() const { return is_expanded; }
 
-    void addData(float value);
+    void addData(ChartValue value);
 
     // statistics within the window
-    float getMaxValueInWindow() const;
-    float getAverageValueInWindow() const;
-    float getMinValueInWindow() const;
+    ChartValue getMaxValueInWindow() const;
+    ChartValue getAverageValueInWindow() const;
+    ChartValue getMinValueInWindow() const;
 
     // statistics throughout the history
-    float getMaxValueInHistory() const;
-    float getAverageValueInHistory() const;
-    float getMinValueInHistory() const;
+    ChartValue getMaxValueInHistory() const;
+    ChartValue getAverageValueInHistory() const;
+    ChartValue getMinValueInHistory() const;
 
     void clearData();
 
@@ -102,25 +102,25 @@ private:
     EXPAND_BASE base_;
 
     // Internal data buffer for real-time data streaming
-    float* m_data_buffer = nullptr;
+    ChartValue* m_data_buffer = nullptr;
     int m_buffer_size = 0;
     int m_write_index = 0;
     int m_data_count = 0;
     
     // Statistics tracking (window)
-    float m_max_value = 0.0f;
-    float m_min_value = 0.0f;
-    float m_sum_value = 0.0f;
+    ChartValue m_max_value = 0;
+    ChartValue m_min_value = 0;
+    ChartAccumulator m_sum_value = 0;
 
     // Statistics tracking (history - all time)
-    float m_hist_max_value = 0.0f;
-    float m_hist_min_value = etl::numeric_limits<float>::max();
-    float m_hist_sum_value = 0.0f;
+    ChartValue m_hist_max_value = 0;
+    ChartValue m_hist_min_value = etl::numeric_limits<ChartValue>::max();
+    ChartAccumulator m_hist_sum_value = 0;
     uint32_t m_hist_count = 0;
 
     // Cache for visible window statistics
-    float m_cached_visible_max = 0.0f;
-    float m_cached_visible_min = 0.0f;
+    ChartValue m_cached_visible_max = 0;
+    ChartValue m_cached_visible_min = 0;
     int m_cached_visible_width = 0;
     bool m_visible_cache_dirty = true;
 
@@ -139,7 +139,7 @@ private:
         uint16_t pos_y,
         uint16_t size_w,
         uint16_t size_h,
-        float* buffer,
+        ChartValue* buffer,
         size_t buffer_size,
         uint16_t size_w_exp,
         uint16_t size_h_exp,
@@ -150,7 +150,7 @@ private:
     void contractWidget();
     void calculateExpandPosition(int32_t& target_x, int32_t& target_y);
     void initializeDataBuffer();
-    void updateStatistics(float new_value, float old_value, bool replacing_data);
+    void updateStatistics(ChartValue new_value, ChartValue old_value, bool replacing_data);
     void recalculateExtremes();
     void drawHistogramData(int tl_x, int tl_y, int width, int height, Canvas& u8g2);
     void drawSelf(const WidgetRenderContext& context) override;

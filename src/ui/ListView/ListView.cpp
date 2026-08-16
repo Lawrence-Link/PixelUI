@@ -25,6 +25,7 @@
  */
 
 #include "ui/ListView/ListView.h"
+#include "core/FixedPoint.h"
 #include "core/animation/animation.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -407,11 +408,18 @@ void ListView::draw() {
                 canvas.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(buf) - 8, itemY, buf);
             }
 
-            // Draw float value if present
-            if (m_itemList[itemIndex].extra.float_dot1f_Value) {
+            // Draw a one-decimal fixed-point value if present.
+            if (m_itemList[itemIndex].extra.fixedPoint1Value) {
                 char buf[16] = {0};
-                snprintf(buf, sizeof(buf), "%.1f", *m_itemList[itemIndex].extra.float_dot1f_Value);
-                canvas.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(buf) - 8, itemY, buf);
+                if (PixelUIFixedPoint::formatDecimal1(
+                        buf,
+                        sizeof(buf),
+                        *m_itemList[itemIndex].extra.fixedPoint1Value)) {
+                    canvas.drawStr(
+                        m_ui.getDisplayWidth() - canvas.getUTF8Width(buf) - 8,
+                        itemY,
+                        buf);
+                }
             }
         }
     }

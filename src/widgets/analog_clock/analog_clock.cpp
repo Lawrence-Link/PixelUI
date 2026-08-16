@@ -26,7 +26,49 @@
 
 #include "widgets/analog_clock/analog_clock.h"
 #include "PixelUI.h"
-#include <math.h>
+
+namespace {
+
+constexpr int32_t TRIG_SCALE = 32767;
+constexpr int32_t DEGREES_PER_STEP = 6;
+constexpr int16_t SIN_Q15[] = {
+    0, 3425, 6813, 10126, 13328, 16383, 19260, 21925,
+    24351, 26509, 28377, 29934, 31163, 32051, 32587, 32767,
+};
+
+int32_t firstQuadrantSinQ15(int angle) {
+    if (angle >= 90) return SIN_Q15[15];
+
+    const int index = angle / DEGREES_PER_STEP;
+    const int remainder = angle % DEGREES_PER_STEP;
+    const int32_t lower = SIN_Q15[index];
+    const int32_t upper = SIN_Q15[index + 1];
+    return lower + ((upper - lower) * remainder) / DEGREES_PER_STEP;
+}
+
+int32_t sinDegreesQ15(int angle) {
+    angle %= 360;
+    if (angle < 0) angle += 360;
+
+    const int quadrant = angle / 90;
+    const int offset = angle % 90;
+    switch (quadrant) {
+        case 0: return firstQuadrantSinQ15(offset);
+        case 1: return firstQuadrantSinQ15(90 - offset);
+        case 2: return -firstQuadrantSinQ15(offset);
+        default: return -firstQuadrantSinQ15(90 - offset);
+    }
+}
+
+int scaleTrig(int32_t trigValue, uint16_t radius) {
+    const int64_t product = static_cast<int64_t>(trigValue) * radius;
+    const int64_t rounded = product >= 0
+        ? product + (TRIG_SCALE / 2)
+        : product - (TRIG_SCALE / 2);
+    return static_cast<int>(rounded / TRIG_SCALE);
+}
+
+} // namespace
 
 /**
  * @brief Construct a new Clock object
@@ -177,15 +219,6 @@ void Clock::drawHands() {
 }
 
 /**
- * @brief Convert angle in degrees to radians
- * @param angle Angle in degrees
- * @return float Angle in radians
- */
-float Clock::angleToRadians(int angle) const {
-    return (float)angle * M_PI / 180.0f;
-}
-
-/**
  * @brief Compute point coordinates on a circle
  * 
  * @param angle Angle in degrees from 0° horizontal
@@ -194,7 +227,6 @@ float Clock::angleToRadians(int angle) const {
  * @param y Output y coordinate
  */
 void Clock::getPointOnCircle(int angle, uint16_t radius, int& x, int& y) const {
-    float rad = angleToRadians(angle);
-    x = draw_origin_x_ + m_x + (int)(cos(rad) * radius);
-    y = draw_origin_y_ + m_y + (int)(sin(rad) * radius);
+    x = draw_origin_x_ + m_x + scaleTrig(sinDegreesQ15(angle + 90), radius);
+    y = draw_origin_y_ + m_y + scaleTrig(sinDegreesQ15(angle), radius);
 }

@@ -96,7 +96,6 @@ private:
     int32_t draw_origin_x_ = 0;
     int32_t draw_origin_y_ = 0;
     
-    // Helper functions for angle calculations
-    float angleToRadians(int angle) const;
+    // Integer-only helper for angle calculations.
     void getPointOnCircle(int angle, uint16_t radius, int& x, int& y) const;
 };
