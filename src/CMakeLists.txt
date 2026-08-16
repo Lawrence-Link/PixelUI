@@ -12,6 +12,7 @@ add_library(pixelui STATIC
     core/app/app_system.cpp
     core/app/ApplicationStack.cpp
     core/canvas/Canvas.cpp
+    core/ValueBinding.cpp
     core/scheduling/UiDeadlineScheduler.cpp
     core/animation/animation.cpp
     core/ViewManager/ViewManager.cpp
@@ -28,6 +29,7 @@ add_library(pixelui STATIC
     ui/IconView/IconView.cpp
     
     widgets/histogram/histogram.cpp
+    widgets/ChartSeries.cpp
     widgets/IWidget.cpp
     widgets/brace/brace.cpp
     widgets/bitmap/bitmap_widget.cpp

@@ -8,7 +8,7 @@
 
 namespace {
 
-constexpr ChartValue CURVE_SAMPLES[] = {
+constexpr ChartSample CURVE_SAMPLES[] = {
     3000, 3296, 3565, 3783, 3932, 3997, 3974,
     3863, 3675, 3427, 3141, 2842, 2557, 2312,
     2128, 2022, 2004, 2074, 2228, 2449, 2721,
@@ -24,7 +24,7 @@ APP_COUNTER::APP_COUNTER(PixelUI& ui, void* parameter) :
         45,
         56,
         18,
-        histogramBuffer,
+        histogramSeries,
         ChartExpandSize<76, 63>{},
         EXPAND_BASE::BOTTOM_RIGHT,
         "Curve"),
@@ -51,6 +51,7 @@ void APP_COUNTER::onEnter(ExitCallback cb) {
     m_ui.addWidgetToFocusManager(&brace);
     m_ui.addWidgetToFocusManager(&histogram);
 
+    histogramSeries.clear();
     loadState = LoadState::INIT;
     first_time = false;
 }
@@ -80,7 +81,7 @@ void APP_COUNTER::draw() {
         case LoadState::HISTO_LOADING:
             histogram.onLoad();
             for (int i = 0; i <= 100; ++i) {
-                histogram.addData(
+                histogramSeries.add(
                     CURVE_SAMPLES[i % (sizeof(CURVE_SAMPLES) / sizeof(CURVE_SAMPLES[0]))]);
             }
             icon_sounding.onLoad();

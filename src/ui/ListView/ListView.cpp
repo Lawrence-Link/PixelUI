@@ -25,10 +25,7 @@
  */
 
 #include "ui/ListView/ListView.h"
-#include "core/FixedPoint.h"
 #include "core/animation/animation.h"
-#include <inttypes.h>
-#include <stdio.h>
 
 /**
  * @brief Called when the ListView is entered.
@@ -59,8 +56,9 @@ void ListView::onEnter(ExitCallback exitCallback){
 
     // Initialize switch animations
     for (int i = 0; i <= m_itemLength; i++) {
-        if (m_itemList[i].extra.switchValue) {
-            switchAnimStates_[i].boxX = *m_itemList[i].extra.switchValue ? 7 : 0;
+        bool* toggle = m_itemList[i].accessory.toggleValue();
+        if (toggle != nullptr) {
+            switchAnimStates_[i].boxX = *toggle ? 7 : 0;
             switchAnimStates_[i].isAnimating = false;
         }
     }
@@ -230,8 +228,8 @@ void ListView::selectCurrent(){
         // return;
     }
 
-    if (m_itemList[currentCursor].extra.switchValue) {
-        bool* switchValPtr = m_itemList[currentCursor].extra.switchValue;
+    if (bool* switchValPtr =
+            m_itemList[currentCursor].accessory.toggleValue()) {
         bool currentState = *switchValPtr;
         int32_t endX = currentState ? 0 : 7;
 
@@ -389,37 +387,52 @@ void ListView::draw() {
             }
             canvas.drawUTF8(drawX, itemY, m_itemList[itemIndex].title);
             
-            // Draw switch box if present
-            if (m_itemList[itemIndex].extra.switchValue) {
-                canvas.drawRFrame(m_ui.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
-                int32_t currentSwitchBoxX = switchAnimStates_.count(itemIndex) ? switchAnimStates_[itemIndex].boxX : (*m_itemList[itemIndex].extra.switchValue ? 7 : 0);
-                canvas.drawRBox(m_ui.getDisplayWidth() - 42 + currentSwitchBoxX, itemY - 9, 7, 8, 2);
-                canvas.drawUTF8(m_ui.getDisplayWidth() - 25, itemY - 1, *m_itemList[itemIndex].extra.switchValue ? "ON" : "OFF");
-            }
-
-            if (m_itemList[itemIndex].extra.text) {
-                canvas.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(m_itemList[itemIndex].extra.text) - 4, itemY, m_itemList[itemIndex].extra.text);
-            }
-
-            // Draw integer value if present
-            if (m_itemList[itemIndex].extra.intValue) {
-                char buf[16] = {0};
-                snprintf(buf, sizeof(buf), "%" PRId32, *m_itemList[itemIndex].extra.intValue);
-                canvas.drawStr(m_ui.getDisplayWidth() - canvas.getUTF8Width(buf) - 8, itemY, buf);
-            }
-
-            // Draw a one-decimal fixed-point value if present.
-            if (m_itemList[itemIndex].extra.fixedPoint1Value) {
-                char buf[16] = {0};
-                if (PixelUIFixedPoint::formatDecimal1(
-                        buf,
-                        sizeof(buf),
-                        *m_itemList[itemIndex].extra.fixedPoint1Value)) {
-                    canvas.drawStr(
-                        m_ui.getDisplayWidth() - canvas.getUTF8Width(buf) - 8,
-                        itemY,
-                        buf);
+            const ListItemAccessory& accessory =
+                m_itemList[itemIndex].accessory;
+            switch (accessory.kind()) {
+                case ListItemAccessory::Kind::Toggle: {
+                    bool* toggle = accessory.toggleValue();
+                    if (toggle == nullptr) break;
+                    canvas.drawRFrame(
+                        m_ui.getDisplayWidth() - 42, itemY - 9, 14, 8, 1);
+                    const int32_t currentSwitchBoxX =
+                        switchAnimStates_.count(itemIndex)
+                            ? switchAnimStates_[itemIndex].boxX
+                            : (*toggle ? 7 : 0);
+                    canvas.drawRBox(
+                        m_ui.getDisplayWidth() - 42 + currentSwitchBoxX,
+                        itemY - 9,
+                        7,
+                        8,
+                        2);
+                    canvas.drawUTF8(
+                        m_ui.getDisplayWidth() - 25,
+                        itemY - 1,
+                        *toggle ? "ON" : "OFF");
+                    break;
                 }
+                case ListItemAccessory::Kind::Text: {
+                    const char* text = accessory.textValue();
+                    if (text != nullptr) {
+                        canvas.drawStr(
+                            m_ui.getDisplayWidth() - canvas.getUTF8Width(text) - 4,
+                            itemY,
+                            text);
+                    }
+                    break;
+                }
+                case ListItemAccessory::Kind::Value: {
+                    char buffer[MAX_TEXT_LENGTH + 1]{};
+                    if (accessory.formatValue(buffer, sizeof(buffer))) {
+                        canvas.drawStr(
+                            m_ui.getDisplayWidth() - canvas.getUTF8Width(buffer) - 8,
+                            itemY,
+                            buffer);
+                    }
+                    break;
+                }
+                case ListItemAccessory::Kind::None:
+                    break;
             }
         }
     }

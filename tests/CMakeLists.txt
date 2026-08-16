@@ -21,6 +21,11 @@ target_link_libraries(chart_buffer_test PRIVATE pixelui u8g2_c)
 target_compile_definitions(chart_buffer_test PRIVATE ETL_NO_STL)
 add_test(NAME chart_buffer_test COMMAND chart_buffer_test)
 
+add_executable(value_binding_test value_binding_test.cpp)
+target_link_libraries(value_binding_test PRIVATE pixelui)
+target_compile_definitions(value_binding_test PRIVATE ETL_NO_STL)
+add_test(NAME value_binding_test COMMAND value_binding_test)
+
 add_executable(
     animation_inline_test
     animation_inline_test.cpp
@@ -136,6 +141,11 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
     target_compile_options(
         chart_buffer_test
+        PRIVATE
+            "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
+    )
+    target_compile_options(
+        value_binding_test
         PRIVATE
             "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/../include/core/etl_no_stl_compat.h"
     )

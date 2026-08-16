@@ -27,7 +27,7 @@
 #pragma once
 
 #include "../IWidget.h"
-#include "../ChartBuffer.h"
+#include "../ChartSeries.h"
 #include <etl/limits.h>
 
 class Histogram : public IWidget {
@@ -39,7 +39,7 @@ public:
         uint16_t pos_y,
         uint16_t size_w,
         uint16_t size_h,
-        ChartValue (&buffer)[N],
+        StaticChartSeries<N>& series,
         ChartExpandSize<ExpandedWidth, ExpandedHeight>,
         EXPAND_BASE base,
         const char* label = nullptr)
@@ -49,14 +49,13 @@ public:
               pos_y,
               size_w,
               size_h,
-              buffer,
-              N,
+              series,
               ExpandedWidth,
               ExpandedHeight,
               base,
               label) {
         static_assert(N == ExpandedWidth,
-                      "Histogram buffer size must equal the expanded chart width");
+                      "Histogram series capacity must equal the expanded chart width");
         static_assert(N <= static_cast<size_t>(etl::numeric_limits<int>::max()),
                       "Histogram buffer capacity exceeds supported index range");
     }
@@ -79,50 +78,19 @@ public:
 
     bool isExpanded() const { return is_expanded; }
 
-    void addData(ChartValue value);
-
-    // statistics within the window
-    ChartValue getMaxValueInWindow() const;
-    ChartValue getAverageValueInWindow() const;
-    ChartValue getMinValueInWindow() const;
-
-    // statistics throughout the history
-    ChartValue getMaxValueInHistory() const;
-    ChartValue getAverageValueInHistory() const;
-    ChartValue getMinValueInHistory() const;
-
-    void clearData();
-
 private:
     PixelUI& m_ui;
+    ChartSeries& m_series;
 
     uint16_t pos_x_ = 0, pos_y_ = 0;
     uint16_t size_w_ = 0, size_h_ = 0;
     uint16_t exp_w = 0, exp_h = 0;
     EXPAND_BASE base_;
 
-    // Internal data buffer for real-time data streaming
-    ChartValue* m_data_buffer = nullptr;
-    int m_buffer_size = 0;
-    int m_write_index = 0;
-    int m_data_count = 0;
-    
-    // Statistics tracking (window)
-    ChartValue m_max_value = 0;
-    ChartValue m_min_value = 0;
-    ChartAccumulator m_sum_value = 0;
-
-    // Statistics tracking (history - all time)
-    ChartValue m_hist_max_value = 0;
-    ChartValue m_hist_min_value = etl::numeric_limits<ChartValue>::max();
-    ChartAccumulator m_hist_sum_value = 0;
-    uint32_t m_hist_count = 0;
-
     // Cache for visible window statistics
-    ChartValue m_cached_visible_max = 0;
-    ChartValue m_cached_visible_min = 0;
+    ChartSample m_cached_visible_max = 0;
     int m_cached_visible_width = 0;
-    bool m_visible_cache_dirty = true;
+    uint32_t m_cached_series_revision = 0;
 
     int32_t anim_w = 0;
     int32_t anim_h = 0;
@@ -139,8 +107,7 @@ private:
         uint16_t pos_y,
         uint16_t size_w,
         uint16_t size_h,
-        ChartValue* buffer,
-        size_t buffer_size,
+        ChartSeries& series,
         uint16_t size_w_exp,
         uint16_t size_h_exp,
         EXPAND_BASE base,
@@ -149,9 +116,6 @@ private:
     void expandWidget();
     void contractWidget();
     void calculateExpandPosition(int32_t& target_x, int32_t& target_y);
-    void initializeDataBuffer();
-    void updateStatistics(ChartValue new_value, ChartValue old_value, bool replacing_data);
-    void recalculateExtremes();
     void drawHistogramData(int tl_x, int tl_y, int width, int height, Canvas& u8g2);
     void drawSelf(const WidgetRenderContext& context) override;
     Canvas& display() override;

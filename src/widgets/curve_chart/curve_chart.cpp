@@ -42,13 +42,13 @@ CurveChart::CurveChart(
     uint16_t pos_y,
     uint16_t size_w,
     uint16_t size_h,
-    ChartValue* buffer,
-    size_t buffer_size,
+    ChartSeries& series,
     uint16_t size_w_exp,
     uint16_t size_h_exp,
     EXPAND_BASE base,
     const char* label) :
-    m_ui(ui), 
+    m_ui(ui),
+    m_series(series),
     pos_x_(pos_x), 
     pos_y_(pos_y),
     size_w_(size_w),
@@ -56,8 +56,6 @@ CurveChart::CurveChart(
     exp_w(size_w_exp),
     exp_h(size_h_exp),
     base_(base),
-    m_data_buffer(buffer),
-    m_buffer_size(static_cast<int>(buffer_size)),
     m_label(label)
 {
     setFocusInsets({1, 1, 0, 0});
@@ -88,211 +86,10 @@ void CurveChart::onLoad() {
 
     m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
     m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
-    
-    // Initialize internal data structures
-    initializeDataBuffer();
-}
-
-void CurveChart::initializeDataBuffer() {
-    // Initialize buffer with zeros
-    for (int i = 0; i < m_buffer_size; ++i) {
-        m_data_buffer[i] = 0;
-    }
-    
-    // Reset window statistics
-    m_write_index = 0;
-    m_data_count = 0;
-    m_max_value = etl::numeric_limits<ChartValue>::min();
-    m_sum_value = 0;
-    m_min_value = etl::numeric_limits<ChartValue>::max();
-    
-    // Reset history statistics
-    m_hist_max_value = etl::numeric_limits<ChartValue>::min();
-    m_hist_min_value = etl::numeric_limits<ChartValue>::max();
-    m_hist_sum_value = 0;
-    m_hist_count = 0;
-    
-    // Reset visible cache
-    m_cached_visible_max = 0;
-    m_cached_visible_min = 0;
-    m_cached_visible_width = 0;
-    m_visible_cache_dirty = true;
 }
 
 void CurveChart::onOffload() {
 
-}
-
-void CurveChart::addData(ChartValue value) {
-    // Store the old value at current position for statistics update
-    ChartValue old_value = m_data_buffer[m_write_index];
-    bool replacing_valid_data = (m_data_count >= m_buffer_size);
-    
-    // Add new value to buffer
-    m_data_buffer[m_write_index] = value;
-    
-    // Update write index (ring buffer)
-    m_write_index = (m_write_index + 1) % m_buffer_size;
-    
-    // Update data count
-    if (m_data_count < m_buffer_size) {
-        m_data_count++;
-    }
-    
-    // Mark visible cache as dirty
-    m_visible_cache_dirty = true;
-    
-    // Update statistics efficiently
-    updateStatistics(value, old_value, replacing_valid_data);
-}
-    
-void CurveChart::updateStatistics(
-    ChartValue new_value,
-    ChartValue old_value,
-    bool replacing_data) {
-    // Update history statistics (all-time)
-    m_hist_max_value = etl::max(m_hist_max_value, new_value);
-    if (m_hist_min_value == etl::numeric_limits<ChartValue>::max() ||
-        new_value < m_hist_min_value) {
-        m_hist_min_value = new_value;
-    }
-    m_hist_sum_value += new_value;
-    m_hist_count++;
-    
-    // Update window statistics
-    if (!replacing_data) {
-        // Adding new data (buffer not full yet)
-        m_sum_value += new_value;
-        m_max_value = etl::max(m_max_value, new_value);
-        if (m_min_value == etl::numeric_limits<ChartValue>::max() ||
-            new_value < m_min_value) {
-            m_min_value = new_value;
-        }
-    } else {
-        // Replacing old data (buffer is full)
-        m_sum_value = m_sum_value - old_value + new_value;
-        
-        // For max/min, we need to check if we're removing the extreme value
-        if (old_value == m_max_value || old_value == m_min_value ||
-            m_min_value == etl::numeric_limits<ChartValue>::max()) {
-            recalculateExtremes();
-        } else {
-            m_max_value = etl::max(m_max_value, new_value);
-            m_min_value = etl::min(m_min_value, new_value);
-        }
-    }
-}
-
-void CurveChart::recalculateExtremes() {
-    if (m_data_count == 0) {
-        m_max_value = etl::numeric_limits<ChartValue>::min();
-        m_min_value = etl::numeric_limits<ChartValue>::max();
-        return;
-    }
-    
-    // Check if the buffer is full; if not, only scan up to m_data_count
-    int scan_limit = m_data_count; 
-    
-    // To scan only valid data points:
-    ChartValue current_max = etl::numeric_limits<ChartValue>::min();
-    ChartValue current_min = etl::numeric_limits<ChartValue>::max();
-    
-    // The safest way to scan the currently valid data in a circular buffer:
-    for (int i = 0; i < scan_limit; ++i) {
-        // Calculate the index starting from the oldest data point
-        int data_index = (m_write_index - m_data_count + i + m_buffer_size) % m_buffer_size;
-        ChartValue value = m_data_buffer[data_index];
-        current_max = etl::max(current_max, value);
-        current_min = etl::min(current_min, value);
-    }
-    
-    m_max_value = current_max;
-    m_min_value = current_min;
-}
-
-/**
- * @brief Get the maximum value in the current window.
- * @return Maximum fixed-point value in buffer.
- */
-ChartValue CurveChart::getMaxValueInWindow() const {
-    return m_data_count == 0 ? 0 : m_max_value;
-}
-
-/**
- * @brief Get the average value in the current window.
- * @return Average fixed-point value, truncated toward zero, or 0 if empty.
- */
-ChartValue CurveChart::getAverageValueInWindow() const {
-    if (m_data_count == 0) {
-        return 0;
-    }
-    return static_cast<ChartValue>(m_sum_value / m_data_count);
-}
-
-/**
- * @brief Get the minimum value in the current window.
- * @return Minimum fixed-point value, or 0 if empty.
- */
-ChartValue CurveChart::getMinValueInWindow() const {
-    if (m_data_count == 0 ||
-        m_min_value == etl::numeric_limits<ChartValue>::max()) {
-        return 0;
-    }
-    return m_min_value;
-}
-
-/**
- * @brief Get the maximum value in the entire history.
- * @return Maximum fixed-point value ever recorded.
- */
-ChartValue CurveChart::getMaxValueInHistory() const {
-    return m_hist_count == 0 ? 0 : m_hist_max_value;
-}
-
-/**
- * @brief Get the average value of all historical data.
- * @return Average fixed-point value, truncated toward zero, or 0 if empty.
- */
-ChartValue CurveChart::getAverageValueInHistory() const {
-    if (m_hist_count == 0) {
-        return 0;
-    }
-    return static_cast<ChartValue>(m_hist_sum_value / m_hist_count);
-}
-
-/**
- * @brief Get the minimum value in the entire history.
- * @return Minimum fixed-point value ever recorded, or 0 if empty.
- */
-ChartValue CurveChart::getMinValueInHistory() const {
-    if (m_hist_count == 0) return 0;
-    if (m_hist_min_value == etl::numeric_limits<ChartValue>::max()) return 0;
-    return m_hist_min_value;
-}
-
-void CurveChart::clearData() {
-    for (int i = 0; i < m_buffer_size; ++i) {
-        m_data_buffer[i] = 0;
-    }
-    
-    // Reset window statistics
-    m_write_index = 0;
-    m_data_count = 0;
-    m_max_value = etl::numeric_limits<ChartValue>::min();
-    m_sum_value = 0;
-    m_min_value = etl::numeric_limits<ChartValue>::max();
-    
-    // Reset history statistics
-    m_hist_max_value = etl::numeric_limits<ChartValue>::min();
-    m_hist_min_value = etl::numeric_limits<ChartValue>::max();
-    m_hist_sum_value = 0;
-    m_hist_count = 0;
-    
-    // Reset visible cache
-    m_cached_visible_max = 0;
-    m_cached_visible_min = 0;
-    m_cached_visible_width = 0;
-    m_visible_cache_dirty = true;
 }
 
 bool CurveChart::handleEvent(InputEvent event) {
@@ -418,7 +215,7 @@ void CurveChart::drawSelf(const WidgetRenderContext& context) {
     u8g2.drawLine(tl_x + current_w - 1, tl_y, tl_x + current_w - 1, tl_y + current_h);
     
     // Draw curve data from internal buffer, passing top-left coordinates, current width, and height
-    drawCuveData(tl_x, tl_y, current_w, current_h, u8g2);
+    drawCurveData(tl_x, tl_y, current_w, current_h, u8g2);
     
     // Draw label if provided (positioned in the top-right area)
     if (m_label != nullptr) {
@@ -456,15 +253,13 @@ void CurveChart::drawSelf(const WidgetRenderContext& context) {
  * @param height Current height of the widget.
  * @param u8g2 Reference to U8G2 for drawing.
  */
-void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, Canvas& u8g2) {
-    // Return early if there's no data or the buffer is invalid
-    if (m_data_count == 0) {
-        return;
-    }
+void CurveChart::drawCurveData(int tl_x, int tl_y, int width, int height, Canvas& u8g2) {
+    if (m_series.empty()) return;
     
     // Determine how many horizontal steps to draw
     // Subtract 3 to account for 2px borders (width - 3 = drawable columns from right border to left border inclusive)
-    int points_to_draw = etl::min(width - 3, static_cast<int>(m_data_count));
+    const int points_to_draw =
+        etl::min(width - 3, static_cast<int>(m_series.size()));
     if (points_to_draw <= 1) { 
         // Handle single point case
         if (points_to_draw == 1) {
@@ -482,29 +277,26 @@ void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, Canvas&
     const int chart_h = height - 4;
     
     // Calculate visible window min/max (with caching)
-    if (m_visible_cache_dirty || m_cached_visible_width != points_to_draw) {
-        m_cached_visible_max = etl::numeric_limits<ChartValue>::min();
-        m_cached_visible_min = etl::numeric_limits<ChartValue>::max();
+    if (m_cached_series_revision != m_series.revision() ||
+        m_cached_visible_width != points_to_draw) {
+        m_cached_visible_max = etl::numeric_limits<ChartSample>::min();
+        m_cached_visible_min = etl::numeric_limits<ChartSample>::max();
         
         for (int i = 0; i < points_to_draw; ++i) {
-            int buffer_offset = i + 1;
-            int data_index = (m_write_index - buffer_offset + m_buffer_size) % m_buffer_size;
-            if (buffer_offset <= m_data_count) {
-                ChartValue value = m_data_buffer[data_index];
-                m_cached_visible_max = etl::max(m_cached_visible_max, value);
-                m_cached_visible_min = etl::min(m_cached_visible_min, value);
-            }
+            const ChartSample sample =
+                m_series.sampleFromNewest(static_cast<size_t>(i));
+            m_cached_visible_max = etl::max(m_cached_visible_max, sample);
+            m_cached_visible_min = etl::min(m_cached_visible_min, sample);
         }
         
         m_cached_visible_width = points_to_draw;
-        m_visible_cache_dirty = false;
+        m_cached_series_revision = m_series.revision();
     }
     
     // Use cached visible window range for scaling
-    const ChartValue visible_min = m_cached_visible_min;
-    const ChartValue visible_max = m_cached_visible_max;
-    const ChartAccumulator range =
-        static_cast<ChartAccumulator>(visible_max) - visible_min;
+    const ChartSample visible_min = m_cached_visible_min;
+    const ChartSample visible_max = m_cached_visible_max;
+    const int64_t range = static_cast<int64_t>(visible_max) - visible_min;
     
     // Drawing area Y boundary (Bottom of the chart area)
     const int y_bottom = tl_y + height - 2;
@@ -516,15 +308,8 @@ void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, Canvas&
     // Loop from newest data (i=0, rightmost pixel) backwards to the oldest data (i=points_to_draw-1, leftmost pixel)
     for (int i = 0; i < points_to_draw; ++i) {
         
-        // 1. Calculate data index
-        int buffer_offset = i + 1; 
-        int data_index = (m_write_index - buffer_offset + m_buffer_size) % m_buffer_size;
-        
-        if (buffer_offset > m_data_count) {
-            continue;
-        }
-        
-        ChartValue value = m_data_buffer[data_index];
+        const ChartSample sample =
+            m_series.sampleFromNewest(static_cast<size_t>(i));
         
         // 2. Calculate coordinates
         // X position: Right Edge of chart area (tl_x + width - 2), move left by 'i' pixels
@@ -533,8 +318,8 @@ void CurveChart::drawCuveData(int tl_x, int tl_y, int width, int height, Canvas&
         // Y position: Normalize value relative to visible_min, then scale, and position relative to y_bottom
         int y_offset = chart_h / 2;
         if (range > 0) {
-            const ChartAccumulator normalized_value =
-                static_cast<ChartAccumulator>(value) - visible_min;
+            const int64_t normalized_value =
+                static_cast<int64_t>(sample) - visible_min;
             y_offset = static_cast<int>((normalized_value * chart_h) / range);
         }
         

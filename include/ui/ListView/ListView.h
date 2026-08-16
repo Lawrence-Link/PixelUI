@@ -32,16 +32,87 @@
 #include "etl/delegate.h"
 #include "core/animation/animation.h"
 #include "core/app/IApplication.h"
+#include "core/ValueBinding.h"
 #include "etl/map.h"
 #include <stdint.h>
 
-// Struct to hold extra data for a list item, like values for switches or sliders.
-struct ListItemExtra{
-    char* text = nullptr;
-    bool* switchValue = nullptr; // Pointer to a boolean value for a switch.
-    int32_t* intValue = nullptr;     // Pointer to an integer value for a slider or counter.
-    // Signed fixed-point value in tenths: 123 is rendered as 12.3.
-    int32_t* fixedPoint1Value = nullptr;
+class ListItemAccessory {
+public:
+    enum class Kind : uint8_t {
+        None,
+        Text,
+        Toggle,
+        Value,
+    };
+
+    static constexpr ListItemAccessory text(const char* text) {
+        ListItemAccessory accessory;
+        accessory.kind_ = Kind::Text;
+        accessory.payload_.text = text;
+        return accessory;
+    }
+
+    static constexpr ListItemAccessory toggle(bool& value) {
+        ListItemAccessory accessory;
+        accessory.kind_ = Kind::Toggle;
+        accessory.payload_.toggle = &value;
+        return accessory;
+    }
+
+    static constexpr ListItemAccessory value(PixelUIValue::Binding binding) {
+        ListItemAccessory accessory;
+        accessory.kind_ = Kind::Value;
+        accessory.payload_.value = {
+            binding.object(),
+            binding.formatter(),
+            binding.suffix(),
+        };
+        return accessory;
+    }
+
+    constexpr Kind kind() const { return kind_; }
+
+    constexpr const char* textValue() const {
+        return kind_ == Kind::Text ? payload_.text : nullptr;
+    }
+
+    constexpr bool* toggleValue() const {
+        return kind_ == Kind::Toggle ? payload_.toggle : nullptr;
+    }
+
+    bool formatValue(char* buffer, size_t bufferSize) const {
+        if (buffer != nullptr && bufferSize != 0U) buffer[0] = '\0';
+        if (kind_ != Kind::Value || payload_.value.formatter == nullptr) {
+            return false;
+        }
+        const bool formatted = payload_.value.formatter(
+            payload_.value.object,
+            payload_.value.suffix,
+            buffer,
+            bufferSize);
+        if (!formatted && buffer != nullptr && bufferSize != 0U) {
+            buffer[0] = '\0';
+        }
+        return formatted;
+    }
+
+private:
+    struct ValuePayload {
+        const void* object;
+        PixelUIValue::Binding::FormatFunction formatter;
+        const char* suffix;
+    };
+
+    union Payload {
+        constexpr Payload() : text(nullptr) {}
+
+        const char* text;
+        bool* toggle;
+        ValuePayload value;
+    };
+
+    Kind kind_ = Kind::None;
+    Payload payload_{};
 };
 
 // Represents a single item in a list view.
@@ -50,7 +121,7 @@ struct ListItem{
     ListItem * nextList = nullptr;                       // Pointer to a sub-menu (another list).
     int32_t nextListLength = 0;                     // The number of items in the sub-menu. (signed to avoid mixed-signedness)
     VoidCallback pFunc = nullptr;               // A function to execute when the item is selected.
-    ListItemExtra extra{};                       // Extra data for dynamic UI elements.
+    ListItemAccessory accessory{};
     bool use_fade = false; // Whether render fade animation when navigate to new app.
 };
 

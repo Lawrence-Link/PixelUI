@@ -47,14 +47,14 @@ Histogram::Histogram(
     uint16_t pos_y,
     uint16_t size_w,
     uint16_t size_h,
-    ChartValue* buffer,
-    size_t buffer_size,
+    ChartSeries& series,
     uint16_t size_w_exp,
     uint16_t size_h_exp,
     EXPAND_BASE base,
     const char* label
 ) : 
-    m_ui(ui), 
+    m_ui(ui),
+    m_series(series),
     pos_x_(pos_x), 
     pos_y_(pos_y),
     size_w_(size_w),
@@ -62,8 +62,6 @@ Histogram::Histogram(
     exp_w(size_w_exp),
     exp_h(size_h_exp),
     base_(base),
-    m_data_buffer(buffer),
-    m_buffer_size(static_cast<int>(buffer_size)),
     m_label(label)
 {
     setFocusInsets({1, 1, 0, 0});
@@ -81,7 +79,7 @@ Histogram::Histogram(
 }
 
 /**
- * @brief Initialize widget when loaded. Sets up animations, focus, and internal buffer.
+ * @brief Initialize widget animations when loaded.
  */
 void Histogram::onLoad() {
     int32_t start_anim_x = (size_w_ / 2);
@@ -98,39 +96,6 @@ void Histogram::onLoad() {
 
     m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
     m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
-    
-
-    // Initialize the internal data buffer
-    initializeDataBuffer();
-}
-
-/**
- * @brief Initialize the circular data buffer and statistics.
- */
-void Histogram::initializeDataBuffer() {
-    // Clear buffer
-    for (int i = 0; i < m_buffer_size; ++i) {
-        m_data_buffer[i] = 0;
-    }
-
-    // Reset statistics
-    m_write_index = 0;
-    m_data_count = 0;
-    m_max_value = etl::numeric_limits<ChartValue>::min();
-    m_sum_value = 0;
-    m_min_value = etl::numeric_limits<ChartValue>::max();
-    
-    // Reset history statistics
-    m_hist_max_value = etl::numeric_limits<ChartValue>::min();
-    m_hist_min_value = etl::numeric_limits<ChartValue>::max();
-    m_hist_sum_value = 0;
-    m_hist_count = 0;
-    
-    // Reset visible cache
-    m_cached_visible_max = 0;
-    m_cached_visible_min = 0;
-    m_cached_visible_width = 0;
-    m_visible_cache_dirty = true;
 }
 
 /**
@@ -138,180 +103,6 @@ void Histogram::initializeDataBuffer() {
  */
 void Histogram::onOffload() {
     
-}
-
-/**
- * @brief Add a new data point to the histogram buffer.
- * @param value The new fixed-point value to add.
- */
-void Histogram::addData(ChartValue value) {
-    // Store the old value at current position for statistics update
-    ChartValue old_value = m_data_buffer[m_write_index];
-    bool replacing_valid_data = (m_data_count >= m_buffer_size);
-    
-    // Add new value to buffer
-    m_data_buffer[m_write_index] = value;
-    
-    // Update write index (ring buffer)
-    m_write_index = (m_write_index + 1) % m_buffer_size;
-    
-    // Update data count
-    if (m_data_count < m_buffer_size) {
-        m_data_count++;
-    }
-    
-    // Mark visible cache as dirty
-    m_visible_cache_dirty = true;
-    
-    // Update statistics efficiently
-    updateStatistics(value, old_value, replacing_valid_data);
-}
-
-/**
- * @brief Update max, min, and sum statistics efficiently.
- * @param new_value The new value being added.
- * @param old_value The old value being replaced (if any).
- * @param replacing_data True if replacing an existing value in a full buffer.
- */
-void Histogram::updateStatistics(
-    ChartValue new_value,
-    ChartValue old_value,
-    bool replacing_data) {
-    // Update history statistics (all-time)
-    m_hist_max_value = etl::max(m_hist_max_value, new_value);
-    if (m_hist_min_value == etl::numeric_limits<ChartValue>::max() ||
-        new_value < m_hist_min_value) {
-        m_hist_min_value = new_value;
-    }
-    m_hist_sum_value += new_value;
-    m_hist_count++;
-
-    // Update window statistics
-    if (!replacing_data) {
-        // Buffer not full, simple update
-        m_sum_value += new_value;
-        m_max_value = etl::max(m_max_value, new_value);
-        // Only update min if a valid (non-max) value is added or if min is still at its maximum possible value
-        if (m_min_value == etl::numeric_limits<ChartValue>::max() ||
-            new_value < m_min_value) {
-            m_min_value = new_value;
-        }
-    } else {
-        // Replace existing value
-        m_sum_value = m_sum_value - old_value + new_value;
-
-        // Recalculate extremes if old value was max or min (recalculating min if old_value was the placeholder max is safer)
-        if (old_value == m_max_value || old_value == m_min_value ||
-            m_min_value == etl::numeric_limits<ChartValue>::max()) {
-            recalculateExtremes();
-        } else {
-            m_max_value = etl::max(m_max_value, new_value);
-            m_min_value = etl::min(m_min_value, new_value);
-        }
-    }
-}
-
-/**
- * @brief Recalculate the max and min values by scanning the buffer.
- */
-void Histogram::recalculateExtremes() {
-    if (m_data_count == 0) {
-        m_max_value = etl::numeric_limits<ChartValue>::min();
-        m_min_value = etl::numeric_limits<ChartValue>::max();
-        m_sum_value = 0;
-        return;
-    }
-
-    m_max_value = m_data_buffer[0];
-    m_min_value = m_data_buffer[0];
-
-    for (int i = 1; i < m_data_count; ++i) {
-        m_max_value = etl::max(m_max_value, m_data_buffer[i]);
-        m_min_value = etl::min(m_min_value, m_data_buffer[i]);
-    }
-}
-
-/**
- * @brief Get the maximum value in the histogram.
- * @return Maximum fixed-point value in buffer.
- */
-ChartValue Histogram::getMaxValueInWindow() const {
-    return m_data_count == 0 ? 0 : m_max_value;
-}
-
-/**
- * @brief Get the average value of the histogram.
- * @return Average fixed-point value, truncated toward zero, or 0 if empty.
- */
-ChartValue Histogram::getAverageValueInWindow() const {
-    if (m_data_count == 0) {
-        return 0;
-    }
-    return static_cast<ChartValue>(m_sum_value / m_data_count);
-}
-
-/**
- * @brief Get the minimum value in the histogram.
- * @return Minimum fixed-point value, or 0 if empty.
- */
-ChartValue Histogram::getMinValueInWindow() const {
-    if (m_data_count == 0) return 0;
-    return m_min_value;
-}
-
-/**
- * @brief Get the maximum value in the entire history.
- * @return Maximum fixed-point value ever recorded.
- */
-ChartValue Histogram::getMaxValueInHistory() const {
-    return m_hist_count == 0 ? 0 : m_hist_max_value;
-}
-
-/**
- * @brief Get the average value of all historical data.
- * @return Average fixed-point value, truncated toward zero, or 0 if empty.
- */
-ChartValue Histogram::getAverageValueInHistory() const {
-    if (m_hist_count == 0) {
-        return 0;
-    }
-    return static_cast<ChartValue>(m_hist_sum_value / m_hist_count);
-}
-
-/**
- * @brief Get the minimum value in the entire history.
- * @return Minimum fixed-point value ever recorded, or 0 if empty.
- */
-ChartValue Histogram::getMinValueInHistory() const {
-    if (m_hist_count == 0) return 0;
-    if (m_hist_min_value == etl::numeric_limits<ChartValue>::max()) return 0;
-    return m_hist_min_value;
-}
-
-/**
- * @brief Clear all data in the histogram buffer and reset statistics.
- */
-void Histogram::clearData() {
-    for (int i = 0; i < m_buffer_size; ++i) {
-        m_data_buffer[i] = 0;
-    }
-    m_write_index = 0;
-    m_data_count = 0;
-    m_max_value = etl::numeric_limits<ChartValue>::min();
-    m_sum_value = 0;
-    m_min_value = etl::numeric_limits<ChartValue>::max();
-    
-    // Reset history statistics
-    m_hist_max_value = etl::numeric_limits<ChartValue>::min();
-    m_hist_min_value = etl::numeric_limits<ChartValue>::max();
-    m_hist_sum_value = 0;
-    m_hist_count = 0;
-    
-    // Reset visible cache
-    m_cached_visible_max = 0;
-    m_cached_visible_min = 0;
-    m_cached_visible_width = 0;
-    m_visible_cache_dirty = true;
 }
 
 /**
@@ -483,62 +274,53 @@ void Histogram::drawSelf(const WidgetRenderContext& context) {
  * @param u8g2 Reference to U8G2 for drawing.
  */
 void Histogram::drawHistogramData(int tl_x, int tl_y, int width, int height, Canvas& u8g2) {
-    if (m_data_count == 0) {
-        return;
-    }
+    if (m_series.empty()) return;
 
     // Determine number of points to draw based on current width
     // Subtract 3 to account for 2px borders (width - 3 = drawable columns from right border to left border inclusive)
-    int points_to_draw = etl::min(width - 3, static_cast<int>(m_data_count));
+    const int points_to_draw =
+        etl::min(width - 3, static_cast<int>(m_series.size()));
     if (points_to_draw <= 0) return;
 
     // Calculate visible window min/max (with caching)
-    if (m_visible_cache_dirty || m_cached_visible_width != points_to_draw) {
-        m_cached_visible_max = etl::numeric_limits<ChartValue>::min();
-        m_cached_visible_min = etl::numeric_limits<ChartValue>::max();
+    if (m_cached_series_revision != m_series.revision() ||
+        m_cached_visible_width != points_to_draw) {
+        m_cached_visible_max = etl::numeric_limits<ChartSample>::min();
         
         for (int i = 0; i < points_to_draw; ++i) {
-            int buffer_offset = i + 1;
-            int data_index = (m_write_index - buffer_offset + m_buffer_size) % m_buffer_size;
-            if (buffer_offset <= m_data_count) {
-                ChartValue value = m_data_buffer[data_index];
-                m_cached_visible_max = etl::max(m_cached_visible_max, value);
-                m_cached_visible_min = etl::min(m_cached_visible_min, value);
-            }
+            const ChartSample sample =
+                m_series.sampleFromNewest(static_cast<size_t>(i));
+            m_cached_visible_max = etl::max(m_cached_visible_max, sample);
         }
         
         m_cached_visible_width = points_to_draw;
-        m_visible_cache_dirty = false;
+        m_cached_series_revision = m_series.revision();
     }
 
-    const ChartValue visible_max = m_cached_visible_max;
-    const ChartValue scale_max = visible_max > 0 ? visible_max : m_max_value;
+    const ChartSample visible_max = m_cached_visible_max;
+    const ChartSample scale_max =
+        visible_max > 0 ? visible_max : m_series.maximum();
     if (scale_max <= 0) return;
 
     // Draw bars from right (newest) to left (oldest)
     // Start from right edge minus 2px border
     for (int i = 0; i < points_to_draw; ++i) {
-        int buffer_offset = i + 1;
-        int data_index = (m_write_index - buffer_offset + m_buffer_size) % m_buffer_size;
+        const ChartSample sample =
+            m_series.sampleFromNewest(static_cast<size_t>(i));
+        int bar_height = static_cast<int>(
+            (static_cast<int64_t>(sample) * (height - 2)) / scale_max);
 
-        if (buffer_offset <= m_data_count) {
-            ChartValue value = m_data_buffer[data_index];
-            int bar_height = static_cast<int>(
-                (static_cast<ChartAccumulator>(value) * (height - 2)) /
-                scale_max);
+        // Clamp bar height to available vertical space
+        bar_height = etl::min(bar_height, height - 4);
+        bar_height = etl::max(bar_height, 0);
 
-            // Clamp bar height to available vertical space
-            bar_height = etl::min(bar_height, height - 4);
-            bar_height = etl::max(bar_height, 0);
+        // Calculate bar position: start from right border (tl_x + width - 2), move left
+        int bar_x = tl_x + width - 2 - i;
+        int bar_y = tl_y + height - bar_height;
 
-            // Calculate bar position: start from right border (tl_x + width - 2), move left
-            int bar_x = tl_x + width - 2 - i;
-            int bar_y = tl_y + height - bar_height;
-
-            // Draw vertical line for the bar
-            if (bar_height > 0) {
-                u8g2.drawVLine(bar_x, bar_y, bar_height);
-            }
+        // Draw vertical line for the bar
+        if (bar_height > 0) {
+            u8g2.drawVLine(bar_x, bar_y, bar_height);
         }
     }
 }

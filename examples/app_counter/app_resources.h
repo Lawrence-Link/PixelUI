@@ -3,13 +3,10 @@
 
 #pragma once
 
-#include "widgets/ChartBuffer.h"
-
 namespace app_counter_resources {
 
 extern const unsigned char counter_icon[];
 extern const unsigned char background[];
-extern ChartValue static_data_buffer[25];
 extern const unsigned char sound_on_icon[];
 extern const unsigned char sound_off_icon[];
 extern const unsigned char bell_icon[];

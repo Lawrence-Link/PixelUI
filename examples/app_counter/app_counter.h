@@ -33,7 +33,7 @@ private:
     };
 
     PixelUI& m_ui;
-    ChartValue histogramBuffer[76]{};
+    StaticChartSeries<76> histogramSeries;
     Histogram histogram;
     Brace brace;
     CounterReadingWidget brace_content;

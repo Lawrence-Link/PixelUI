@@ -1,13 +1,13 @@
-# Histogram and CurveChart buffers
+# Chart series and value formatting
 
-`Histogram` and `CurveChart` do not allocate sample storage. Their owner must
-provide a `ChartValue` array that outlives the widget. `ChartValue` is a signed
-decimal fixed-point value scaled by `CHART_VALUE_SCALE` (1000), so `1250`
-represents `1.250`. Declare the array before the widget when both are members of
-an App:
+## Chart sample ownership
+
+`Histogram` and `CurveChart` are views. They do not allocate storage, define a
+unit, or own statistics. The application owns a fixed-capacity
+`StaticChartSeries<N>` that must outlive every chart that references it:
 
 ```cpp
-ChartValue chartBuffer[76]{};
+StaticChartSeries<76> temperatureSeries;
 CurveChart chart;
 
 App(PixelUI& ui)
@@ -17,23 +17,58 @@ App(PixelUI& ui)
           45,
           56,
           18,
-          chartBuffer,
+          temperatureSeries,
           ChartExpandSize<76, 63>{},
           EXPAND_BASE::BOTTOM_RIGHT) {}
 ```
 
-Add integer or fractional samples without floating-point arithmetic:
+The series is a ring buffer with no heap allocation. Add and clear samples on
+the model, not on the widget. `clear()` resets metadata in constant time and
+does not sweep the backing array:
 
 ```cpp
-chart.addData(chartValueFromInt(42));     // 42.000
-chart.addData(chartValueFromMilli(1250)); // 1.250
+temperatureSeries.clear();
+temperatureSeries.add(215); // The application decides what 215 means.
 ```
 
-Window and history statistics return `ChartValue` using the same scale.
-Average values are truncated toward zero when the exact result cannot be
-represented in one-thousandth units.
+`ChartSample` is an alias of `int32_t`. It is deliberately unitless. A sample
+may mean an integer count, tenths of a degree, Q15, or another application
+domain representation. The chart only compares and scales samples, so it does
+not need to know that representation and does not pull floating-point support
+into the rendering path.
 
-The expanded width and height are template arguments. The constructor deduces
-the array capacity and fails at compile time unless the element count exactly
-matches the expanded width. The supplied array is the complete circular sample
-buffer, with one sample slot per expanded horizontal pixel.
+Current-window statistics are available through `minimum()`, `maximum()`, and
+`average()`. `historyMinimum()`, `historyMaximum()`, and `historyAverage()` cover
+all samples since the last `clear()`. Integer averages truncate toward zero.
+`sampleFromNewest(0)` returns the latest sample.
+
+The constructor deduces the series capacity and checks at compile time that it
+equals the expanded chart width. This preserves one sample slot per expanded
+horizontal pixel.
+
+## Domain values and ListView
+
+Use `ScaledInt32<Scale>` when a domain value needs a compile-time scale:
+
+```cpp
+using Temperature = ScaledInt32<10>;
+Temperature roomTemperature = Temperature::fromRaw(215); // 21.5
+```
+
+The scale stays in the domain type. It is not a global chart convention.
+`ScaledInt32` stores only one `int32_t`, performs no allocation, and does not
+implicitly convert from an unscaled integer.
+
+At the text-rendering boundary, bind the value to a formatter:
+
+```cpp
+ListItemAccessory::value(
+    PixelUIValue::Binding::decimal<1>(roomTemperature, " C"))
+```
+
+`PixelUIValue::Binding` is non-owning. The referenced value and optional suffix
+must outlive the `ListItemAccessory`. It contains a data pointer and a plain
+formatter function pointer; it does not allocate callback storage. Integer,
+scaled-integer, and custom formatters share the same bounded-buffer interface.
+The built-in formatting uses integer arithmetic only. A failed formatter leaves
+the destination empty, including when a custom formatter reports failure.

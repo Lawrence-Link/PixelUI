@@ -36,8 +36,8 @@ bool bool_state = false;
 
 extern PixelUI ui;
 
-int my_value = 0;
-int my_value_4_digits = 0;
+int32_t my_value = 0;
+int32_t my_value_4_digits = 0;
 
 ListItem sub_CathyFlower[3] = {
     ListItem(">>> Sub Menu <<<"),
@@ -49,9 +49,9 @@ ListItem ItemList[10] = {
     ListItem(">>> ListDemo <<<"),
     ListItem{.title ="- Show pop", .pFunc = [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }},
     ListItem{.title ="- Sub Menu", .nextList = sub_CathyFlower, .nextListLength = 3},
-    ListItem{.title ="- Bool State", .extra = {.switchValue = &bool_state}},
-    ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000); }, .extra = {.intValue = &my_value}},
-    ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 40, 5000); }, .extra = {.intValue = &my_value_4_digits}},
+    ListItem{.title ="- Bool State", .accessory = ListItemAccessory::toggle(bool_state)},
+    ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value))},
+    ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 40, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value_4_digits))},
     ListItem{.title ="- Progress"},
     ListItem{.title ="- Anytone"},
     ListItem{.title ="- Potato"},
