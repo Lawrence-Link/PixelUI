@@ -27,8 +27,12 @@ int main() {
     int32_t secondValue = 20;
 
     // The first request becomes active; later requests remain FIFO pending.
-    if (!manager.enqueueProgress(80, 30, firstValue, 0, 100, "First", 0)) return 1;
-    if (!manager.enqueueProgress(80, 30, secondValue, 0, 100, "Second", 0)) return 2;
+    if (!manager.enqueueProgress(
+            80, 30, firstValue, 0, 100, "First", 0, nullptr,
+            PopupProgressMode::Editable)) return 1;
+    if (!manager.enqueueProgress(
+            80, 30, secondValue, 0, 100, "Second", 0, nullptr,
+            PopupProgressMode::Editable)) return 2;
     if (!manager.enqueueInfo(80, 30, "Third", "", 0)) return 3;
     if (!manager.hasActivePopup() || (manager.pendingCount() != 2U) ||
         (manager.getPopupCounts() != MAX_POPUP_NUM)) return 4;
@@ -74,7 +78,7 @@ int main() {
     };
     if (!manager.enqueueProgress(
             80, 30, firstValue, 0, 100, "Reentrant", 0,
-            etl::move(callback))) return 16;
+            etl::move(callback), PopupProgressMode::Editable)) return 16;
     if (callback) return 17;
     manager.updatePopups(ui.getCurrentTime());
     advance(manager, ui, 300U);
@@ -132,7 +136,7 @@ int main() {
     if (!manager.enqueueInfo(80, 30, "Info", "", 0) ||
         !manager.enqueueProgress(
             80, 30, mixedProgress, 0, 10, "Progress", 0,
-            etl::move(progressCallback)) ||
+            etl::move(progressCallback), PopupProgressMode::Editable) ||
         !manager.enqueueValueDigits(
             100, 56, mixedDigits, 4, "Digits", 0,
             etl::move(digitsCallback))) return 26;
@@ -166,6 +170,24 @@ int main() {
     manager.handleTopPopupInput(InputEvent::SELECT);
     if (mixedDigits != 1042 || digitsCallbackCount != 1 ||
         manager.pendingCount() != 0U) return 30;
+
+    manager.clearPopups();
+    int32_t readOnlyValue = 5;
+    int readOnlyCallbackCount = 0;
+    ValueCallback readOnlyCallback = [&readOnlyCallbackCount](int32_t) {
+        ++readOnlyCallbackCount;
+    };
+    if (!manager.enqueueProgress(
+            80, 30, readOnlyValue, 0, 10, "Read only", 0,
+            etl::move(readOnlyCallback))) return 31;
+    manager.updatePopups(ui.getCurrentTime());
+    advance(manager, ui, 300U);
+    if (!manager.handleTopPopupInput(InputEvent::RIGHT) || readOnlyValue != 5 ||
+        readOnlyCallbackCount != 0) return 32;
+    readOnlyValue = 8;
+    manager.drawPopups();
+    if (readOnlyValue != 8 || readOnlyCallbackCount != 0) return 33;
+    manager.handleTopPopupInput(InputEvent::BACK);
 
     return 0;
 }

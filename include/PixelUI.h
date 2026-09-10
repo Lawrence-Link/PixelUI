@@ -324,7 +324,8 @@ public:
      * @param width Popup width.
      * @param height Popup height.
      * @param duration Display duration.
-     * @param policy Live writes each edit; CommitOnConfirm writes only on SELECT.
+     * @param policy Write timing when mode is Editable.
+     * @param mode ReadOnly only displays progress; Editable accepts value changes.
      * @return true if the request was accepted.
      * @note Binding/formatter contexts and title must outlive pending and active use.
      */
@@ -336,7 +337,8 @@ public:
         uint16_t width = 100,
         uint16_t height = 40,
         uint16_t duration = 3000,
-        ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm);
+        ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm,
+        PopupProgressMode mode = PopupProgressMode::ReadOnly);
 
     /**
      * @brief Compatibility adapter using step 1 and percentage formatting.
@@ -352,7 +354,8 @@ public:
         uint16_t width = 100, 
         uint16_t height = 40, 
         uint16_t duration = 3000,
-        ValueCallback update_cb = nullptr);
+        ValueCallback update_cb = nullptr,
+        PopupProgressMode mode = PopupProgressMode::ReadOnly);
 
     /**
      * @brief Marks the display buffer as dirty, forcing a redraw.

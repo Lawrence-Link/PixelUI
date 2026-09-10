@@ -45,12 +45,13 @@ bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
                                    NumericFormatter formatter,
                                    const char* title, uint16_t duration,
                                    ValueCallback callback,
-                                   ValueEditPolicy policy) {
+                                   ValueEditPolicy policy,
+                                   PopupProgressMode mode) {
     const RequestEnvelope envelope{width, height, duration};
     int32_t currentValue = 0;
     if (!validEnvelope(envelope) || !binding.read(currentValue)) return false;
     PopupRequest request{ProgressRequest{
-        envelope, policy, range, formatter, binding, title,
+        envelope, policy, mode, range, formatter, binding, title,
         etl::move(callback)}};
     return enqueue(etl::move(request));
 }
@@ -58,13 +59,14 @@ bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
 bool PopupManager::enqueueProgress(uint16_t width, uint16_t height,
                                    int32_t& value, int32_t minValue,
                                    int32_t maxValue, const char* title,
-                                   uint16_t duration, ValueCallback callback) {
+                                   uint16_t duration, ValueCallback callback,
+                                   PopupProgressMode mode) {
     NumericRange range;
     if (!NumericRange::tryCreate(minValue, maxValue, 1, range)) return false;
     return enqueueProgress(
         width, height, ValueEditorBinding::reference(value), range,
         NumericFormatter{}, title, duration, etl::move(callback),
-        ValueEditPolicy::CommitOnConfirm);
+        ValueEditPolicy::CommitOnConfirm, mode);
 }
 #endif
 
@@ -123,7 +125,8 @@ void PopupManager::activate(ProgressRequest& request) {
     active_ = activePool_.create<PopupProgress>(
         ui_, request.envelope.width, request.envelope.height,
         request.range, request.formatter, request.binding, request.title,
-        request.envelope.duration, etl::move(request.callback), request.policy);
+        request.envelope.duration, etl::move(request.callback), request.policy,
+        request.mode);
 }
 #endif
 

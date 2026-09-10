@@ -464,7 +464,7 @@ bool PixelUI::showPopupProgress(
     ValueEditorBinding binding, const NumericRange& range,
     NumericFormatter formatter, const char* title,
     uint16_t width, uint16_t height, uint16_t duration,
-    ValueEditPolicy policy) {
+    ValueEditPolicy policy, PopupProgressMode mode) {
 #if PIXELUI_USE_POPUP_PROGRESS
     if (!binding.valid()) return false;
     if (width < 50) width = 50;
@@ -476,7 +476,7 @@ bool PixelUI::showPopupProgress(
 
     if (m_popupManager.enqueueProgress(
             width, height, binding, range, formatter, title, duration,
-            nullptr, policy)) {
+            nullptr, policy, mode)) {
         markDirty();
         return true;
     }
@@ -490,13 +490,15 @@ bool PixelUI::showPopupProgress(
     (void)height;
     (void)duration;
     (void)policy;
+    (void)mode;
     return false;
 #endif
 }
 
 bool PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxValue,
                                 const char* title, uint16_t width, uint16_t height,
-                                uint16_t duration, ValueCallback update_cb) {
+                                uint16_t duration, ValueCallback update_cb,
+                                PopupProgressMode mode) {
 #if PIXELUI_USE_POPUP_PROGRESS
     NumericRange range;
     if (!NumericRange::tryCreate(minValue, maxValue, 1, range)) return false;
@@ -509,7 +511,7 @@ bool PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxVal
     if (m_popupManager.enqueueProgress(
             width, height, ValueEditorBinding::reference(value), range,
             NumericFormatter{}, title, duration, etl::move(update_cb),
-            ValueEditPolicy::CommitOnConfirm)) {
+            ValueEditPolicy::CommitOnConfirm, mode)) {
         markDirty();
         return true;
     }
@@ -523,6 +525,7 @@ bool PixelUI::showPopupProgress(int32_t& value, int32_t minValue, int32_t maxVal
     (void)height;
     (void)duration;
     (void)update_cb;
+    (void)mode;
     return false;
 #endif
 }

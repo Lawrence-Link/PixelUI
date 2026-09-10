@@ -12,6 +12,11 @@
 #include "core/NumericRange.h"
 #include "core/ValueEdit.h"
 
+enum class PopupProgressMode : uint8_t {
+    ReadOnly,
+    Editable,
+};
+
 /**
  * @class PopupProgress
  * @brief A popup displaying a progress bar.
@@ -27,6 +32,8 @@ private:
     ValueCallback compatibilityCallback_;
     ValueEditSession ownedSession_;
     ValueEditSession* session_ = nullptr;
+    ValueEditorBinding sourceBinding_{};
+    PopupProgressMode mode_ = PopupProgressMode::ReadOnly;
 
     bool updateDraft(int32_t value);
     bool commitEditing();
@@ -36,16 +43,19 @@ public:
     PopupProgress(PixelUI& ui, uint16_t width, uint16_t height,
                   const NumericRange& range, NumericFormatter formatter,
                   ValueEditSession& session, const char* title = "",
-                  uint16_t duration = 3000);
+                  uint16_t duration = 3000,
+                  PopupProgressMode mode = PopupProgressMode::ReadOnly);
     PopupProgress(PixelUI& ui, uint16_t width, uint16_t height,
                   const NumericRange& range, NumericFormatter formatter,
                   ValueEditorBinding binding, const char* title,
                   uint16_t duration, ValueCallback callback = nullptr,
-                  ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm);
+                  ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm,
+                  PopupProgressMode mode = PopupProgressMode::ReadOnly);
     PopupProgress(PixelUI& ui, uint16_t width, uint16_t height,
                   const NumericRange& range, NumericFormatter formatter,
                   int32_t initialValue, const char* title = "",
-                  uint16_t duration = 3000);
+                  uint16_t duration = 3000,
+                  PopupProgressMode mode = PopupProgressMode::ReadOnly);
     ~PopupProgress() = default;
 
     void drawContent(const PopupContentBounds& bounds) override;

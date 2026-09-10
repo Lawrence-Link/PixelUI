@@ -50,6 +50,7 @@ struct InfoRequest {
 struct ProgressRequest {
     RequestEnvelope envelope{};
     ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm;
+    PopupProgressMode mode = PopupProgressMode::ReadOnly;
     NumericRange range{};
     // Formatter and binding contexts are non-owning.
     NumericFormatter formatter{};
@@ -154,11 +155,13 @@ public:
                          NumericFormatter formatter,
                          const char* title, uint16_t duration,
                          ValueCallback callback = nullptr,
-                         ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm);
+                         ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm,
+                         PopupProgressMode mode = PopupProgressMode::ReadOnly);
     bool enqueueProgress(uint16_t width, uint16_t height,
                          int32_t& value, int32_t minValue, int32_t maxValue,
                          const char* title, uint16_t duration,
-                         ValueCallback callback = nullptr);
+                         ValueCallback callback = nullptr,
+                         PopupProgressMode mode = PopupProgressMode::ReadOnly);
 #endif
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
     bool enqueueValueDigits(uint16_t width, uint16_t height,

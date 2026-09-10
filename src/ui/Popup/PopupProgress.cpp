@@ -8,7 +8,8 @@
 PopupProgress::PopupProgress(
     PixelUI& ui, uint16_t width, uint16_t height,
     const NumericRange& range, NumericFormatter formatter,
-    ValueEditSession& session, const char* title, uint16_t duration)
+    ValueEditSession& session, const char* title, uint16_t duration,
+    PopupProgressMode mode)
     : PopupBase(ui, width, height, duration),
       range_(range),
       defaultPercentage_{&range_, "%"},
@@ -17,13 +18,14 @@ PopupProgress::PopupProgress(
           : NumericFormatter::percentage(defaultPercentage_)),
       title_(title),
       ownedSession_(0),
-      session_(&session) {}
+      session_(&session),
+      mode_(mode) {}
 
 PopupProgress::PopupProgress(
     PixelUI& ui, uint16_t width, uint16_t height,
     const NumericRange& range, NumericFormatter formatter,
     ValueEditorBinding binding, const char* title, uint16_t duration,
-    ValueCallback callback, ValueEditPolicy policy)
+    ValueCallback callback, ValueEditPolicy policy, PopupProgressMode mode)
     : PopupBase(ui, width, height, duration),
       range_(range),
       defaultPercentage_{&range_, "%"},
@@ -33,12 +35,15 @@ PopupProgress::PopupProgress(
       title_(title),
       compatibilityCallback_(etl::move(callback)),
       ownedSession_(binding, policy),
-      session_(&ownedSession_) {}
+      session_(&ownedSession_),
+      sourceBinding_(binding),
+      mode_(mode) {}
 
 PopupProgress::PopupProgress(
     PixelUI& ui, uint16_t width, uint16_t height,
     const NumericRange& range, NumericFormatter formatter,
-    int32_t initialValue, const char* title, uint16_t duration)
+    int32_t initialValue, const char* title, uint16_t duration,
+    PopupProgressMode mode)
     : PopupBase(ui, width, height, duration),
       range_(range),
       defaultPercentage_{&range_, "%"},
@@ -47,7 +52,8 @@ PopupProgress::PopupProgress(
           : NumericFormatter::percentage(defaultPercentage_)),
       title_(title),
       ownedSession_(initialValue),
-      session_(&ownedSession_) {}
+      session_(&ownedSession_),
+      mode_(mode) {}
 
 bool PopupProgress::updateDraft(int32_t value) {
     if (session_ == nullptr || !session_->valid()) return false;
@@ -100,7 +106,10 @@ void PopupProgress::drawContent(const PopupContentBounds& bounds) {
     const int32_t barY = bounds.centerY - 3;
     if (barWidth > 0) display.drawFrame(barX, barY, barWidth, barHeight);
 
-    const int32_t value = session_ != nullptr ? session_->draftValue() : 0;
+    int32_t value = session_ != nullptr ? session_->draftValue() : 0;
+    if (mode_ == PopupProgressMode::ReadOnly) {
+        sourceBinding_.read(value);
+    }
     if (barWidth > 2) {
         const uint32_t fillWidth = normalizeToExtent(
             range_, value, static_cast<uint32_t>(barWidth - 2));
@@ -120,6 +129,19 @@ void PopupProgress::drawContent(const PopupContentBounds& bounds) {
 
 bool PopupProgress::handleContentInput(InputEvent event) {
     if (session_ == nullptr || !session_->valid()) return false;
+    if (mode_ == PopupProgressMode::ReadOnly) {
+        switch (event) {
+            case InputEvent::RIGHT:
+            case InputEvent::LEFT:
+                return true;
+            case InputEvent::SELECT:
+            case InputEvent::BACK:
+                requestClose();
+                return true;
+            default:
+                return false;
+        }
+    }
     switch (event) {
         case InputEvent::RIGHT:
             if (range_.canIncrement(session_->draftValue())) {

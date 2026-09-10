@@ -39,6 +39,35 @@ extern PixelUI ui;
 int32_t my_value = 0;
 int32_t my_value_4_digits = 0;
 
+static int32_t displayProgress = 0;
+static AnimationHandle displayProgressAnimation = INVALID_ANIMATION_HANDLE;
+
+static void showReadOnlyProgress() {
+    constexpr int32_t peakProgress = 100;
+    constexpr uint32_t roundTripDurationMs = 4000;
+    constexpr uint16_t popupDurationMs = 5000;
+
+    ui.cancelAnimation(displayProgressAnimation);
+    displayProgressAnimation = INVALID_ANIMATION_HANDLE;
+    displayProgress = 0;
+    // One linear animation covers both halves of the 0 -> 100 -> 0 cycle.
+    if (!ui.animateCallback(
+            0, peakProgress * 2, roundTripDurationMs, EasingType::LINEAR,
+            [](int32_t value) {
+                displayProgress = value <= peakProgress
+                    ? value : peakProgress * 2 - value;
+            }, PROTECTION::NOT_PROTECTED, &displayProgressAnimation)) {
+        ui.showPopupInfo("Animation unavailable", "Progress");
+        return;
+    }
+    if (!ui.showPopupProgress(
+            displayProgress, 0, peakProgress, "Read only", 100, 40,
+            popupDurationMs)) {
+        ui.cancelAnimation(displayProgressAnimation);
+        displayProgressAnimation = INVALID_ANIMATION_HANDLE;
+    }
+}
+
 ListItem sub_CathyFlower[3] = {
     ListItem(">>> Sub Menu <<<"),
     ListItem("- Text"),
@@ -50,9 +79,9 @@ ListItem ItemList[10] = {
     ListItem{.title ="- Show pop", .pFunc = [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }},
     ListItem{.title ="- Sub Menu", .nextList = sub_CathyFlower, .nextListLength = 3},
     ListItem{.title ="- Bool State", .accessory = ListItemAccessory::toggle(bool_state)},
-    ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value))},
+    ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, nullptr, PopupProgressMode::Editable); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value))},
     ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 56, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value_4_digits))},
-    ListItem{.title ="- Progress"},
+    ListItem{.title ="- Progress", .pFunc = &showReadOnlyProgress, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(displayProgress))},
     ListItem{.title ="- Anytone"},
     ListItem{.title ="- Potato"},
     ListItem{.title ="- Tomato"}
