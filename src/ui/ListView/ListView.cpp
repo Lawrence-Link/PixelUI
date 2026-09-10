@@ -401,7 +401,8 @@ bool ListView::handleInput(InputEvent event) {
         #ifdef LISTVIEW_NAVI_SELECT
         case LISTVIEW_NAVI_SELECT: selectCurrent(); return true;
         #endif
-        default: return false;
+        default:
+            return event == InputEvent::UP || event == InputEvent::DOWN;
     }
 }
 

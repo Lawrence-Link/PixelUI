@@ -57,6 +57,8 @@ int main() {
     finishAnimations(ui);
     const int32_t oneRowOffset = ui.getCanvas().camera().storedY();
     if (oneRowOffset <= 0) return 4;
+    if (!list.handleInput(InputEvent::UP) ||
+        !list.handleInput(InputEvent::DOWN)) return 13;
 
     for (int i = 0; i < 4; ++i) {
         if (!list.handleInput(LISTVIEW_NAVI_UP)) return 5;
