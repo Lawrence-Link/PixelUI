@@ -107,7 +107,7 @@ void icon_view_detail::IconViewBase::onEnter(ExitCallback exitCallback) {
                  (ui_.getDisplayWidth() - 2) / 2, 700,
                  EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     animateOwned(AnimationSlot::SelectorLength, animation_selector_length,
-                 selector_length, 700, EasingType::EASE_IN_OUT_CUBIC,
+                 SELECTOR_LENGTH, 700, EasingType::EASE_IN_OUT_CUBIC,
                  PROTECTION::PROTECTED);
     scrollToIndex(currentIndex_);
     ui_.markDirty();  // Trigger initial redraw.
@@ -118,7 +118,7 @@ void icon_view_detail::IconViewBase::onEnter(ExitCallback exitCallback) {
  */
 void icon_view_detail::IconViewBase::onResume() {
     animation_scroll_bar = 0;
-    scrollOffset_ -= iconWidth_ + 2 * iconSpacing_;
+    scrollOffset_ -= ICON_WIDTH + 2 * layout_.iconSpacing;
     animateOwned(AnimationSlot::PixelDots, animation_pixel_dots,
                  (ui_.getDisplayWidth() - 2) / 2, 300,
                  EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
@@ -133,7 +133,7 @@ void icon_view_detail::IconViewBase::onResume() {
 void icon_view_detail::IconViewBase::onPause() {
     ui_.markFading();
     cancelOwnAnimations();
-    animation_selector_length = selector_length;
+    animation_selector_length = SELECTOR_LENGTH;
 }
 
 /**
@@ -249,10 +249,10 @@ void icon_view_detail::IconViewBase::scrollToIndex(int newIndex) {
     
     // Compute target scroll offset.
     const int32_t targetSelectorX =
-        slotPositionsX_[targetSlot] + iconWidth_ / 2;
+        layout_.slotPositionsX[targetSlot] + ICON_WIDTH / 2;
     const int32_t iconTargetCenterX = targetSelectorX;
     const int32_t iconOriginalCenterX =
-        newIndex * (iconWidth_ + iconSpacing_) + iconWidth_ / 2;
+        newIndex * (ICON_WIDTH + layout_.iconSpacing) + ICON_WIDTH / 2;
     const int32_t targetScrollOffset =
         iconTargetCenterX - iconOriginalCenterX;
 
@@ -299,7 +299,7 @@ void icon_view_detail::IconViewBase::drawTitle() {
     Canvas& display = ui_.getCanvas();
     display.setFont(PIXELUI_FONT_SMALL);
     int titleWidth = display.getStrWidth(title_.c_str());
-    display.drawStr((ui_.getDisplayWidth() - titleWidth) / 2, titleY_, title_.c_str());
+    display.drawStr((ui_.getDisplayWidth() - titleWidth) / 2, TITLE_Y, title_.c_str());
 }
 
 /**
@@ -348,7 +348,7 @@ void icon_view_detail::IconViewBase::drawHorizontalIconList() {
         // Show a fallback message if no icons exist.
         Canvas& display = ui_.getCanvas();
         display.setFont(PIXELUI_FONT_TINY);
-        display.drawStr(centerX_ - 20, iconY_ + 16, "No Items");
+        display.drawStr(layout_.centerX - 20, layout_.iconY + 16, "No Items");
         return;
     }
     
@@ -359,7 +359,7 @@ void icon_view_detail::IconViewBase::drawHorizontalIconList() {
     for (int32_t i = startIndex;
          i <= endIndex && i < static_cast<int32_t>(items_.size()); ++i) {
         const int32_t iconX = calculateIconX(i);
-        drawIcon(items_[i], iconX, iconY_);
+        drawIcon(items_[i], iconX, layout_.iconY);
     }
 }
 
@@ -373,12 +373,12 @@ void icon_view_detail::IconViewBase::drawIcon(const IconItem& item, int32_t x, i
     Canvas& display = ui_.getCanvas();
     if (item.bitmap) {
         // Center 24x24 bitmap within icon area.
-        int iconX = x + (iconWidth_ - 24) / 2;
-        int iconY = y + (iconHeight_ - 24) / 2;
+        int iconX = x + (ICON_WIDTH - 24) / 2;
+        int iconY = y + (ICON_HEIGHT - 24) / 2;
         display.drawXBM(iconX, iconY, 24, 24, item.bitmap);
     } else {
         // Draw placeholder rounded box.
-        display.drawRBox(x + 4, y + 4, iconWidth_ - 8, iconHeight_ - 8, 2);
+        display.drawRBox(x + 4, y + 4, ICON_WIDTH - 8, ICON_HEIGHT - 8, 2);
     }
 }
 
@@ -388,10 +388,6 @@ void icon_view_detail::IconViewBase::drawIcon(const IconItem& item, int32_t x, i
 void icon_view_detail::IconViewBase::initializeSlotPositions() {
     layout_ = calculateIconViewLayout(
         ui_.getDisplayWidth(), ui_.getDisplayHeight());
-    centerX_ = layout_.centerX;
-    iconY_ = layout_.iconY;
-    iconSpacing_ = layout_.iconSpacing;
-    slotPositionsX_ = layout_.slotPositionsX;
 }
 
 /**
@@ -421,7 +417,7 @@ void icon_view_detail::IconViewBase::drawSelector(int32_t x, int32_t y, int32_t 
  * @return Computed X coordinate.
  */
 int32_t icon_view_detail::IconViewBase::calculateIconX(int32_t index) const {
-    return (index * (iconWidth_ + iconSpacing_)) + scrollOffset_;
+    return (index * (ICON_WIDTH + layout_.iconSpacing)) + scrollOffset_;
 }
 
 /**
@@ -429,7 +425,7 @@ int32_t icon_view_detail::IconViewBase::calculateIconX(int32_t index) const {
  * @return Index of the first visible icon.
  */
 int32_t icon_view_detail::IconViewBase::getVisibleStartIndex() const {
-    const int32_t leftmostX = -iconWidth_;
+    const int32_t leftmostX = -ICON_WIDTH;
     for (int32_t i = 0; i < static_cast<int32_t>(items_.size()); ++i) {
         if (calculateIconX(i) >= leftmostX) return etl::max(0, i - 1);
     }
@@ -441,7 +437,7 @@ int32_t icon_view_detail::IconViewBase::getVisibleStartIndex() const {
  * @return Index of the last visible icon.
  */
 int32_t icon_view_detail::IconViewBase::getVisibleEndIndex() const {
-    const int32_t rightmostX = ui_.getDisplayWidth() + iconWidth_;
+    const int32_t rightmostX = ui_.getDisplayWidth() + ICON_WIDTH;
     for (int32_t i = static_cast<int32_t>(items_.size()) - 1; i >= 0; --i) {
         if (calculateIconX(i) <= rightmostX) {
             return etl::min(static_cast<int32_t>(items_.size()) - 1, i + 1);

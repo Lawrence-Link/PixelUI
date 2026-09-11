@@ -102,13 +102,17 @@ public:
     void enableSelectedItemTitle(bool enable);
 
 private:
+    static constexpr int32_t TITLE_Y = 10;
+    static constexpr int32_t ICON_WIDTH = 24;
+    static constexpr int32_t ICON_HEIGHT = 24;
+    static constexpr int32_t SELECTOR_LENGTH = 30;
+
     PixelUI& ui_;
     etl::ivector<IconItem>& items_;
     SelectionCallback selectionCallback_;
     
     // Title-related members.
     etl::string<MAX_TEXT_LENGTH> title_;
-    int32_t titleY_ = 10;
     const uint8_t * font_title = NULL;
     
     // State.
@@ -123,20 +127,13 @@ private:
     int32_t scrollOffset_ = 0;
     int32_t animation_selector_coord_x = 0;
     int32_t animation_selector_length = 10;
-    int32_t selector_length = 30;
     int32_t animation_item_title_Y = 0;
     int32_t animation_pixel_dots = 0;
     int32_t animation_scroll_bar = 0;
     
     // Layout parameters.
-    int32_t iconWidth_ = 24;
-    int32_t iconHeight_ = 24;
-    int32_t iconSpacing_ = 14;
-    int32_t centerX_ = 0;
-    int32_t iconY_ = 0;
     IconViewLayout layout_{};
-    
-    etl::array<int32_t, 3> slotPositionsX_{};
+
     enum class AnimationSlot : uint8_t {
         PixelDots,
         SelectorLength,
