@@ -10,6 +10,24 @@ struct ChangeState {
     int32_t last = 0;
 };
 
+struct RejectingBindingState {
+    int32_t value = 0;
+    int32_t rejectedValue = 0;
+    bool rejectWrite = false;
+};
+
+bool readRejectingValue(const void* context, int32_t& value) {
+    value = static_cast<const RejectingBindingState*>(context)->value;
+    return true;
+}
+
+bool writeRejectingValue(void* context, int32_t value) {
+    RejectingBindingState& state = *static_cast<RejectingBindingState*>(context);
+    if (state.rejectWrite && value == state.rejectedValue) return false;
+    state.value = value;
+    return true;
+}
+
 void changed(void* context, int32_t value) {
     ChangeState& state = *static_cast<ChangeState*>(context);
     ++state.calls;
@@ -200,6 +218,24 @@ int main() {
     fullAnimationPopup.handleInput(InputEvent::SELECT);
     if (fullAnimationValue != 1123) return 18;
     ui.clearAllAnimations();
+
+    RejectingBindingState rejectingState{123, 123, false};
+    PopupValueDigits retryPopup(
+        ui, 100, 56,
+        ValueEditorBinding::custom(
+            &rejectingState, &readRejectingValue, &writeRejectingValue),
+        4, "", 100, nullptr, ValueEditPolicy::Live);
+    retryPopup.update(0);
+    retryPopup.update(300);
+    retryPopup.handleInput(InputEvent::RIGHT);
+    retryPopup.handleInput(InputEvent::SELECT);
+    retryPopup.handleInput(InputEvent::RIGHT);
+    if (rejectingState.value != 1123) return 19;
+    rejectingState.rejectWrite = true;
+    if (!retryPopup.update(401) || rejectingState.value != 1123) return 20;
+    rejectingState.rejectWrite = false;
+    if (!retryPopup.update(402) || rejectingState.value != 123) return 21;
+    if (retryPopup.update(702)) return 22;
 
     return 0;
 }

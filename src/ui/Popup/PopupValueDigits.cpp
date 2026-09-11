@@ -4,6 +4,7 @@
 
 #include "ui/Popup/PopupValueDigits.h"
 #include "PixelUI.h"
+#include <assert.h>
 
 PopupValueDigits::ControlGroup::ControlGroup(PixelUI& ui) : ui_(ui) {
     setClipChildren(false);
@@ -27,21 +28,17 @@ int32_t PopupValueDigits::maximumValue(uint8_t digitCount) {
 PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
                                    ValueEditSession& session, uint8_t digitCount,
                                    const char* title, uint16_t duration)
-    : PopupBase(
-          ui,
-          width < minimumWidth(isValidDigitCount(digitCount) ? digitCount : 1U)
-              ? minimumWidth(isValidDigitCount(digitCount) ? digitCount : 1U)
-              : width,
-          height < minimumHeight() ? minimumHeight() : height,
-          duration),
+    : PopupBase(ui, width, height, duration),
       title_(title),
       ownedSession_(0),
       session_(&session),
-      digitCount_(isValidDigitCount(digitCount) ? digitCount : 1U),
+      digitCount_(digitCount),
       controls_(ui),
       okButton_(ui, 0, 0, OK_WIDTH, ACTION_HEIGHT, "OK"),
       cancelButton_(ui, 0, 0, CANCEL_WIDTH, ACTION_HEIGHT, "CANCEL"),
       focusManager_(ui) {
+    assert(isValidLayout(width, height, digitCount));
+    assert(session.valid());
     initializeControls();
 }
 
@@ -49,22 +46,18 @@ PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
                                    ValueEditorBinding binding, uint8_t digitCount,
                                    const char* title, uint16_t duration,
                                    ValueCallback callback, ValueEditPolicy policy)
-    : PopupBase(
-          ui,
-          width < minimumWidth(isValidDigitCount(digitCount) ? digitCount : 1U)
-              ? minimumWidth(isValidDigitCount(digitCount) ? digitCount : 1U)
-              : width,
-          height < minimumHeight() ? minimumHeight() : height,
-          duration),
+    : PopupBase(ui, width, height, duration),
       title_(title),
       compatibilityCallback_(etl::move(callback)),
       ownedSession_(binding, policy),
       session_(&ownedSession_),
-      digitCount_(isValidDigitCount(digitCount) ? digitCount : 1U),
+      digitCount_(digitCount),
       controls_(ui),
       okButton_(ui, 0, 0, OK_WIDTH, ACTION_HEIGHT, "OK"),
       cancelButton_(ui, 0, 0, CANCEL_WIDTH, ACTION_HEIGHT, "CANCEL"),
       focusManager_(ui) {
+    assert(isValidLayout(width, height, digitCount));
+    assert(ownedSession_.valid());
     initializeControls();
 }
 
@@ -72,29 +65,26 @@ PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
                                    int32_t& value, uint8_t digitCount,
                                    const char* title, uint16_t duration,
                                    ValueCallback callback)
-    : PopupBase(
-          ui,
-          width < minimumWidth(isValidDigitCount(digitCount) ? digitCount : 1U)
-              ? minimumWidth(isValidDigitCount(digitCount) ? digitCount : 1U)
-              : width,
-          height < minimumHeight() ? minimumHeight() : height,
-          duration),
+    : PopupBase(ui, width, height, duration),
       title_(title),
       compatibilityCallback_(etl::move(callback)),
       ownedSession_(
           ValueEditorBinding::reference(value),
           ValueEditPolicy::CommitOnConfirm),
       session_(&ownedSession_),
-      digitCount_(isValidDigitCount(digitCount) ? digitCount : 1U),
+      digitCount_(digitCount),
       controls_(ui),
       okButton_(ui, 0, 0, OK_WIDTH, ACTION_HEIGHT, "OK"),
       cancelButton_(ui, 0, 0, CANCEL_WIDTH, ACTION_HEIGHT, "CANCEL"),
       focusManager_(ui) {
+    assert(isValidLayout(width, height, digitCount));
     initializeControls();
 }
 
 void PopupValueDigits::initializeControls() {
-    NumericRange::tryCreate(0, 9, 1, digitRange_);
+    const bool rangeCreated = NumericRange::tryCreate(0, 9, 1, digitRange_);
+    assert(rangeCreated);
+    (void)rangeCreated;
     const int32_t maximum = maximumValue(digitCount_);
     const int32_t sourceValue = session_ != nullptr && session_->valid()
         ? session_->draftValue()
@@ -133,12 +123,14 @@ void PopupValueDigits::initializeControls() {
             static_cast<uint16_t>(DIGIT_HEIGHT),
             digitRange_,
             NumericFormatter::integer(DIGIT_FORMAT));
-        if (digit == nullptr) continue;
+        assert(digit != nullptr);
         digits_[index] = digit;
         digit->setPresentation(NumScroll::Presentation::Bare);
         digit->setValueImmediate((displayedValue / divisor) % 10);
         digit->onLoadNoAnim();
-        controls_.addChild(*digit);
+        const bool digitAdded = controls_.addChild(*digit);
+        assert(digitAdded);
+        (void)digitAdded;
         divisor /= 10;
     }
 
@@ -151,14 +143,20 @@ void PopupValueDigits::initializeControls() {
     cancelButton_.setCallback([this]() { cancelEditing(); });
     okButton_.onLoadNoAnim();
     cancelButton_.onLoadNoAnim();
-    controls_.addChild(okButton_);
-    controls_.addChild(cancelButton_);
-    focusManager_.addWidget(&controls_);
+    const bool okAdded = controls_.addChild(okButton_);
+    const bool cancelAdded = controls_.addChild(cancelButton_);
+    const bool controlsAdded = focusManager_.addWidget(&controls_);
+    assert(okAdded && cancelAdded && controlsAdded);
+    (void)okAdded;
+    (void)cancelAdded;
+    (void)controlsAdded;
 }
 
 PopupValueDigits::~PopupValueDigits() {
     if (finalizationState_ == FinalizationState::Editing) {
-        cancelEditing(false);
+        const bool cancelled = cancelEditing(false);
+        assert(cancelled);
+        (void)cancelled;
     }
     destroyControls();
     ui().markDirty();
@@ -246,10 +244,9 @@ bool PopupValueDigits::cancelEditing(bool closePopup) {
     return true;
 }
 
-void PopupValueDigits::onClosing() {
-    if (finalizationState_ == FinalizationState::Editing) {
-        cancelEditing(false);
-    }
+bool PopupValueDigits::onClosing() {
+    return finalizationState_ != FinalizationState::Editing ||
+           cancelEditing(false);
 }
 
 void PopupValueDigits::drawContent(const PopupContentBounds& bounds) {

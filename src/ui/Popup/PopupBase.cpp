@@ -150,11 +150,10 @@ bool PopupBase::updateClosing(uint32_t currentTime) {
  * @brief Start the internal closing transition.
  */
 void PopupBase::requestClose() {
-    if (m_state != PopupState::CLOSING) {
+    if (m_state != PopupState::CLOSING && onClosing()) {
         m_state = PopupState::CLOSING;
         m_transitionStartTime = m_ui.getCurrentTime();
         m_transitionStartSize = m_currentBoxSize;
-        onClosing();
         m_ui.markDirty();
     }
 }

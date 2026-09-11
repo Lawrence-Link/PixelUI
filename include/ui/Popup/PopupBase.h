@@ -35,7 +35,8 @@ protected:
     virtual void drawContent(const PopupContentBounds& bounds) = 0;
     virtual bool handleContentInput(InputEvent event) { (void)event; return false; }
     virtual void onShown() {}
-    virtual void onClosing() {}
+    // Return false when the Popup cannot safely begin closing yet.
+    virtual bool onClosing() { return true; }
 
 public:
     PopupBase(PixelUI& ui, uint16_t width, uint16_t height, uint16_t duration);

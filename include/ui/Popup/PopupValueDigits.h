@@ -90,17 +90,28 @@ private:
 protected:
     void drawContent(const PopupContentBounds& bounds) override;
     bool handleContentInput(InputEvent event) override;
-    void onClosing() override;
+    bool onClosing() override;
 
 public:
+    /**
+     * @pre isValidLayout(width, height, digitCount) is true.
+     * @pre session.valid() is true and session outlives this Popup.
+     * @pre A Live session can restore its original value before destruction.
+     */
     PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
                      ValueEditSession& session, uint8_t digitCount,
                      const char* title = "", uint16_t duration = 3000);
+    /**
+     * @pre isValidLayout(width, height, digitCount) is true.
+     * @pre binding can be read and its contexts outlive this Popup.
+     * @pre A Live binding can restore its original value before destruction.
+     */
     PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
                      ValueEditorBinding binding, uint8_t digitCount,
                      const char* title, uint16_t duration,
                      ValueCallback callback = nullptr,
                      ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm);
+    /** @pre isValidLayout(width, height, digitCount) is true. */
     PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
                      int32_t& value, uint8_t digitCount,
                      const char* title = "", uint16_t duration = 3000,

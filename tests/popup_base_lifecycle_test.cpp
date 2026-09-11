@@ -11,6 +11,7 @@ public:
     int shownCount = 0;
     int closingCount = 0;
     int contentInputCount = 0;
+    bool allowClosing = true;
 
 protected:
     void drawContent(const PopupContentBounds&) override {}
@@ -24,7 +25,10 @@ protected:
     }
 
     void onShown() override { ++shownCount; }
-    void onClosing() override { ++closingCount; }
+    bool onClosing() override {
+        ++closingCount;
+        return allowClosing;
+    }
 };
 
 } // namespace
@@ -81,6 +85,20 @@ int main() {
     }
     ui.heartbeat(1);
     if (drawingPopup.update(ui.getCurrentTime())) return 19;
+
+    TestPopup vetoedPopup(ui, 1);
+    vetoedPopup.allowClosing = false;
+    if (!vetoedPopup.update(ui.getCurrentTime())) return 20;
+    ui.heartbeat(300);
+    if (!vetoedPopup.update(ui.getCurrentTime())) return 21;
+    ui.heartbeat(1);
+    if (!vetoedPopup.update(ui.getCurrentTime()) ||
+        vetoedPopup.closingCount != 1) return 22;
+    vetoedPopup.allowClosing = true;
+    if (!vetoedPopup.update(ui.getCurrentTime()) ||
+        vetoedPopup.closingCount != 2) return 23;
+    ui.heartbeat(300);
+    if (vetoedPopup.update(ui.getCurrentTime())) return 24;
 
     return 0;
 }
