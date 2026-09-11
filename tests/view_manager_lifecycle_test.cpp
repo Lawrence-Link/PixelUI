@@ -176,11 +176,11 @@ int main() {
     {
         U8G2 display;
         PixelUI ui(display);
-        IconView iconView(ui);
-        IconItemList items;
+        IconView<1> iconView(ui);
+        IconItemList<1> items;
         items.emplace_back("Item", nullptr, nullptr);
 
-        iconView.setItems(items);
+        if (!iconView.setItems(items)) return 1;
         iconView.setSelectionCallback([](int, const IconItem&) {});
         if ((ui.activeAnimationCount() != 0U) ||
             (ui.getActiveCoroutineCount() != 0U) ||

@@ -55,25 +55,27 @@ IconViewLayout calculateIconViewLayout(
  * @brief Construct an IconView instance and initialize slot positions.
  * @param ui Reference to the PixelUI context.
  */
-IconView::IconView(PixelUI& ui, const uint8_t * font) : ui_(ui), font_title(font) {
+icon_view_detail::IconViewBase::IconViewBase(
+    PixelUI& ui, etl::ivector<IconItem>& items, const uint8_t* font)
+    : ui_(ui), items_(items), font_title(font) {
     initializeSlotPositions();
     scrollOffset_ = -ui_.getDisplayWidth();
     animation_selector_coord_x = ui_.getDisplayWidth();
     animation_item_title_Y = ui_.getDisplayHeight() + 6;
 }
 
-IconView::~IconView() {
+icon_view_detail::IconViewBase::~IconViewBase() {
     cancelOwnAnimations();
 }
 
-void IconView::cancelOwnAnimations() {
+void icon_view_detail::IconViewBase::cancelOwnAnimations() {
     for (AnimationHandle& handle : animationHandles_) {
         ui_.cancelAnimation(handle);
         handle = INVALID_ANIMATION_HANDLE;
     }
 }
 
-bool IconView::animateOwned(
+bool icon_view_detail::IconViewBase::animateOwned(
     AnimationSlot slot, int32_t& value, int32_t target,
     uint32_t duration, EasingType easing, PROTECTION protection) {
     AnimationHandle& handle = animationHandles_[static_cast<size_t>(slot)];
@@ -94,7 +96,7 @@ bool IconView::animateOwned(
  * @brief Called when entering the IconView application.
  * @param exitCallback Callback function to trigger when exiting the view.
  */
-void IconView::onEnter(ExitCallback exitCallback) {
+void icon_view_detail::IconViewBase::onEnter(ExitCallback exitCallback) {
     IApplication::onEnter(exitCallback);  // Store the exit callback.
     cancelOwnAnimations();
     initializeSlotPositions();
@@ -114,7 +116,7 @@ void IconView::onEnter(ExitCallback exitCallback) {
 /**
  * @brief Called when the view is resumed from a paused state.
  */
-void IconView::onResume() {
+void icon_view_detail::IconViewBase::onResume() {
     animation_scroll_bar = 0;
     scrollOffset_ -= iconWidth_ + 2 * iconSpacing_;
     animateOwned(AnimationSlot::PixelDots, animation_pixel_dots,
@@ -128,7 +130,7 @@ void IconView::onResume() {
 /**
  * @brief Called when the view is paused.
  */
-void IconView::onPause() {
+void icon_view_detail::IconViewBase::onPause() {
     ui_.markFading();
     cancelOwnAnimations();
     animation_selector_length = selector_length;
@@ -139,7 +141,7 @@ void IconView::onPause() {
  * @param event The input event type (LEFT, RIGHT, SELECT, BACK, etc.).
  * @return true if the event was handled, false otherwise.
  */
-bool IconView::handleInput(InputEvent event) {
+bool icon_view_detail::IconViewBase::handleInput(InputEvent event) {
     switch (event) {
         case ICONVIEW_NAVI_LEFT:   navigateLeft(); return true;
         case ICONVIEW_NAVI_RIGHT:  navigateRight(); return true;
@@ -152,7 +154,7 @@ bool IconView::handleInput(InputEvent event) {
 /**
  * @brief Render all elements of the IconView UI.
  */
-void IconView::draw() {
+void icon_view_detail::IconViewBase::draw() {
     if (!title_.empty()) drawTitle();
     drawSelector(
         animation_selector_coord_x, layout_.selectorY,
@@ -171,16 +173,19 @@ void IconView::draw() {
  * @brief Set the list of icons to be displayed.
  * @param items A vector of IconItem structures.
  */
-void IconView::setItems(const IconItemList& items) {
-    items_ = items;
+bool icon_view_detail::IconViewBase::setItems(
+    const etl::ivector<IconItem>& items) {
+    if (items.size() > items_.max_size()) return false;
+    items_.assign(items.begin(), items.end());
     currentIndex_ = 0;
+    return true;
 }
 
 /**
  * @brief Set callback to be triggered when an icon is selected.
  * @param callback The function to call on selection.
  */
-void IconView::setSelectionCallback(SelectionCallback callback) {
+void icon_view_detail::IconViewBase::setSelectionCallback(SelectionCallback callback) {
     selectionCallback_ = callback;
 }
 
@@ -188,13 +193,13 @@ void IconView::setSelectionCallback(SelectionCallback callback) {
  * @brief Set the title text displayed at the top of the view.
  * @param title Pointer to a C-string title (can be nullptr).
  */
-void IconView::setTitle(const char* title) {
+void icon_view_detail::IconViewBase::setTitle(const char* title) {
     title_ = title ? title : "";
 }
 
-void IconView::enableProgressBar(bool enable) { progressBarEnabled_ = enable; }
-void IconView::enableStatusText(bool enable) { statusTextEnabled_ = enable; }
-void IconView::enableSelectedItemTitle(bool enable) { selectedItemTitleEnabled_ = enable; }
+void icon_view_detail::IconViewBase::enableProgressBar(bool enable) { progressBarEnabled_ = enable; }
+void icon_view_detail::IconViewBase::enableStatusText(bool enable) { statusTextEnabled_ = enable; }
+void icon_view_detail::IconViewBase::enableSelectedItemTitle(bool enable) { selectedItemTitleEnabled_ = enable; }
 
 // -----------------------------------------------------------------------------
 // Navigation and Interaction
@@ -203,7 +208,7 @@ void IconView::enableSelectedItemTitle(bool enable) { selectedItemTitleEnabled_ 
 /**
  * @brief Navigate to the previous icon in the list.
  */
-void IconView::navigateLeft() {
+void icon_view_detail::IconViewBase::navigateLeft() {
     if (items_.empty()) return;
     currentIndex_ = (currentIndex_ - 1 + items_.size()) % items_.size();
     scrollToIndex(currentIndex_);
@@ -212,7 +217,7 @@ void IconView::navigateLeft() {
 /**
  * @brief Navigate to the next icon in the list.
  */
-void IconView::navigateRight() {
+void icon_view_detail::IconViewBase::navigateRight() {
     if (items_.empty()) return;
     currentIndex_ = (currentIndex_ + 1) % items_.size();
     scrollToIndex(currentIndex_);
@@ -221,7 +226,7 @@ void IconView::navigateRight() {
 /**
  * @brief Select the currently focused icon and trigger the callback.
  */
-void IconView::selectCurrentItem() {
+void icon_view_detail::IconViewBase::selectCurrentItem() {
     if (selectionCallback_ && !items_.empty()) {
         selectionCallback_(currentIndex_, items_[currentIndex_]);
     }
@@ -232,7 +237,7 @@ void IconView::selectCurrentItem() {
  * @param newIndex The index of the icon to scroll to.
  * @note This method triggers selector and scroll animations.
  */
-void IconView::scrollToIndex(int newIndex) {
+void icon_view_detail::IconViewBase::scrollToIndex(int newIndex) {
     const int32_t totalItems = static_cast<int32_t>(items_.size());
     if (totalItems == 0) return;
 
@@ -273,7 +278,7 @@ void IconView::scrollToIndex(int newIndex) {
 /**
  * @brief Update the progress bar animation according to current selection.
  */
-void IconView::updateProgressBar() {
+void icon_view_detail::IconViewBase::updateProgressBar() {
     if (progressBarEnabled_ && !items_.empty()) {
         const int32_t target = static_cast<int32_t>(
             (static_cast<int64_t>(currentIndex_ + 1) * ui_.getDisplayWidth()) /
@@ -290,7 +295,7 @@ void IconView::updateProgressBar() {
 /**
  * @brief Draw the title text centered at the top of the display.
  */
-void IconView::drawTitle() {
+void icon_view_detail::IconViewBase::drawTitle() {
     Canvas& display = ui_.getCanvas();
     display.setFont(PIXELUI_FONT_SMALL);
     int titleWidth = display.getStrWidth(title_.c_str());
@@ -300,7 +305,7 @@ void IconView::drawTitle() {
 /**
  * @brief Draw the animated progress bar at the bottom.
  */
-void IconView::drawProgressBar() {
+void icon_view_detail::IconViewBase::drawProgressBar() {
     Canvas& display = ui_.getCanvas();
     for (int i = 0; i <= static_cast<int>(animation_pixel_dots); i++) {
         display.drawPixel(i * 2, layout_.progressY);
@@ -311,7 +316,7 @@ void IconView::drawProgressBar() {
 /**
  * @brief Draw current item index and total count as status text.
  */
-void IconView::drawStatusText() {
+void icon_view_detail::IconViewBase::drawStatusText() {
     if (items_.empty()) return;
     Canvas& display = ui_.getCanvas();
     char statusText[16]{};
@@ -326,7 +331,7 @@ void IconView::drawStatusText() {
 /**
  * @brief Draw the title of the currently selected item below the icons.
  */
-void IconView::drawSelectedItemTitle() {
+void icon_view_detail::IconViewBase::drawSelectedItemTitle() {
     if (items_.empty()) return;
     Canvas& display = ui_.getCanvas();
     const auto& currentItem = items_[currentIndex_];
@@ -338,7 +343,7 @@ void IconView::drawSelectedItemTitle() {
 /**
  * @brief Draw visible icons in a horizontal scroll layout.
  */
-void IconView::drawHorizontalIconList() {
+void icon_view_detail::IconViewBase::drawHorizontalIconList() {
     if (items_.empty()) {
         // Show a fallback message if no icons exist.
         Canvas& display = ui_.getCanvas();
@@ -364,7 +369,7 @@ void IconView::drawHorizontalIconList() {
  * @param x X coordinate of icon.
  * @param y Y coordinate of icon.
  */
-void IconView::drawIcon(const IconItem& item, int32_t x, int32_t y) {
+void icon_view_detail::IconViewBase::drawIcon(const IconItem& item, int32_t x, int32_t y) {
     Canvas& display = ui_.getCanvas();
     if (item.bitmap) {
         // Center 24x24 bitmap within icon area.
@@ -380,7 +385,7 @@ void IconView::drawIcon(const IconItem& item, int32_t x, int32_t y) {
 /**
  * @brief Precompute X-coordinates for icon slots based on display width.
  */
-void IconView::initializeSlotPositions() {
+void icon_view_detail::IconViewBase::initializeSlotPositions() {
     layout_ = calculateIconViewLayout(
         ui_.getDisplayWidth(), ui_.getDisplayHeight());
     centerX_ = layout_.centerX;
@@ -395,7 +400,7 @@ void IconView::initializeSlotPositions() {
  * @param y Y coordinate of selector center.
  * @param length Total side length of the selector square.
  */
-void IconView::drawSelector(int32_t x, int32_t y, int32_t length) {
+void icon_view_detail::IconViewBase::drawSelector(int32_t x, int32_t y, int32_t length) {
     Canvas& display = ui_.getCanvas();
     const int32_t half_length = length / 2;
 
@@ -415,7 +420,7 @@ void IconView::drawSelector(int32_t x, int32_t y, int32_t length) {
  * @param index Index of the icon.
  * @return Computed X coordinate.
  */
-int32_t IconView::calculateIconX(int32_t index) const {
+int32_t icon_view_detail::IconViewBase::calculateIconX(int32_t index) const {
     return (index * (iconWidth_ + iconSpacing_)) + scrollOffset_;
 }
 
@@ -423,7 +428,7 @@ int32_t IconView::calculateIconX(int32_t index) const {
  * @brief Determine first visible icon index based on scroll offset.
  * @return Index of the first visible icon.
  */
-int32_t IconView::getVisibleStartIndex() const {
+int32_t icon_view_detail::IconViewBase::getVisibleStartIndex() const {
     const int32_t leftmostX = -iconWidth_;
     for (int32_t i = 0; i < static_cast<int32_t>(items_.size()); ++i) {
         if (calculateIconX(i) >= leftmostX) return etl::max(0, i - 1);
@@ -435,7 +440,7 @@ int32_t IconView::getVisibleStartIndex() const {
  * @brief Determine last visible icon index based on scroll offset.
  * @return Index of the last visible icon.
  */
-int32_t IconView::getVisibleEndIndex() const {
+int32_t icon_view_detail::IconViewBase::getVisibleEndIndex() const {
     const int32_t rightmostX = ui_.getDisplayWidth() + iconWidth_;
     for (int32_t i = static_cast<int32_t>(items_.size()) - 1; i >= 0; --i) {
         if (calculateIconX(i) <= rightmostX) {

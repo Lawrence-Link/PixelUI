@@ -49,8 +49,10 @@ int main() {
            sizeof(IWidget), alignof(IWidget));
     printf("sizeof(FocusManager)=%zu alignof(FocusManager)=%zu\n",
            sizeof(FocusManager), alignof(FocusManager));
-    printf("sizeof(IconView)=%zu alignof(IconView)=%zu\n",
-           sizeof(IconView), alignof(IconView));
+    printf("sizeof(IconView<1>)=%zu alignof(IconView<1>)=%zu\n",
+           sizeof(IconView<1>), alignof(IconView<1>));
+    printf("sizeof(IconView<MAX_APP_NUM>)=%zu alignof(IconView<MAX_APP_NUM>)=%zu\n",
+           sizeof(IconView<MAX_APP_NUM>), alignof(IconView<MAX_APP_NUM>));
     printf("sizeof(ListView)=%zu alignof(ListView)=%zu\n",
            sizeof(ListView), alignof(ListView));
     printf("sizeof(Animation)=%zu alignof(Animation)=%zu\n",

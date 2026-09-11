@@ -35,12 +35,19 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
-    IconView view(ui);
-    IconItemList items;
+    static_assert(sizeof(IconView<1>) < sizeof(IconView<3>));
+    IconView<3> view(ui);
+    IconItemList<3> items;
     items.push_back({"One", nullptr});
     items.push_back({"Two", nullptr});
     items.push_back({"Three", nullptr});
-    view.setItems(items);
+    if (!view.setItems(items)) return 3;
+    IconItemList<4> tooManyItems;
+    tooManyItems.push_back({"One", nullptr});
+    tooManyItems.push_back({"Two", nullptr});
+    tooManyItems.push_back({"Three", nullptr});
+    tooManyItems.push_back({"Four", nullptr});
+    if (view.setItems(tooManyItems)) return 4;
     view.enableProgressBar(true);
     view.enableStatusText(true);
     view.onEnter([]() {});
@@ -50,7 +57,7 @@ int main() {
     view.draw();
 
     const uint8_t* frame = u8g2_GetBufferPtr(display.getU8g2());
-    if (frameHash(frame, ui.getDisplayBufferSize()) != 3139118789U) return 3;
+    if (frameHash(frame, ui.getDisplayBufferSize()) != 3139118789U) return 5;
     bool selectorBandSet = false;
     bool progressBandSet = false;
     for (int32_t x = 0; x < 128; ++x) {
@@ -61,7 +68,7 @@ int main() {
             ((frame[x + (standard.progressY / 8) * 128] &
               (1U << (standard.progressY % 8))) != 0U);
     }
-    if (!selectorBandSet || !progressBandSet) return 4;
+    if (!selectorBandSet || !progressBandSet) return 6;
 
     return 0;
 }

@@ -30,10 +30,10 @@
 
 namespace {
 
-class AppLauncherView final : public IconView {
+class AppLauncherView final : public IconView<MAX_APP_NUM> {
 public:
     AppLauncherView(PixelUI& ui, ViewManager& viewManager)
-        : IconView(ui), viewManager_(viewManager) {}
+        : IconView<MAX_APP_NUM>(ui), viewManager_(viewManager) {}
 
     void onEnter(ExitCallback exitCallback) override {
         setTitle("< Apps >");
@@ -42,7 +42,7 @@ public:
         enableSelectedItemTitle(true);
 
         const auto& apps = AppManager::getInstance().getAppVector();
-        IconItemList iconItems;
+        IconItemList<MAX_APP_NUM> iconItems;
         for (const auto& app : apps) {
             iconItems.emplace_back(app.title, app.bitmap, const_cast<AppItem*>(&app));
         }
@@ -56,7 +56,7 @@ public:
             }
         });
 
-        IconView::onEnter(exitCallback);
+        IconView<MAX_APP_NUM>::onEnter(exitCallback);
     }
 
 private:

@@ -35,7 +35,7 @@
 
 // A generic interface for an icon-based item.
 struct IconItem {
-    // All pointers are non-owning and must outlive every IconView copy of this item.
+    // All pointers are non-owning and must outlive the IconView storing this item.
     const char* title;
     const uint8_t* bitmap;
     void* userData; // Used to store type-specific data.
@@ -44,7 +44,8 @@ struct IconItem {
         : title(t), bitmap(b), userData(data) {}
 };
 
-using IconItemList = etl::vector<IconItem, MAX_ICONVIEW_ITEMS>;
+template <size_t Capacity>
+using IconItemList = etl::vector<IconItem, Capacity>;
 // The callback object is owned; references captured by it are non-owning.
 using SelectionCallback = etl::inplace_function<void(int index, const IconItem& item), CALLBACK_STORAGE_SIZE>;
 
@@ -64,11 +65,23 @@ struct IconViewLayout {
 // the right/bottom edge.
 IconViewLayout calculateIconViewLayout(int32_t displayWidth, int32_t displayHeight);
 
-// IconView is now a complete, standalone view component.
-class IconView : public IApplication {
+namespace icon_view_detail {
+
+template <size_t Capacity>
+class IconItemStorage {
+    static_assert(Capacity > 0, "IconView capacity must be positive");
+
+protected:
+    IconItemList<Capacity> items_;
+};
+
+class IconViewBase : public IApplication {
+protected:
+    IconViewBase(PixelUI& ui, etl::ivector<IconItem>& items,
+                 const uint8_t* font);
+
 public:
-    IconView(PixelUI& ui, const uint8_t * font = PIXELUI_FONT_TEXT);
-    ~IconView() override;
+    ~IconViewBase() override;
 
     // --- IApplication Interface Implementation ---
     void draw() override;
@@ -77,8 +90,9 @@ public:
     void onResume() override;
     void onPause() override;
 
-    // Configuration only; external animation registration starts in onEnter().
-    void setItems(const IconItemList& items);
+    // Returns false without changing the current items when capacity is exceeded.
+    // External animation registration starts in onEnter().
+    bool setItems(const etl::ivector<IconItem>& items);
     void setSelectionCallback(SelectionCallback callback);
     void setTitle(const char* title);
     
@@ -89,7 +103,7 @@ public:
 
 private:
     PixelUI& ui_;
-    IconItemList items_;
+    etl::ivector<IconItem>& items_;
     SelectionCallback selectionCallback_;
     
     // Title-related members.
@@ -159,4 +173,22 @@ private:
     int32_t calculateIconX(int32_t index) const;
     int32_t getVisibleStartIndex() const;
     int32_t getVisibleEndIndex() const;
+};
+
+} // namespace icon_view_detail
+
+// Capacity is selected per view while storage remains fixed and allocation-free.
+template <size_t Capacity>
+class IconView : private icon_view_detail::IconItemStorage<Capacity>,
+                 public icon_view_detail::IconViewBase {
+    using Storage = icon_view_detail::IconItemStorage<Capacity>;
+
+public:
+    explicit IconView(PixelUI& ui, const uint8_t* font = PIXELUI_FONT_TEXT)
+        : Storage(), icon_view_detail::IconViewBase(ui, Storage::items_, font) {}
+
+    IconView(const IconView&) = delete;
+    IconView& operator=(const IconView&) = delete;
+    IconView(IconView&&) = delete;
+    IconView& operator=(IconView&&) = delete;
 };
