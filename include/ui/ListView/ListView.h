@@ -157,6 +157,11 @@ protected:
     int32_t toggleBoxXFor(const ListItem& item) const;
 
 private:
+    static constexpr int32_t SPACING = 7;
+    static constexpr int32_t TOP_MARGIN = 3;
+    static constexpr int32_t CURSOR_X = 1;
+    static constexpr int32_t VISIBLE_ITEM_COUNT = LISTVIEW_ITEMS_PER_PAGE;
+
     ListItem* m_itemList;
     int32_t m_itemLength; // signed index length (last index). Avoid mixing signed/unsigned.
     
@@ -166,32 +171,25 @@ private:
         AnimationHandle handle = INVALID_ANIMATION_HANDLE;
     } switchAnimState_;
 
-    static constexpr size_t MAX_VIEW_ANIMATIONS = 6U;
+    static constexpr size_t MAX_VIEW_ANIMATIONS = 5U;
     static constexpr size_t MAX_LOAD_ANIMATIONS = LISTVIEW_ITEMS_PER_PAGE + 1U;
     etl::vector<AnimationHandle, MAX_VIEW_ANIMATIONS> viewAnimations_;
     etl::vector<AnimationHandle, MAX_LOAD_ANIMATIONS> loadAnimations_;
 
-    // --- Layout and Spacing Variables ---
-    uint8_t spacing_ = 7;
-    uint8_t topMargin_ = 3;
-    uint8_t FontHeight = 0;
-    
     // History stack to support nested menus (for back navigation).
     etl::vector<etl::pair<etl::pair<ListItem*, int32_t>, int32_t>, MAX_LISTVIEW_DEPTH> m_history_stack;
 
     // --- Cursor Variables ---
     int32_t CursorY = -6;
-    int32_t CursorX = 1;
     int32_t CursorWidth = 0;
     
     // --- Scroll Variables ---
     int32_t topVisibleIndex_ = 0;           // Index of the first item visible on screen.
-    int32_t visibleItemCount_ = LISTVIEW_ITEMS_PER_PAGE; // Number of items that can be displayed at once.
     
     // --- Load Animation Variables ---
     int32_t itemLoadAnimations_[LISTVIEW_ITEMS_PER_PAGE + 1]; // Tracks animation progress for each item.
     bool isInitialLoad_ = true;
-    int32_t animation_pixel_dots = 0;
+    uint8_t FontHeight = 0;
     
     // --- Progress Bar Variables ---
     int32_t progress_bar_top = 0;

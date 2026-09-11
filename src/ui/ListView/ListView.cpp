@@ -120,13 +120,9 @@ void ListView::onEnter(ExitCallback exitCallback){
     onLoad(); // Initialize item data before calculating box states
 
     // Reset item load animation states
-    for (int i = 0; i < visibleItemCount_ + 1; i++) {
+    for (int i = 0; i < VISIBLE_ITEM_COUNT + 1; i++) {
         itemLoadAnimations_[i] = 0;
     }
-
-    // Animate scrollbar
-    animateOwned(animation_pixel_dots, m_ui.getDisplayHeight() / 2, 400,
-                 EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     
     startLoadAnimation();
     scrollToTarget();
@@ -141,7 +137,7 @@ void ListView::onEnter(ExitCallback exitCallback){
 void ListView::startLoadAnimation() {
     cancelLoadAnimations();
     isInitialLoad_ = true;
-    int maxVisible = etl::min(visibleItemCount_ + 1, (int32_t)(m_itemLength + 1));
+    int maxVisible = etl::min(VISIBLE_ITEM_COUNT + 1, (int32_t)(m_itemLength + 1));
 
     for (int i = 0; i < maxVisible; i++) {
         int duration = 250 + i * 60;
@@ -178,7 +174,7 @@ void ListView::startLoadAnimation() {
  */
 bool ListView::shouldScroll(int newCursor) {
     return newCursor < topVisibleIndex_ ||
-           newCursor >= topVisibleIndex_ + visibleItemCount_;
+           newCursor >= topVisibleIndex_ + VISIBLE_ITEM_COUNT;
 }
 
 /**
@@ -190,16 +186,16 @@ bool ListView::shouldScroll(int newCursor) {
 void ListView::updateScrollPosition() {
     if (!shouldScroll(currentCursor)) return;
 
-    const int32_t rowHeight = FontHeight + spacing_;
+    const int32_t rowHeight = FontHeight + SPACING;
     int32_t newTopIndex = topVisibleIndex_;
     if (currentCursor < topVisibleIndex_) {
         newTopIndex = currentCursor;
-    } else if (currentCursor >= topVisibleIndex_ + visibleItemCount_) {
-        newTopIndex = currentCursor - visibleItemCount_ + 1;
+    } else if (currentCursor >= topVisibleIndex_ + VISIBLE_ITEM_COUNT) {
+        newTopIndex = currentCursor - VISIBLE_ITEM_COUNT + 1;
     }
 
     const int32_t maxTopIndex = etl::max(
-        (int32_t)0, m_itemLength + 1 - visibleItemCount_);
+        (int32_t)0, m_itemLength + 1 - VISIBLE_ITEM_COUNT);
     newTopIndex = etl::max((int32_t)0,
                            etl::min(newTopIndex, maxTopIndex));
     if (newTopIndex == topVisibleIndex_) return;
@@ -219,7 +215,7 @@ void ListView::updateScrollPosition() {
  * @return Screen Y position of the item including scroll offset.
  */
 int32_t ListView::calculateItemY(int itemIndex) {
-    return topMargin_ + itemIndex * (FontHeight + spacing_) +
+    return TOP_MARGIN + itemIndex * (FontHeight + SPACING) +
            m_ui.getCanvas().getFontAscent();
 }
 
@@ -233,13 +229,13 @@ void ListView::scrollToTarget(){
         return;
     }
 
-    const int32_t contentHeight = topMargin_ +
-        (m_itemLength + 1) * (FontHeight + spacing_);
+    const int32_t contentHeight = TOP_MARGIN +
+        (m_itemLength + 1) * (FontHeight + SPACING);
     m_ui.getCanvas().camera().setContentHeight(contentHeight);
     updateScrollPosition();
     
     Canvas& canvas = m_ui.getCanvas();
-    int32_t targetCursorY = topMargin_ + currentCursor * (FontHeight + spacing_) - 1;
+    int32_t targetCursorY = TOP_MARGIN + currentCursor * (FontHeight + SPACING) - 1;
     
     const int32_t displayHeight = m_ui.getDisplayHeight();
     animateOwned(CursorY, targetCursorY, 150, EasingType::EASE_IN_OUT_CUBIC);
@@ -412,7 +408,7 @@ bool ListView::handleInput(InputEvent event) {
 void ListView::drawCursor() {
     Canvas& canvas = m_ui.getCanvas();
     canvas.setDrawColor(2);
-    canvas.drawRBox(CursorX, CursorY - 2, CursorWidth, FontHeight + 3, 0);
+    canvas.drawRBox(CURSOR_X, CursorY - 2, CursorWidth, FontHeight + 3, 0);
     canvas.setDrawColor(1);
 
     U8G2& overlay = canvas.rawDisplay();
@@ -451,11 +447,11 @@ void ListView::onExit() {
 void ListView::draw() {
     Canvas& canvas = m_ui.getCanvas();
     canvas.setFont(PIXELUI_FONT_TEXT);
-    const int32_t rowHeight = FontHeight + spacing_;
+    const int32_t rowHeight = FontHeight + SPACING;
     const int32_t cameraY = canvas.camera().storedY();
     int startIndex = etl::max((int32_t)0, topVisibleIndex_ - 2);
-    int endIndex = etl::min(m_itemLength, topVisibleIndex_ + visibleItemCount_ + 2);
-    canvas.setContentHeight(topMargin_ + (m_itemLength + 1) * rowHeight);
+    int endIndex = etl::min(m_itemLength, topVisibleIndex_ + VISIBLE_ITEM_COUNT + 2);
+    canvas.setContentHeight(TOP_MARGIN + (m_itemLength + 1) * rowHeight);
     
     for (int itemIndex = startIndex; itemIndex <= endIndex; itemIndex++) {
         int32_t itemY = calculateItemY(itemIndex);
@@ -465,7 +461,7 @@ void ListView::draw() {
             int32_t drawX = 4;
             if (isInitialLoad_) {
                 int animIndex = itemIndex - topVisibleIndex_;
-                if (animIndex >= 0 && animIndex < visibleItemCount_ + 1) {
+                if (animIndex >= 0 && animIndex < VISIBLE_ITEM_COUNT + 1) {
                     int32_t loadProgress = itemLoadAnimations_[animIndex];
                     drawX = 4 + (FIXED_POINT_ONE - loadProgress) * 30 / FIXED_POINT_ONE;
                 }
