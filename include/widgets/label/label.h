@@ -26,28 +26,74 @@
 
 #pragma once
 
+#include "config.h"
 #include "../IWidget.h"
+#include "calc/TextAlignHelper/TextAlignHelper.h"
+#if PIXELUI_USE_LABEL_SCROLL
+#include "core/scheduling/UiDeadlineScheduler.h"
+#endif
 
 enum class POS {
     TOP, BOTTOM, LEFT, RIGHT
 };
 
-class Label : public IWidget {
+class Label : public IWidget
+#if PIXELUI_USE_LABEL_SCROLL
+            , private UiDeadlineSource
+#endif
+{
+public:
+    enum class Overflow : uint8_t {
+        Clip,
+        AutoScroll
+    };
+
 private:
     PixelUI& m_ui;
     int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
-    const char* src;
-    int32_t anim_w = 0, anim_h = 0;
+    const char* src = nullptr;
     int32_t anim_x = 0, anim_y = 0;
+    int32_t text_width_ = 0;
+    int32_t font_height_ = 0;
+    int32_t load_distance_ = 0;
     VoidCallback m_callback;
     POS load_pos;
     uint8_t const* m_font;
+    Overflow overflow_ = Overflow::Clip;
+    TextAlignX text_alignment_ = TextAlignX::Left;
+    bool loaded_ = false;
+
+#if PIXELUI_USE_LABEL_SCROLL
+    enum class ScrollPhase : uint8_t {
+        StartPause,
+        ScrollingToEnd,
+        EndPause,
+        ScrollingToStart
+    };
+
+    int32_t scroll_offset_ = 0;
+    uint32_t next_scroll_deadline_ = 0;
+    ScrollPhase scroll_phase_ = ScrollPhase::StartPause;
+    bool scroll_running_ = false;
+
+    uint32_t nextWakeupMs(uint32_t currentTime) const override;
+    bool update(uint32_t currentTime) override;
+    void restartAutoScroll(uint32_t additionalDelayMs = 0U);
+    void stopAutoScroll();
+#endif
+
+    void refreshMetrics();
     void drawSelf(const WidgetRenderContext& context) override;
     Canvas& display() override;
 public:
     Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM, const uint8_t* font = PIXELUI_FONT_TEXT);
-    ~Label() = default;
+    Label(PixelUI& ui, uint16_t x, uint16_t y, uint16_t viewportWidth,
+          const char* content, POS pos = POS::BOTTOM,
+          const uint8_t* font = PIXELUI_FONT_TEXT);
+    ~Label() override = default;
     void onLoad() override;
+    // Activate metrics and overflow behavior when a parent owns the animation.
+    void onLoadImmediately();
     void onOffload() override;
     bool onSelect() override ;
     void setLoadPos(POS pos) {load_pos = pos;};
@@ -56,11 +102,16 @@ public:
         m_x = x; m_y = y;
         setWidgetBounds({m_x, m_y, m_w, m_h});
     };
+    void setSize(uint16_t w, uint16_t h);
+    void setViewportWidth(uint16_t width);
+    void clearViewportWidth() { setViewportWidth(0U); }
+    uint16_t getViewportWidth() const { return static_cast<uint16_t>(m_w); }
+    void setOverflow(Overflow overflow);
+    Overflow getOverflow() const { return overflow_; }
+    void setTextAlignment(TextAlignX alignment);
+    TextAlignX getTextAlignment() const { return text_alignment_; }
+    void setText(const char* source);
 
-    void setSize(uint16_t w, uint16_t h) {
-        m_w = w; m_h = h;
-        setWidgetBounds({m_x, m_y, m_w, m_h});
-    }
-    
-    void setText(const char* source) {src = source;};
+private:
+    void load(bool animate);
 };

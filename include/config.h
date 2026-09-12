@@ -38,6 +38,7 @@
 #define PIXELUI_USE_POPUP               1
 #define PIXELUI_USE_COROUTINE           1
 #define PIXELUI_USE_FOCUS               1
+#define PIXELUI_USE_LABEL_SCROLL        1
 
 /* Power policy. 0 keeps the host's periodic timer; 1 allows idle tick suppression. */
 #ifndef PIXELUI_ENABLE_TICKLESS

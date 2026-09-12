@@ -27,8 +27,37 @@ enum class TextAlignY {
     Baseline
 };
 
+enum class TextOverflowPlacement {
+    PreserveAlignment,
+    PinToLeadingEdge
+};
+
 class TextAlignHelper {
 public:
+
+    static int32_t calcAlignedOffset(
+        int32_t area_width,
+        int32_t text_width,
+        TextAlignX align,
+        TextOverflowPlacement overflow =
+            TextOverflowPlacement::PreserveAlignment
+    ) {
+        if (overflow == TextOverflowPlacement::PinToLeadingEdge &&
+            text_width > area_width) {
+            return 0;
+        }
+
+        switch (align) {
+        case TextAlignX::Left:
+            return 0;
+        case TextAlignX::Center:
+            return (area_width - text_width) / 2;
+        case TextAlignX::Right:
+            return area_width - text_width;
+        default:
+            return 0;
+        }
+    }
 
     // calculate X position for centered text
     static int16_t calcCenteredX(
@@ -38,7 +67,9 @@ public:
         const char* utf8
     ) {
         int16_t text_width = u8g2_GetUTF8Width(u8g2, utf8);
-        return area_x + (area_w - text_width) / 2;
+        return static_cast<int16_t>(
+            area_x + calcAlignedOffset(
+                area_w, text_width, TextAlignX::Center));
     }
 
     static int16_t calcAlignedX(
@@ -50,19 +81,8 @@ public:
     ) {
         int16_t text_width = u8g2_GetUTF8Width(u8g2, utf8);
 
-        switch (align) {
-        case TextAlignX::Left:
-            return area_x;
-
-        case TextAlignX::Center:
-            return area_x + (area_w - text_width) / 2;
-
-        case TextAlignX::Right:
-            return area_x + area_w - text_width;
-
-        default:
-            return area_x;
-        }
+        return static_cast<int16_t>(
+            area_x + calcAlignedOffset(area_w, text_width, align));
     }
 
     static int16_t calcAlignedBaselineY(

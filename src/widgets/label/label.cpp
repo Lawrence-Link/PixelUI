@@ -26,6 +26,21 @@
 
 #include "widgets/label/label.h"
 #include "PixelUI.h"
+#if PIXELUI_USE_LABEL_SCROLL
+#include "core/TimeUtils.h"
+#endif
+
+namespace {
+
+constexpr uint32_t LOAD_ANIMATION_DURATION_MS = 300U;
+
+#if PIXELUI_USE_LABEL_SCROLL
+constexpr uint32_t SCROLL_START_PAUSE_MS = 800U;
+constexpr uint32_t SCROLL_END_PAUSE_MS = 500U;
+constexpr uint32_t SCROLL_PIXEL_INTERVAL_MS = 50U;
+#endif
+
+} // namespace
 
 /**
  * @brief Constructor for Label widget.
@@ -36,11 +51,38 @@
  * @param pos Label alignment position relative to (x, y).
  */
 Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, const uint8_t* font)
-    : m_ui(ui), m_x(x), m_y(y), src(content), load_pos(pos), m_font(font)
+    : Label(ui, x, y, 0U, content, pos, font)
+{
+}
+
+Label::Label(PixelUI& ui, uint16_t x, uint16_t y, uint16_t viewportWidth,
+             const char* content, POS pos, const uint8_t* font)
+#if PIXELUI_USE_LABEL_SCROLL
+    : UiDeadlineSource(ui.m_deadlineScheduler)
+    , m_ui(ui)
+#else
+    : m_ui(ui)
+#endif
+    , m_x(x)
+    , m_y(y)
+    , m_w(viewportWidth)
+    , src(content)
+    , load_pos(pos)
+    , m_font(font)
 {
     setFocusable(true);
     setFocusInsets({1, 1, 1, 1});
     setWidgetBounds({m_x, m_y, m_w, m_h});
+}
+
+void Label::refreshMetrics() {
+    Canvas& canvas = m_ui.getCanvas();
+    const uint8_t* previousFont = canvas.rawDisplay().getU8g2()->font;
+    canvas.setFont(m_font);
+    font_height_ = canvas.getAscent() - canvas.getDescent();
+    load_distance_ = canvas.getFontAscent() + canvas.getFontDescent();
+    text_width_ = src ? canvas.getUTF8Width(src) : 0;
+    if (previousFont) canvas.setFont(previousFont);
 }
 
 /**
@@ -48,43 +90,187 @@ Label::Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos, 
  *        based on alignment and triggers slide-in animation.
  */
 void Label::onLoad() {
-    Canvas& u8g2 = m_ui.getCanvas();
-    u8g2.setFont(m_font);
+    load(true);
+}
 
-    // Calculate font height
-    int8_t font_height = u8g2.getFontAscent() + u8g2.getFontDescent();
+void Label::onLoadImmediately() {
+    load(false);
+}
 
-    // Set initial animated position based on alignment
-    switch (load_pos) {
-        case POS::TOP: {
-            anim_x = m_x;
-            anim_y = m_y - font_height; 
-            m_ui.animate(anim_y, m_y, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
-        } break;
-        case POS::BOTTOM: {
-            anim_x = m_x;
-            anim_y = m_y + font_height; 
-            m_ui.animate(anim_y, m_y, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
-        } break;
-        case POS::LEFT: {
-            anim_x = m_x - u8g2.getUTF8Width(src);
-            anim_y = m_y; 
-            m_ui.animate(anim_x, m_x, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
-        } break;
-        case POS::RIGHT: {
-            anim_x = m_x + u8g2.getUTF8Width(src);
-            anim_y = m_y; 
-            m_ui.animate(anim_x, m_x, 300, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
-        } break;
+void Label::load(bool animate) {
+    refreshMetrics();
+    loaded_ = true;
+
+    anim_x = m_x;
+    anim_y = m_y;
+
+    if (animate) {
+        // Set initial animated position based on alignment
+        switch (load_pos) {
+            case POS::TOP: {
+                anim_y = m_y - load_distance_;
+                m_ui.animate(anim_y, m_y, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+            } break;
+            case POS::BOTTOM: {
+                anim_y = m_y + load_distance_;
+                m_ui.animate(anim_y, m_y, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+            } break;
+            case POS::LEFT: {
+                anim_x = m_x - text_width_;
+                m_ui.animate(anim_x, m_x, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+            } break;
+            case POS::RIGHT: {
+                anim_x = m_x + text_width_;
+                m_ui.animate(anim_x, m_x, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+            } break;
+        }
     }
+
+#if PIXELUI_USE_LABEL_SCROLL
+#if PIXELUI_USE_ANIMATION
+    restartAutoScroll(animate ? LOAD_ANIMATION_DURATION_MS : 0U);
+#else
+    restartAutoScroll();
+#endif
+#endif
 }
 
 /**
  * @brief Clean up resources when label is offloaded.
  */
 void Label::onOffload() {
-    // No dynamic resources to release
+    loaded_ = false;
+#if PIXELUI_USE_LABEL_SCROLL
+    stopAutoScroll();
+#endif
 }
+
+void Label::setSize(uint16_t w, uint16_t h) {
+    m_w = w;
+    m_h = h;
+    setWidgetBounds({m_x, m_y, m_w, m_h});
+#if PIXELUI_USE_LABEL_SCROLL
+    restartAutoScroll();
+#endif
+    m_ui.markDirty();
+}
+
+void Label::setViewportWidth(uint16_t width) {
+    m_w = width;
+    setWidgetBounds({m_x, m_y, m_w, m_h});
+#if PIXELUI_USE_LABEL_SCROLL
+    restartAutoScroll();
+#endif
+    m_ui.markDirty();
+}
+
+void Label::setOverflow(Overflow overflow) {
+    if (overflow_ == overflow) return;
+    overflow_ = overflow;
+#if PIXELUI_USE_LABEL_SCROLL
+    restartAutoScroll();
+#endif
+    m_ui.markDirty();
+}
+
+void Label::setTextAlignment(TextAlignX alignment) {
+    if (text_alignment_ == alignment) return;
+    text_alignment_ = alignment;
+#if PIXELUI_USE_LABEL_SCROLL
+    restartAutoScroll();
+#endif
+    m_ui.markDirty();
+}
+
+void Label::setText(const char* source) {
+    src = source;
+    if (loaded_) refreshMetrics();
+#if PIXELUI_USE_LABEL_SCROLL
+    restartAutoScroll();
+#endif
+    m_ui.markDirty();
+}
+
+#if PIXELUI_USE_LABEL_SCROLL
+void Label::stopAutoScroll() {
+    scroll_running_ = false;
+    scroll_offset_ = 0;
+    scroll_phase_ = ScrollPhase::StartPause;
+}
+
+void Label::restartAutoScroll(uint32_t additionalDelayMs) {
+    stopAutoScroll();
+    if (!loaded_ || overflow_ != Overflow::AutoScroll || m_w <= 0 ||
+        text_width_ <= m_w) {
+        return;
+    }
+
+    scroll_running_ = true;
+    next_scroll_deadline_ = m_ui.getCurrentTime() + additionalDelayMs +
+                            SCROLL_START_PAUSE_MS;
+}
+
+uint32_t Label::nextWakeupMs(uint32_t currentTime) const {
+    if (!scroll_running_) return PixelUITime::NO_WAKEUP;
+    return PixelUITime::untilDeadline(currentTime, next_scroll_deadline_);
+}
+
+bool Label::update(uint32_t currentTime) {
+    if (!scroll_running_ ||
+        !PixelUITime::deadlineReached(currentTime, next_scroll_deadline_)) {
+        return false;
+    }
+
+    switch (scroll_phase_) {
+        case ScrollPhase::StartPause:
+            scroll_phase_ = ScrollPhase::ScrollingToEnd;
+            next_scroll_deadline_ = currentTime + SCROLL_PIXEL_INTERVAL_MS;
+            return false;
+
+        case ScrollPhase::ScrollingToEnd: {
+            const uint32_t overdue = currentTime - next_scroll_deadline_;
+            const int32_t step = static_cast<int32_t>(
+                1U + overdue / SCROLL_PIXEL_INTERVAL_MS);
+            const int32_t maximumOffset = text_width_ - m_w;
+            const int32_t previousOffset = scroll_offset_;
+            scroll_offset_ -= step;
+            if (-scroll_offset_ >= maximumOffset) {
+                scroll_offset_ = -maximumOffset;
+                scroll_phase_ = ScrollPhase::EndPause;
+                next_scroll_deadline_ = currentTime + SCROLL_END_PAUSE_MS;
+            } else {
+                next_scroll_deadline_ +=
+                    static_cast<uint32_t>(step) * SCROLL_PIXEL_INTERVAL_MS;
+            }
+            return scroll_offset_ != previousOffset;
+        }
+
+        case ScrollPhase::EndPause:
+            scroll_phase_ = ScrollPhase::ScrollingToStart;
+            next_scroll_deadline_ = currentTime + SCROLL_PIXEL_INTERVAL_MS;
+            return false;
+
+        case ScrollPhase::ScrollingToStart: {
+            const uint32_t overdue = currentTime - next_scroll_deadline_;
+            const int32_t step = static_cast<int32_t>(
+                1U + overdue / SCROLL_PIXEL_INTERVAL_MS);
+            const int32_t previousOffset = scroll_offset_;
+            scroll_offset_ += step;
+            if (scroll_offset_ >= 0) {
+                scroll_offset_ = 0;
+                scroll_phase_ = ScrollPhase::StartPause;
+                next_scroll_deadline_ = currentTime + SCROLL_START_PAUSE_MS;
+            } else {
+                next_scroll_deadline_ +=
+                    static_cast<uint32_t>(step) * SCROLL_PIXEL_INTERVAL_MS;
+            }
+            return scroll_offset_ != previousOffset;
+        }
+    }
+
+    return false;
+}
+#endif
 
 /**
  * @brief Render the label text on screen with clipping to avoid overflow.
@@ -97,19 +283,17 @@ void Label::drawSelf(const WidgetRenderContext& context) {
     Canvas& u8g2 = m_ui.getCanvas();
     u8g2.setFont(m_font);
 
-    // Compute font metrics
-    int8_t font_ascent = u8g2.getAscent();
-    int8_t font_descent = u8g2.getDescent();
-    int8_t font_height = font_ascent - font_descent;
-
-    // Compute text width
-    int32_t text_width = u8g2.getUTF8Width((const char*)src);
-
-    // Clip drawing area to label rectangle
-    setClipWindow(context, {m_x, m_y - font_height, text_width, font_height + 1});
+    const int32_t viewportWidth = m_w > 0 ? m_w : text_width_;
+    setClipWindow(context, {m_x, m_y - font_height_, viewportWidth, font_height_ + 1});
 
     // Draw text at animated position
-    u8g2.drawUTF8(context.originX + anim_x, context.originY + anim_y, (const char*)src);
+    int32_t drawX = anim_x + TextAlignHelper::calcAlignedOffset(
+        viewportWidth, text_width_, text_alignment_,
+        TextOverflowPlacement::PinToLeadingEdge);
+#if PIXELUI_USE_LABEL_SCROLL
+    drawX += scroll_offset_;
+#endif
+    u8g2.drawUTF8(context.originX + drawX, context.originY + anim_y, src);
 
     // Reset clipping
     restoreClipWindow(context);

@@ -57,6 +57,7 @@
 class Coroutine;
 class IWidget;
 class BlinkState;
+class Label;
 
 /**
  * @class PixelUI
@@ -414,6 +415,9 @@ protected:
 
 private:
     friend class BlinkState;
+#if PIXELUI_USE_LABEL_SCROLL
+    friend class Label;
+#endif
 
     uint32_t calculateNextWakeupMs(uint32_t frameIntervalMs) const;
 

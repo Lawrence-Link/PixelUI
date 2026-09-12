@@ -28,6 +28,7 @@
 
 #include "PixelUI.h"
 #include "core/app/IApplication.h"
+#include "widgets/label/label.h"
 #include <etl/inplace_function.h>
 #include <etl/string.h>
 #include <etl/vector.h>
@@ -57,6 +58,8 @@ struct IconViewLayout {
     int32_t progressY = 0;
     int32_t statusBaseline = 0;
     int32_t selectedTitleBaseline = 0;
+    int32_t selectedTitleX = 0;
+    int32_t selectedTitleWidth = 0;
     etl::array<int32_t, 3> slotPositionsX{};
 };
 
@@ -109,11 +112,12 @@ private:
 
     PixelUI& ui_;
     etl::ivector<IconItem>& items_;
+    IconViewLayout layout_{};
+    Label selectedItemTitle_;
     SelectionCallback selectionCallback_;
     
     // Title-related members.
     etl::string<MAX_TEXT_LENGTH> title_;
-    const uint8_t * font_title = NULL;
     
     // State.
     int32_t currentIndex_ = 0;
@@ -122,6 +126,7 @@ private:
     bool progressBarEnabled_ = false;
     bool statusTextEnabled_ = false;
     bool selectedItemTitleEnabled_ = false;
+    bool active_ = false;
 
     // Animation variables.
     int32_t scrollOffset_ = 0;
@@ -130,9 +135,6 @@ private:
     int32_t animation_item_title_Y = 0;
     int32_t animation_pixel_dots = 0;
     int32_t animation_scroll_bar = 0;
-    
-    // Layout parameters.
-    IconViewLayout layout_{};
 
     enum class AnimationSlot : uint8_t {
         PixelDots,
@@ -157,6 +159,7 @@ private:
     void selectCurrentItem();
     void scrollToIndex(int newIndex);
     void updateProgressBar();
+    void updateSelectedItemTitle();
 
     // Drawing logic.
     void drawTitle();

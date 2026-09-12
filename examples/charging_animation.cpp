@@ -201,4 +201,4 @@ private:
 
 // ---------------- Application registration ----------------
 
-AppItem charging_anim = AppItem::make<ChargeDemo>("Charging animation", image_Icon_Charging_bits);
+AppItem charging_anim = AppItem::make<ChargeDemo>("Charging animation 123456789099999", image_Icon_Charging_bits);

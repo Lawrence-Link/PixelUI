@@ -41,6 +41,12 @@ IconViewLayout calculateIconViewLayout(
     layout.progressY = displayHeight > 15 ? displayHeight - 15 : 0;
     layout.statusBaseline = displayHeight > 4 ? displayHeight - 4 : 0;
     layout.selectedTitleBaseline = displayHeight > 2 ? displayHeight - 2 : 0;
+    constexpr int32_t selectedTitleMargin = 19;
+    const int32_t titleMargin = displayWidth > 2 * selectedTitleMargin
+        ? selectedTitleMargin
+        : 0;
+    layout.selectedTitleX = titleMargin;
+    layout.selectedTitleWidth = displayWidth - 2 * titleMargin;
     const int32_t firstSlot =
         layout.centerX - (3 * iconWidth) / 2 - layout.iconSpacing;
     layout.slotPositionsX = {
@@ -57,8 +63,17 @@ IconViewLayout calculateIconViewLayout(
  */
 icon_view_detail::IconViewBase::IconViewBase(
     PixelUI& ui, etl::ivector<IconItem>& items, const uint8_t* font)
-    : ui_(ui), items_(items), font_title(font) {
-    initializeSlotPositions();
+    : ui_(ui)
+    , items_(items)
+    , layout_(calculateIconViewLayout(
+          ui.getDisplayWidth(), ui.getDisplayHeight()))
+    , selectedItemTitle_(
+          ui, static_cast<uint16_t>(layout_.selectedTitleX),
+          static_cast<uint16_t>(layout_.selectedTitleBaseline),
+          static_cast<uint16_t>(layout_.selectedTitleWidth), "", POS::BOTTOM,
+          font) {
+    selectedItemTitle_.setOverflow(Label::Overflow::AutoScroll);
+    selectedItemTitle_.setTextAlignment(TextAlignX::Center);
     scrollOffset_ = -ui_.getDisplayWidth();
     animation_selector_coord_x = ui_.getDisplayWidth();
     animation_item_title_Y = ui_.getDisplayHeight() + 6;
@@ -101,6 +116,7 @@ void icon_view_detail::IconViewBase::onEnter(ExitCallback exitCallback) {
     cancelOwnAnimations();
     initializeSlotPositions();
     scrollOffset_ = -ui_.getDisplayWidth();
+    active_ = true;
 
     // Start entry animations for visual transition.
     animateOwned(AnimationSlot::PixelDots, animation_pixel_dots,
@@ -110,6 +126,7 @@ void icon_view_detail::IconViewBase::onEnter(ExitCallback exitCallback) {
                  SELECTOR_LENGTH, 700, EasingType::EASE_IN_OUT_CUBIC,
                  PROTECTION::PROTECTED);
     scrollToIndex(currentIndex_);
+    if (selectedItemTitleEnabled_) selectedItemTitle_.onLoadImmediately();
     ui_.markDirty();  // Trigger initial redraw.
 }
 
@@ -117,6 +134,7 @@ void icon_view_detail::IconViewBase::onEnter(ExitCallback exitCallback) {
  * @brief Called when the view is resumed from a paused state.
  */
 void icon_view_detail::IconViewBase::onResume() {
+    active_ = true;
     animation_scroll_bar = 0;
     scrollOffset_ -= ICON_WIDTH + 2 * layout_.iconSpacing;
     animateOwned(AnimationSlot::PixelDots, animation_pixel_dots,
@@ -124,6 +142,7 @@ void icon_view_detail::IconViewBase::onResume() {
                  EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
     updateProgressBar();
     scrollToIndex(currentIndex_);
+    if (selectedItemTitleEnabled_) selectedItemTitle_.onLoadImmediately();
     ui_.markDirty();
 }
 
@@ -131,6 +150,8 @@ void icon_view_detail::IconViewBase::onResume() {
  * @brief Called when the view is paused.
  */
 void icon_view_detail::IconViewBase::onPause() {
+    if (selectedItemTitleEnabled_) selectedItemTitle_.onOffload();
+    active_ = false;
     ui_.markFading();
     cancelOwnAnimations();
     animation_selector_length = SELECTOR_LENGTH;
@@ -178,6 +199,7 @@ bool icon_view_detail::IconViewBase::setItems(
     if (items.size() > items_.max_size()) return false;
     items_.assign(items.begin(), items.end());
     currentIndex_ = 0;
+    if (selectedItemTitleEnabled_) updateSelectedItemTitle();
     return true;
 }
 
@@ -199,7 +221,17 @@ void icon_view_detail::IconViewBase::setTitle(const char* title) {
 
 void icon_view_detail::IconViewBase::enableProgressBar(bool enable) { progressBarEnabled_ = enable; }
 void icon_view_detail::IconViewBase::enableStatusText(bool enable) { statusTextEnabled_ = enable; }
-void icon_view_detail::IconViewBase::enableSelectedItemTitle(bool enable) { selectedItemTitleEnabled_ = enable; }
+void icon_view_detail::IconViewBase::enableSelectedItemTitle(bool enable) {
+    if (selectedItemTitleEnabled_ == enable) return;
+    selectedItemTitleEnabled_ = enable;
+    if (enable) {
+        updateSelectedItemTitle();
+        if (active_) selectedItemTitle_.onLoadImmediately();
+    } else {
+        selectedItemTitle_.onOffload();
+    }
+    ui_.markDirty();
+}
 
 // -----------------------------------------------------------------------------
 // Navigation and Interaction
@@ -271,6 +303,7 @@ void icon_view_detail::IconViewBase::scrollToIndex(int newIndex) {
     }
     
     currentIndex_ = newIndex;
+    if (selectedItemTitleEnabled_) updateSelectedItemTitle();
     updateProgressBar();
     ui_.markDirty();  // Request redraw after animation update.
 }
@@ -286,6 +319,13 @@ void icon_view_detail::IconViewBase::updateProgressBar() {
         animateOwned(AnimationSlot::Progress, animation_scroll_bar, target,
                      300, EasingType::EASE_OUT_QUAD);
     }
+}
+
+void icon_view_detail::IconViewBase::updateSelectedItemTitle() {
+    const char* title = items_.empty() || items_[currentIndex_].title == nullptr
+        ? ""
+        : items_[currentIndex_].title;
+    selectedItemTitle_.setText(title);
 }
 
 // -----------------------------------------------------------------------------
@@ -333,11 +373,12 @@ void icon_view_detail::IconViewBase::drawStatusText() {
  */
 void icon_view_detail::IconViewBase::drawSelectedItemTitle() {
     if (items_.empty()) return;
-    Canvas& display = ui_.getCanvas();
-    const auto& currentItem = items_[currentIndex_];
-    display.setFont(font_title);
-    int titleWidth = display.getUTF8Width(currentItem.title);
-    display.drawUTF8((ui_.getDisplayWidth() - titleWidth) / 2, animation_item_title_Y, currentItem.title);
+    const WidgetRenderContext context{
+        0,
+        animation_item_title_Y - layout_.selectedTitleBaseline,
+        {0, 0, ui_.getDisplayWidth(), ui_.getDisplayHeight()}
+    };
+    selectedItemTitle_.draw(context);
 }
 
 /**
@@ -388,6 +429,11 @@ void icon_view_detail::IconViewBase::drawIcon(const IconItem& item, int32_t x, i
 void icon_view_detail::IconViewBase::initializeSlotPositions() {
     layout_ = calculateIconViewLayout(
         ui_.getDisplayWidth(), ui_.getDisplayHeight());
+    selectedItemTitle_.setPosition(
+        static_cast<uint16_t>(layout_.selectedTitleX),
+        static_cast<uint16_t>(layout_.selectedTitleBaseline));
+    selectedItemTitle_.setViewportWidth(
+        static_cast<uint16_t>(layout_.selectedTitleWidth));
 }
 
 /**
