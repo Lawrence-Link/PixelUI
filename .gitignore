@@ -11,6 +11,7 @@
 # CMake build directories
 /build/
 /build-asan/
+/output/
 [Cc]MakeFiles/
 CMakeCache.txt
 CMakeFiles/
