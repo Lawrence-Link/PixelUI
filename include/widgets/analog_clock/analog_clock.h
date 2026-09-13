@@ -42,6 +42,7 @@ public:
     ~Clock() = default;
 
     void onLoad() override;
+    void onLoad(LoadTransition transition);
     void onOffload() override;
     bool handleEvent(InputEvent event) override;
     bool onSelect() override;

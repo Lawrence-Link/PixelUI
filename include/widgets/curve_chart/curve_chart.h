@@ -62,6 +62,7 @@ public:
     ~CurveChart() = default;
 
     void onLoad() override;
+    void onLoad(LoadTransition transition);
     void onOffload() override;
     bool onSelect() override;
     bool handleEvent(InputEvent event) override;

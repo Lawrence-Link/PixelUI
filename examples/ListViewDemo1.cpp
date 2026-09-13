@@ -82,7 +82,7 @@ ListItem ItemList[10] = {
     ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, nullptr, PopupProgressMode::Editable); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value))},
     ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 56, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value_4_digits))},
     ListItem{.title ="- Progress", .pFunc = &showReadOnlyProgress, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(displayProgress))},
-    ListItem{.title ="- Anytone"},
+    ListItem{.title ="- Actually wanted a big hug!"},
     ListItem{.title ="- Potato"},
     ListItem{.title ="- Tomato"}
 };

@@ -90,11 +90,15 @@ void Label::refreshMetrics() {
  *        based on alignment and triggers slide-in animation.
  */
 void Label::onLoad() {
-    load(true);
+    onLoad(LoadTransition::Animated);
+}
+
+void Label::onLoad(LoadTransition transition) {
+    load(transition == LoadTransition::Animated);
 }
 
 void Label::onLoadImmediately() {
-    load(false);
+    onLoad(LoadTransition::Immediate);
 }
 
 void Label::load(bool animate) {
@@ -109,19 +113,27 @@ void Label::load(bool animate) {
         switch (load_pos) {
             case POS::TOP: {
                 anim_y = m_y - load_distance_;
-                m_ui.animate(anim_y, m_y, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+                if (!m_ui.animate(anim_y, m_y, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED)) {
+                    anim_y = m_y;
+                }
             } break;
             case POS::BOTTOM: {
                 anim_y = m_y + load_distance_;
-                m_ui.animate(anim_y, m_y, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+                if (!m_ui.animate(anim_y, m_y, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED)) {
+                    anim_y = m_y;
+                }
             } break;
             case POS::LEFT: {
                 anim_x = m_x - text_width_;
-                m_ui.animate(anim_x, m_x, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+                if (!m_ui.animate(anim_x, m_x, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED)) {
+                    anim_x = m_x;
+                }
             } break;
             case POS::RIGHT: {
                 anim_x = m_x + text_width_;
-                m_ui.animate(anim_x, m_x, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED);
+                if (!m_ui.animate(anim_x, m_x, LOAD_ANIMATION_DURATION_MS, EasingType::EASE_OUT_CUBIC, PROTECTION::NOT_PROTECTED)) {
+                    anim_x = m_x;
+                }
             } break;
         }
     }
@@ -133,6 +145,8 @@ void Label::load(bool animate) {
     restartAutoScroll();
 #endif
 #endif
+
+    m_ui.markDirty();
 }
 
 /**

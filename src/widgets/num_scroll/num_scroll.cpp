@@ -67,6 +67,10 @@ void NumScroll::updateGeometry() {
  * @brief Initialize widget with animation.
  */
 void NumScroll::onLoad() {
+    onLoad(LoadTransition::Animated);
+}
+
+void NumScroll::onLoad(LoadTransition transition) {
     cancelOwnAnimations();
     m_anim_offset = 0;
     m_is_active = false;
@@ -75,6 +79,13 @@ void NumScroll::onLoad() {
     anim_h = 0;
 
     updateGeometry();
+
+    if (transition == LoadTransition::Immediate) {
+        anim_w = m_w;
+        anim_h = m_h;
+        m_ui.markDirty();
+        return;
+    }
 
     const int32_t targetWidth = m_w;
     const int32_t targetHeight = m_h;
@@ -94,6 +105,7 @@ void NumScroll::onLoad() {
         cancelOwnAnimations();
         anim_w = m_w;
         anim_h = m_h;
+        m_ui.markDirty();
     }
 }
 
@@ -101,18 +113,7 @@ void NumScroll::onLoad() {
  * @brief Initialize widget without animation (immediate size).
  */
 void NumScroll::onLoadNoAnim() {
-    cancelOwnAnimations();
-    m_anim_offset = 0;
-    m_is_active = false;
-
-    anim_w = 0;
-    anim_h = 0;
-
-    updateGeometry();
-
-    // Set final size immediately
-    anim_w = m_w;
-    anim_h = m_h;
+    onLoad(LoadTransition::Immediate);
 }
 
 /**

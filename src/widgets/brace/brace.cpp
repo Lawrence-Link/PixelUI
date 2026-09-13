@@ -65,7 +65,20 @@ void Brace::setPosition(int16_t pos_x, int16_t pos_y) {
  * @brief Initialize animations for brace expansion and set the focus box
  */
 void Brace::onLoad() {
+    onLoad(LoadTransition::Animated);
+}
+
+void Brace::onLoad(LoadTransition transition) {
     const FocusBox bounds = getLocalBounds();
+    if (transition == LoadTransition::Immediate) {
+        anim_w = bounds.w;
+        anim_h = bounds.h;
+        anim_x = 0;
+        anim_y = 0;
+        m_ui.markDirty();
+        return;
+    }
+
     const int32_t start_anim_x = bounds.w / 2;
     const int32_t start_anim_y = bounds.h / 2;
     
@@ -75,11 +88,20 @@ void Brace::onLoad() {
     anim_x = start_anim_x;
     anim_y = start_anim_y;
 
-    m_ui.animate(anim_w, bounds.w, 550, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
-    m_ui.animate(anim_h, bounds.h, 600, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    if (!m_ui.animate(anim_w, bounds.w, 550, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        anim_w = bounds.w;
+    }
+    if (!m_ui.animate(anim_h, bounds.h, 600, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        anim_h = bounds.h;
+    }
     
-    m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
-    m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    if (!m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        anim_x = 0;
+    }
+    if (!m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        anim_y = 0;
+    }
+    m_ui.markDirty();
 }
 
 /**

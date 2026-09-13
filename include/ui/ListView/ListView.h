@@ -33,6 +33,9 @@
 #include "core/animation/animation.h"
 #include "core/app/IApplication.h"
 #include "core/ValueBinding.h"
+#if PIXELUI_USE_LABEL_SCROLL
+#include "widgets/label/label.h"
+#endif
 #include <stdint.h>
 
 class ListItemAccessory {
@@ -133,8 +136,7 @@ public:
     // itemList, every submenu, accessory target, and callback capture are
     // non-owning and must remain valid for this ListView's lifetime.
     // NOTE: length is signed to match internal indices.
-    ListView(PixelUI& ui, ListItem *itemList, int length)
-        : IApplication(true), m_ui(ui), m_itemList(itemList), m_itemLength(length - 1) {}
+    ListView(PixelUI& ui, ListItem *itemList, int length);
     ~ListView() override;
 
     // --- Application Lifecycle and Input Handlers ---
@@ -160,10 +162,15 @@ private:
     static constexpr int32_t SPACING = 7;
     static constexpr int32_t TOP_MARGIN = 3;
     static constexpr int32_t CURSOR_X = 1;
+    static constexpr int32_t TITLE_X = 4;
+    static constexpr int32_t TITLE_ACCESSORY_GAP = 3;
     static constexpr int32_t VISIBLE_ITEM_COUNT = LISTVIEW_ITEMS_PER_PAGE;
 
     ListItem* m_itemList;
     int32_t m_itemLength; // signed index length (last index). Avoid mixing signed/unsigned.
+#if PIXELUI_USE_LABEL_SCROLL
+    Label selectedItemTitle_;
+#endif
     
     struct SwitchAnimState {
         ListItem* item = nullptr;
@@ -202,6 +209,9 @@ private:
     void navigateDown();
 
     void drawCursor();
+    int32_t calculateTitleRight(const ListItem& item, char* valueBuffer,
+                                size_t valueBufferSize) const;
+    int32_t updateSelectedItemTitle();
     void scrollToTarget();
     void updateScrollPosition();
     void startLoadAnimation();

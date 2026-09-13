@@ -82,6 +82,19 @@ Histogram::Histogram(
  * @brief Initialize widget animations when loaded.
  */
 void Histogram::onLoad() {
+    onLoad(LoadTransition::Animated);
+}
+
+void Histogram::onLoad(LoadTransition transition) {
+    if (transition == LoadTransition::Immediate) {
+        anim_w = size_w_;
+        anim_h = size_h_;
+        anim_x = 0;
+        anim_y = 0;
+        m_ui.markDirty();
+        return;
+    }
+
     int32_t start_anim_x = (size_w_ / 2);
     int32_t start_anim_y = (size_h_ / 2);
 
@@ -91,11 +104,20 @@ void Histogram::onLoad() {
     anim_x = start_anim_x;
     anim_y = start_anim_y;
 
-    m_ui.animate(anim_w, size_w_, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
-    m_ui.animate(anim_h, size_h_, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
+    if (!m_ui.animate(anim_w, size_w_, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED)) {
+        anim_w = size_w_;
+    }
+    if (!m_ui.animate(anim_h, size_h_, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED)) {
+        anim_h = size_h_;
+    }
 
-    m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
-    m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
+    if (!m_ui.animate(anim_x, 0, 550, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED)) {
+        anim_x = 0;
+    }
+    if (!m_ui.animate(anim_y, 0, 600, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED)) {
+        anim_y = 0;
+    }
+    m_ui.markDirty();
 }
 
 /**

@@ -27,6 +27,21 @@
 #include "ui/ListView/ListView.h"
 #include "core/animation/animation.h"
 
+ListView::ListView(PixelUI& ui, ListItem* itemList, int length)
+    : IApplication(true)
+    , m_ui(ui)
+    , m_itemList(itemList)
+    , m_itemLength(length - 1)
+#if PIXELUI_USE_LABEL_SCROLL
+    , selectedItemTitle_(ui, TITLE_X, 0, "", POS::BOTTOM,
+                         PIXELUI_FONT_TEXT)
+#endif
+{
+#if PIXELUI_USE_LABEL_SCROLL
+    selectedItemTitle_.setOverflow(Label::Overflow::AutoScroll);
+#endif
+}
+
 ListView::~ListView() {
     cancelAllOwnedAnimations();
 }
@@ -106,6 +121,9 @@ bool ListView::animateOwnedCallback(
 void ListView::onEnter(ExitCallback exitCallback){
     IApplication::onEnter(exitCallback);
     cancelAllOwnedAnimations();
+#if PIXELUI_USE_LABEL_SCROLL
+    selectedItemTitle_.onOffload();
+#endif
 
     Canvas& canvas = m_ui.getCanvas();
     canvas.setFont(PIXELUI_FONT_TEXT);
@@ -126,6 +144,9 @@ void ListView::onEnter(ExitCallback exitCallback){
     
     startLoadAnimation();
     scrollToTarget();
+#if PIXELUI_USE_LABEL_SCROLL
+    selectedItemTitle_.onLoadImmediately();
+#endif
 }
 
 /**
@@ -219,6 +240,66 @@ int32_t ListView::calculateItemY(int itemIndex) {
            m_ui.getCanvas().getFontAscent();
 }
 
+int32_t ListView::calculateTitleRight(
+    const ListItem& item, char* valueBuffer, size_t valueBufferSize) const {
+    Canvas& canvas = m_ui.getCanvas();
+    const int32_t displayWidth = m_ui.getDisplayWidth();
+    int32_t right = displayWidth - 4;
+
+    if (valueBuffer != nullptr && valueBufferSize != 0U) {
+        valueBuffer[0] = '\0';
+    }
+
+    switch (item.accessory.kind()) {
+        case ListItemAccessory::Kind::Toggle:
+            if (item.accessory.toggleValue() != nullptr) {
+                right = displayWidth - 42 - TITLE_ACCESSORY_GAP;
+            }
+            break;
+
+        case ListItemAccessory::Kind::Text: {
+            const char* text = item.accessory.textValue();
+            if (text != nullptr) {
+                right = displayWidth - canvas.getUTF8Width(text) - 4 -
+                        TITLE_ACCESSORY_GAP;
+            }
+            break;
+        }
+
+        case ListItemAccessory::Kind::Value:
+            if (item.accessory.formatValue(valueBuffer, valueBufferSize)) {
+                right = displayWidth - canvas.getUTF8Width(valueBuffer) - 8 -
+                        TITLE_ACCESSORY_GAP;
+            }
+            break;
+
+        case ListItemAccessory::Kind::None:
+            break;
+    }
+
+    return etl::max(TITLE_X + 1, right);
+}
+
+int32_t ListView::updateSelectedItemTitle() {
+    if (m_itemLength < 0 || currentCursor < 0 ||
+        currentCursor > m_itemLength) {
+#if PIXELUI_USE_LABEL_SCROLL
+        selectedItemTitle_.setText("");
+#endif
+        return TITLE_X + 1;
+    }
+
+    char valueBuffer[MAX_TEXT_LENGTH + 1]{};
+    const int32_t titleRight = calculateTitleRight(
+        m_itemList[currentCursor], valueBuffer, sizeof(valueBuffer));
+#if PIXELUI_USE_LABEL_SCROLL
+    selectedItemTitle_.setViewportWidth(
+        static_cast<uint16_t>(titleRight - TITLE_X));
+    selectedItemTitle_.setText(m_itemList[currentCursor].title);
+#endif
+    return titleRight;
+}
+
 /**
  * @brief Scroll UI to ensure target item is visible and animate cursor/progress bar.
  * @param target Target item index.
@@ -226,6 +307,7 @@ int32_t ListView::calculateItemY(int itemIndex) {
 void ListView::scrollToTarget(){
     if (m_itemLength < 0 || currentCursor < 0 || currentCursor > m_itemLength) {
         m_ui.scrollCanvasTo(0);
+        updateSelectedItemTitle();
         return;
     }
 
@@ -235,12 +317,15 @@ void ListView::scrollToTarget(){
     updateScrollPosition();
     
     Canvas& canvas = m_ui.getCanvas();
+    const int32_t titleRight = updateSelectedItemTitle();
     int32_t targetCursorY = TOP_MARGIN + currentCursor * (FontHeight + SPACING) - 1;
     
     const int32_t displayHeight = m_ui.getDisplayHeight();
     animateOwned(CursorY, targetCursorY, 150, EasingType::EASE_IN_OUT_CUBIC);
     animateOwned(CursorWidth,
-                 canvas.getUTF8Width(m_itemList[currentCursor].title) + 6,
+                 etl::min(
+                     canvas.getUTF8Width(m_itemList[currentCursor].title) + 6,
+                     titleRight - CURSOR_X),
                  500, EasingType::EASE_OUT_CUBIC);
     animateOwned(progress_bar_top,
                  static_cast<int32_t>(
@@ -423,12 +508,19 @@ void ListView::drawCursor() {
 void ListView::onResume() {
     cancelLoadAnimations();
     isInitialLoad_ = false;
+    updateSelectedItemTitle();
+#if PIXELUI_USE_LABEL_SCROLL
+    selectedItemTitle_.onLoadImmediately();
+#endif
 }
 
 /**
  * @brief Called when ListView is paused.
  */
 void ListView::onPause() {
+#if PIXELUI_USE_LABEL_SCROLL
+    selectedItemTitle_.onOffload();
+#endif
 }
 
 /**
@@ -437,6 +529,9 @@ void ListView::onPause() {
  * Saves state and clears animations.
  */
 void ListView::onExit() {
+#if PIXELUI_USE_LABEL_SCROLL
+    selectedItemTitle_.onOffload();
+#endif
     cancelAllOwnedAnimations();
     onSave();
 }
@@ -458,18 +553,48 @@ void ListView::draw() {
         
         const int32_t screenY = itemY - cameraY;
         if (screenY >= -FontHeight && screenY <= m_ui.getDisplayHeight() + FontHeight) {
-            int32_t drawX = 4;
+            int32_t drawX = TITLE_X;
             if (isInitialLoad_) {
                 int animIndex = itemIndex - topVisibleIndex_;
                 if (animIndex >= 0 && animIndex < VISIBLE_ITEM_COUNT + 1) {
                     int32_t loadProgress = itemLoadAnimations_[animIndex];
-                    drawX = 4 + (FIXED_POINT_ONE - loadProgress) * 30 / FIXED_POINT_ONE;
+                    drawX = TITLE_X +
+                        (FIXED_POINT_ONE - loadProgress) * 30 / FIXED_POINT_ONE;
                 }
             }
-            canvas.drawUTF8(drawX, itemY, m_itemList[itemIndex].title);
-            
+
             const ListItemAccessory& accessory =
                 m_itemList[itemIndex].accessory;
+            char valueBuffer[MAX_TEXT_LENGTH + 1]{};
+            const int32_t titleRight = calculateTitleRight(
+                m_itemList[itemIndex], valueBuffer, sizeof(valueBuffer));
+            if (drawX < titleRight) {
+#if PIXELUI_USE_LABEL_SCROLL
+                if (itemIndex == currentCursor) {
+                    const uint16_t viewportWidth = static_cast<uint16_t>(
+                        titleRight - drawX);
+                    if (selectedItemTitle_.getViewportWidth() != viewportWidth) {
+                        selectedItemTitle_.setViewportWidth(viewportWidth);
+                    }
+                    const WidgetRenderContext context{
+                        drawX - TITLE_X,
+                        itemY,
+                        {canvas.camera().x(), cameraY,
+                         m_ui.getDisplayWidth(), m_ui.getDisplayHeight()}
+                    };
+                    selectedItemTitle_.draw(context);
+                } else {
+#endif
+                    canvas.setClipWindow(
+                        drawX, itemY - FontHeight, titleRight, itemY + 1);
+                    canvas.drawUTF8(
+                        drawX, itemY, m_itemList[itemIndex].title);
+                    canvas.setMaxClipWindow();
+#if PIXELUI_USE_LABEL_SCROLL
+                }
+#endif
+            }
+
             switch (accessory.kind()) {
                 case ListItemAccessory::Kind::Toggle: {
                     bool* toggle = accessory.toggleValue();
@@ -501,12 +626,12 @@ void ListView::draw() {
                     break;
                 }
                 case ListItemAccessory::Kind::Value: {
-                    char buffer[MAX_TEXT_LENGTH + 1]{};
-                    if (accessory.formatValue(buffer, sizeof(buffer))) {
+                    if (valueBuffer[0] != '\0') {
                         canvas.drawStr(
-                            m_ui.getDisplayWidth() - canvas.getUTF8Width(buffer) - 8,
+                            m_ui.getDisplayWidth() -
+                                canvas.getUTF8Width(valueBuffer) - 8,
                             itemY,
-                            buffer);
+                            valueBuffer);
                     }
                     break;
                 }

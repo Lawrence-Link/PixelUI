@@ -92,7 +92,8 @@ public:
           const uint8_t* font = PIXELUI_FONT_TEXT);
     ~Label() override = default;
     void onLoad() override;
-    // Activate metrics and overflow behavior when a parent owns the animation.
+    void onLoad(LoadTransition transition);
+    // Compatibility wrapper for callers that already use the old name.
     void onLoadImmediately();
     void onOffload() override;
     bool onSelect() override ;

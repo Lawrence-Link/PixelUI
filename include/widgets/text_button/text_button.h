@@ -57,6 +57,8 @@ public:
 
     // IWidget overrides
     void onLoad() override;
+    void onLoad(LoadTransition transition);
+    // Compatibility wrapper for callers that already use the old name.
     void onLoadNoAnim();
     void onOffload() override;
     bool onSelect() override;

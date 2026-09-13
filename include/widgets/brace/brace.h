@@ -35,6 +35,7 @@ public:
     ~Brace() = default;
 
     void onLoad() override;
+    void onLoad(LoadTransition transition);
     void onOffload() override;
     bool onSelect() override {
         if (m_callback) m_callback();

@@ -48,6 +48,12 @@ struct WidgetRenderContext {
     FocusBox clip = {0, 0, 0, 0};
 };
 
+// Selects whether loading begins with an entrance animation or its final frame.
+enum class LoadTransition : uint8_t {
+    Animated,
+    Immediate
+};
+
 class IWidget {
     friend class FocusManager;
 private:

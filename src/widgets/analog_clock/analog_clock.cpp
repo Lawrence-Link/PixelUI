@@ -89,21 +89,54 @@ Clock::Clock(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t radius) :
  * @brief Initialize the clock widget and start animations
  */
 void Clock::onLoad() {
+    onLoad(LoadTransition::Animated);
+}
+
+void Clock::onLoad(LoadTransition transition) {
+    const int32_t finalHourHandLength = m_radius - 10;
+    const int32_t finalMinuteHandLength = m_radius - 4;
+    const int32_t finalSecondHandLength = m_radius - 2;
+
+    if (transition == LoadTransition::Immediate) {
+        m_anim_state = AnimState::FINISHED;
+        m_dial_progress = 360;
+        m_marks_progress = 14;
+        m_length_hand_h = finalHourHandLength;
+        m_length_hand_m = finalMinuteHandLength;
+        m_length_hand_s = finalSecondHandLength;
+        m_ui.markDirty();
+        return;
+    }
+
     m_anim_state = AnimState::EXPANDING;
 
     m_dial_progress = 0; /**< Progress of dial animation (0-360 deg) */
     m_marks_progress = 0; /**< Number of hour marks drawn (0-12) */
+    m_length_hand_h = 0;
+    m_length_hand_m = 0;
+    m_length_hand_s = 0;
 
     /**< Animate dial drawing */
-    m_ui.animate(m_dial_progress, 360, ANIM_DURATION, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED);
+    if (!m_ui.animate(m_dial_progress, 360, ANIM_DURATION, EasingType::EASE_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        m_dial_progress = 360;
+    }
 
     /**< Animate hour marks appearance */
-    m_ui.animate(m_marks_progress, 14, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+    if (!m_ui.animate(m_marks_progress, 14, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        m_marks_progress = 14;
+    }
 
     /**< Animate lengths of hour, minute, second hands */
-    m_ui.animate(m_length_hand_h, m_radius - 10, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-    m_ui.animate(m_length_hand_m, m_radius - 4, 400, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
-    m_ui.animate(m_length_hand_s, m_radius - 2, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED);
+    if (!m_ui.animate(m_length_hand_h, finalHourHandLength, 700, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        m_length_hand_h = finalHourHandLength;
+    }
+    if (!m_ui.animate(m_length_hand_m, finalMinuteHandLength, 400, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        m_length_hand_m = finalMinuteHandLength;
+    }
+    if (!m_ui.animate(m_length_hand_s, finalSecondHandLength, 300, EasingType::EASE_IN_OUT_CUBIC, PROTECTION::PROTECTED)) {
+        m_length_hand_s = finalSecondHandLength;
+    }
+    m_ui.markDirty();
 }
 
 /**

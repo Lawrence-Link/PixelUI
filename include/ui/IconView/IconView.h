@@ -108,7 +108,7 @@ private:
     static constexpr int32_t TITLE_Y = 10;
     static constexpr int32_t ICON_WIDTH = 24;
     static constexpr int32_t ICON_HEIGHT = 24;
-    static constexpr int32_t SELECTOR_LENGTH = 30;
+    static constexpr int32_t SELECTOR_LENGTH = 32;
 
     PixelUI& ui_;
     etl::ivector<IconItem>& items_;

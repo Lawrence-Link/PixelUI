@@ -31,6 +31,10 @@
  * @brief Initialize the widget with animation from the center.
  */
 void TextButton::onLoad() {
+    onLoad(LoadTransition::Animated);
+}
+
+void TextButton::onLoad(LoadTransition transition) {
     // Calculate the center coordinates
     int32_t center_x = m_x + m_w / 2;
     int32_t center_y = m_y + m_h / 2;
@@ -38,19 +42,28 @@ void TextButton::onLoad() {
     anim_x = center_x;
     anim_y = center_y;
 
+    if (transition == LoadTransition::Immediate) {
+        anim_w = m_w;
+        anim_h = m_h;
+        m_ui.markDirty();
+        return;
+    }
+
     // Animate width and height expansion from the center
-    m_ui.animate(anim_w, anim_h,
-                 m_w, m_h,
-                 400, EasingType::EASE_OUT_CUBIC,
-                 PROTECTION::PROTECTED);
+    anim_w = 0;
+    anim_h = 0;
+    if (!m_ui.animate(anim_w, anim_h,
+                      m_w, m_h,
+                      400, EasingType::EASE_OUT_CUBIC,
+                      PROTECTION::PROTECTED)) {
+        anim_w = m_w;
+        anim_h = m_h;
+        m_ui.markDirty();
+    }
 }
 
 void TextButton::onLoadNoAnim() {
-    anim_x = m_x;
-    anim_y = m_y;
-    anim_w = m_w;
-    anim_h = m_h;
-    m_ui.markDirty();
+    onLoad(LoadTransition::Immediate);
 }
 
 /**
