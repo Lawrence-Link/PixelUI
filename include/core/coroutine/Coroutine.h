@@ -70,17 +70,34 @@ using CoroutineFunction = etl::inplace_function<void(CoroutineContext&), CALLBAC
  */
 class Coroutine {
 public:
+    /**
+     * @brief Creates a coroutine backed by a fixed callback.
+     * @param func Callback implementing the coroutine state machine.
+     */
     Coroutine(CoroutineFunction func);
+    /** @brief Destroys the coroutine and its fixed context. */
     ~Coroutine() = default;
 
+    /** @brief Moves a newly created coroutine to the running state. */
     void start();
+    /**
+     * @brief Resumes execution when the current wait condition is satisfied.
+     * @param currentTime Current monotonic time in milliseconds.
+     * @param animationActive Whether animations are currently active.
+     */
     void resume(uint32_t currentTime, bool animationActive = false);
+    /** @brief Returns the coroutine to its initial program-counter state. */
     void reset(); 
+    /** @return Whether the coroutine reached its terminal state. */
     bool isFinished() const { return context_.state == CoroutineState::FINISHED; }
+    /** @return Whether the coroutine is ready to execute at the supplied time. */
     bool shouldRun(uint32_t currentTime, bool animationActive = false) const;
+    /** @return Delay until execution, or NO_WAKEUP when no wakeup is pending. */
     uint32_t nextWakeupMs(uint32_t currentTime, bool animationActive) const;
     
+    /** @return Mutable state used by the coroutine callback. */
     CoroutineContext& getContext() { return context_; }
+    /** @return Read-only state used by the coroutine callback. */
     const CoroutineContext& getContext() const { return context_; }
 
 private:
@@ -93,14 +110,21 @@ private:
  */
 class CoroutineScheduler {
 public:
+    /** @brief Creates a scheduler that observes the supplied UI clock and animations. */
     explicit CoroutineScheduler(PixelUI& ui);
     
+    /** @brief Adds a non-owning coroutine pointer to the scheduler. */
     void addCoroutine(Coroutine* coroutine);
+    /** @brief Removes a coroutine pointer from the scheduler without destroying it. */
     void removeCoroutine(Coroutine* coroutine);
+    /** @brief Resumes ready coroutines and removes those that have finished. */
     void update(uint32_t currentTime);
+    /** @return Earliest wakeup delay among scheduled coroutines. */
     uint32_t nextWakeupMs(uint32_t currentTime) const;
+    /** @brief Removes all coroutine pointers without destroying their owners. */
     void clear();
     
+    /** @return Number of coroutine pointers currently scheduled. */
     size_t getActiveCount() const;
 
 private:

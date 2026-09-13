@@ -47,6 +47,7 @@ private:
     TextButton moveLeft;
     TextButton moveRight;
 
+/** @brief moveParent. */
     void moveParent(int16_t delta) {
         int16_t next = static_cast<int16_t>(parentX + delta);
         if (next < 4) next = 4;
@@ -66,6 +67,7 @@ public:
         parent.addChild(moveRight);
     }
 
+/** @brief onEnter. */
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
 
@@ -81,6 +83,7 @@ public:
         m_ui.markDirty();
     }
 
+/** @brief draw. */
     void draw() override {
         Canvas& u8g2 = m_ui.getCanvas();
         u8g2.setFont(u8g2_font_5x7_tr);
@@ -91,6 +94,7 @@ public:
         parent.draw();
     }
 
+/** @brief handleInput. */
     bool handleInput(InputEvent event) override {
         if (event == InputEvent::BACK) requestExit();
         return true;

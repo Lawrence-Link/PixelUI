@@ -76,43 +76,71 @@ int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
     ScrollPhase scroll_phase_ = ScrollPhase::StartPause;
     bool scroll_running_ = false;
 
+/** @brief nextWakeupMs. */
     uint32_t nextWakeupMs(uint32_t currentTime) const override;
+/** @brief update. */
     bool update(uint32_t currentTime) override;
+/** @brief restartAutoScroll. */
     void restartAutoScroll(uint32_t additionalDelayMs = 0U);
+/** @brief stopAutoScroll. */
     void stopAutoScroll();
 #endif
 
+/** @brief refreshMetrics. */
     void refreshMetrics();
+/** @brief drawSelf. */
     void drawSelf(const WidgetRenderContext& context) override;
+/** @brief display. */
     Canvas& display() override;
 public:
+/** @brief Label. */
     Label(PixelUI& ui, uint16_t x, uint16_t y, const char* content, POS pos = POS::BOTTOM, const uint8_t* font = PIXELUI_FONT_TEXT);
+/** @brief Label. */
     Label(PixelUI& ui, uint16_t x, uint16_t y, uint16_t viewportWidth,
           const char* content, POS pos = POS::BOTTOM,
           const uint8_t* font = PIXELUI_FONT_TEXT);
+/** @brief ~Label. */
     ~Label() override = default;
+/** @brief onLoad. */
     void onLoad() override;
+/** @brief onLoad. */
     void onLoad(LoadTransition transition);
     // Compatibility wrapper for callers that already use the old name.
+/** @brief onLoadImmediately. */
     void onLoadImmediately();
+/** @brief onOffload. */
     void onOffload() override;
+/** @brief onSelect. */
     bool onSelect() override ;
+/** @brief setLoadPos. */
     void setLoadPos(POS pos) {load_pos = pos;};
+/** @brief setCallback. */
     void setCallback(VoidCallback cb) {m_callback = cb;}
+/** @brief setPosition. */
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y;
         setWidgetBounds({m_x, m_y, m_w, m_h});
     };
+/** @brief setSize. */
     void setSize(uint16_t w, uint16_t h);
+/** @brief setViewportWidth. */
     void setViewportWidth(uint16_t width);
+/** @brief clearViewportWidth. */
     void clearViewportWidth() { setViewportWidth(0U); }
+/** @brief getViewportWidth. */
     uint16_t getViewportWidth() const { return static_cast<uint16_t>(m_w); }
+/** @brief setOverflow. */
     void setOverflow(Overflow overflow);
+/** @brief getOverflow. */
     Overflow getOverflow() const { return overflow_; }
+/** @brief setTextAlignment. */
     void setTextAlignment(TextAlignX alignment);
+/** @brief getTextAlignment. */
     TextAlignX getTextAlignment() const { return text_alignment_; }
+/** @brief setText. */
     void setText(const char* source);
 
 private:
+/** @brief load. */
     void load(bool animate);
 };

@@ -37,14 +37,35 @@ using Framebuffer = etl::array<FramebufferRow, FRAMEBUFFER_HEIGHT>;
 
 class U8G2Wrapper : public U8G2 {
 public:
+    /** @brief Creates a wrapper configured for a 128x64 SSD1306 framebuffer. */
     U8G2Wrapper();
+
+    /**
+     * @brief Creates a wrapper with explicit logical dimensions.
+     * @param _width Logical framebuffer width in pixels.
+     * @param _height Logical framebuffer height in pixels.
+     */
     U8G2Wrapper(int _width, int _height) : width(_width), height(_height) {};
+
+    /** @brief Destroys the wrapper. */
     ~U8G2Wrapper() = default;
 
+    /** @brief Initializes the configured display and leaves power-save mode. */
     void init();
+
+    /**
+     * @brief Clears the buffer and draws a test string at the top-left corner.
+     * @param str Null-terminated string to draw.
+     */
     void drawTestString(const char* str);
+
+    /** @return The logical framebuffer width in pixels. */
     int getWidth() const { return width; }
+
+    /** @return The logical framebuffer height in pixels. */
     int getHeight() const { return height; }
+
+    /** @return A pixel-oriented copy of the current U8G2 framebuffer. */
     Framebuffer getFramebufferPixels();
 
 private:

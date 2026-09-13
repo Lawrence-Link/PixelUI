@@ -29,7 +29,9 @@ private:
     static constexpr uint8_t ACTION_GAP = 4;
     static constexpr uint8_t CONTENT_PADDING = 4;
 
+    /** @return Minimum popup height required by the digit editor. */
     static constexpr uint16_t minimumHeight() { return 56U; }
+    /** @return Minimum popup width required for the requested digit count. */
     static constexpr uint16_t minimumWidth(uint8_t digitCount) {
         const uint16_t digitWidth = digitCount == 0U
             ? 0U
@@ -44,13 +46,19 @@ private:
 
     class ControlGroup final : public IWidget {
     public:
+        /** @brief Creates the widget group used to position editor controls. */
         explicit ControlGroup(PixelUI& ui);
+        /** @param width Group width in pixels. @param height Group height in pixels. */
         void setSize(uint16_t width, uint16_t height);
+        /** @brief Handles loading; the group has no transient resources. */
         void onLoad() override {}
+        /** @brief Handles offloading; the group has no transient resources. */
         void onOffload() override {}
 
     private:
+        /** @brief Intentionally draws no content; child controls render themselves. */
         void drawSelf(const WidgetRenderContext&) override {}
+        /** @return Canvas used by the control group. */
         Canvas& display() override;
         PixelUI& ui_;
     };
@@ -78,18 +86,29 @@ private:
     FocusManager focusManager_;
     FinalizationState finalizationState_ = FinalizationState::Editing;
 
+    /** @return Largest signed value representable with digitCount decimal digits. */
     static int32_t maximumValue(uint8_t digitCount);
+    /** @return Value reconstructed from the currently displayed digits. */
     int32_t collectValue() const;
+    /** @brief Writes the digit editor's current value into its session. */
     bool synchronizeValue();
+    /** @brief Updates each digit widget from the session's draft value. */
     void restoreDigitsFromDraft();
+    /** @brief Commits the current session and marks the popup committed. */
     bool commitEditing();
+    /** @brief Cancels editing and optionally starts popup closing. */
     bool cancelEditing(bool closePopup = true);
+    /** @brief Allocates and configures digit and action controls. */
     void initializeControls();
+    /** @brief Destroys all controls allocated from the fixed pool. */
     void destroyControls();
 
 protected:
+    /** @brief Draws the digit controls and action buttons. */
     void drawContent(const PopupContentBounds& bounds) override;
+    /** @return Whether the event was consumed by digit focus or actions. */
     bool handleContentInput(InputEvent event) override;
+    /** @return Whether editing has reached a state safe for popup closure. */
     bool onClosing() override;
 
 public:
@@ -116,11 +135,14 @@ public:
                      int32_t& value, uint8_t digitCount,
                      const char* title = "", uint16_t duration = 3000,
                      ValueCallback callback = nullptr);
+    /** @brief Commits or restores the edit session and releases pooled controls. */
     ~PopupValueDigits();
 
+    /** @return Whether digitCount fits the configured fixed storage. */
     static constexpr bool isValidDigitCount(uint8_t digitCount) {
         return digitCount > 0U && digitCount <= MAX_INT_FIXED_WIDTH;
     }
+    /** @return Whether dimensions are sufficient for the requested digit count. */
     static constexpr bool isValidLayout(
         uint16_t width, uint16_t height, uint8_t digitCount) {
         return isValidDigitCount(digitCount) &&

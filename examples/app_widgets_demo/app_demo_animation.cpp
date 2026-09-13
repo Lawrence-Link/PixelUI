@@ -73,6 +73,7 @@ public:
         setEnterTransitionEnabled(true);
     }
 
+/** @brief draw. */
     void draw() override {
 
         Canvas& u8g2 = m_ui.getCanvas();
@@ -184,6 +185,7 @@ public:
         u8g2.drawLine(0, 0, 128 * (curr_timestamp - prev_timestamp) / page_switch_duration, 0);
     }
 
+/** @brief handleInput. */
     bool handleInput(InputEvent event) override {
         // No widget has taken over input, execute the original focus management logic
         if (event == InputEvent::BACK) {
@@ -192,20 +194,24 @@ public:
         return true;
     }
     
+/** @brief onEnter. */
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
         m_ui.setContinousDraw(true);
         m_ui.markDirty(); 
     }
 
+/** @brief onPause. */
     void onPause() override {
         m_ui.setContinousDraw(false);
     }
 
+/** @brief onResume. */
     void onResume() override {
         m_ui.setContinousDraw(true);
     }
 
+/** @brief onExit. */
     void onExit() override {
         m_ui.clearAllAnimations();
         m_ui.setContinousDraw(false);

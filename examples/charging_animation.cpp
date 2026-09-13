@@ -61,6 +61,7 @@ public:
     ChargeDemo(PixelUI& ui, void* parameter) : m_ui(ui) {}
 
     // ---------------- Drawing function ----------------
+/** @brief draw. */
     void draw() override {
         m_ui.markDirty();
         Canvas& display = m_ui.getCanvas();
@@ -87,6 +88,7 @@ public:
     }
 
     // ---------------- State machine scheduler ----------------
+/** @brief updateState. */
     void updateState() {
         switch(state) {
             case ChargeState::LIGHTNING_AND_RING:
@@ -131,12 +133,14 @@ public:
     }
 
     // ---------------- Input handling ----------------
+/** @brief handleInput. */
     bool handleInput(InputEvent event) override {
         requestExit(); // Any input exits the application
         return true;
     }
 
     // ---------------- Lifecycle ----------------
+/** @brief onEnter. */
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
 
@@ -157,12 +161,14 @@ public:
         m_ui.markDirty();
     }
 
+/** @brief onExit. */
     void onExit() override {
         m_ui.setContinousDraw(false);
     }
 
 private:
     // ---------------- Lightning drawing ----------------
+/** @brief drawChargingLightning. */
     void drawChargingLightning(int size, int centerX, int centerY) {
         Canvas& g = m_ui.getCanvas();
         int p1x = centerX + size * 0.4; int p1y = centerY - size * 0.6;
@@ -182,6 +188,7 @@ private:
     }
 
     // ---------------- Ring drawing ----------------
+/** @brief drawBatteryRing. */
     void drawBatteryRing(Canvas& u8g2, int x0, int y0, int radius, int thickness, int percent) {
         if (thickness < 1) thickness = 1;
         if (radius <= 0) return;

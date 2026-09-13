@@ -36,6 +36,7 @@ constexpr int16_t SIN_Q15[] = {
     24351, 26509, 28377, 29934, 31163, 32051, 32587, 32767,
 };
 
+/** @brief firstQuadrantSinQ15. */
 int32_t firstQuadrantSinQ15(int angle) {
     if (angle >= 90) return SIN_Q15[15];
 
@@ -46,6 +47,7 @@ int32_t firstQuadrantSinQ15(int angle) {
     return lower + ((upper - lower) * remainder) / DEGREES_PER_STEP;
 }
 
+/** @brief sinDegreesQ15. */
 int32_t sinDegreesQ15(int angle) {
     angle %= 360;
     if (angle < 0) angle += 360;
@@ -60,6 +62,7 @@ int32_t sinDegreesQ15(int angle) {
     }
 }
 
+/** @brief scaleTrig. */
 int scaleTrig(int32_t trigValue, uint16_t radius) {
     const int64_t product = static_cast<int64_t>(trigValue) * radius;
     const int64_t rounded = product >= 0
@@ -92,6 +95,7 @@ void Clock::onLoad() {
     onLoad(LoadTransition::Animated);
 }
 
+/** @brief Clock::onLoad. */
 void Clock::onLoad(LoadTransition transition) {
     const int32_t finalHourHandLength = m_radius - 10;
     const int32_t finalMinuteHandLength = m_radius - 4;
@@ -164,6 +168,7 @@ bool Clock::handleEvent(InputEvent event) { return false; }
  */
 Canvas& Clock::display() { return m_ui.getCanvas(); }
 
+/** @brief Clock::drawSelf. */
 void Clock::drawSelf(const WidgetRenderContext& context) {
     draw_origin_x_ = context.originX;
     draw_origin_y_ = context.originY;

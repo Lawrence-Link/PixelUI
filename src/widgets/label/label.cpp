@@ -75,6 +75,7 @@ Label::Label(PixelUI& ui, uint16_t x, uint16_t y, uint16_t viewportWidth,
     setWidgetBounds({m_x, m_y, m_w, m_h});
 }
 
+/** @brief Label::refreshMetrics. */
 void Label::refreshMetrics() {
     Canvas& canvas = m_ui.getCanvas();
     const uint8_t* previousFont = canvas.rawDisplay().getU8g2()->font;
@@ -93,14 +94,17 @@ void Label::onLoad() {
     onLoad(LoadTransition::Animated);
 }
 
+/** @brief Label::onLoad. */
 void Label::onLoad(LoadTransition transition) {
     load(transition == LoadTransition::Animated);
 }
 
+/** @brief Label::onLoadImmediately. */
 void Label::onLoadImmediately() {
     onLoad(LoadTransition::Immediate);
 }
 
+/** @brief Label::load. */
 void Label::load(bool animate) {
     refreshMetrics();
     loaded_ = true;
@@ -159,6 +163,7 @@ void Label::onOffload() {
 #endif
 }
 
+/** @brief Label::setSize. */
 void Label::setSize(uint16_t w, uint16_t h) {
     m_w = w;
     m_h = h;
@@ -169,6 +174,7 @@ void Label::setSize(uint16_t w, uint16_t h) {
     m_ui.markDirty();
 }
 
+/** @brief Label::setViewportWidth. */
 void Label::setViewportWidth(uint16_t width) {
     m_w = width;
     setWidgetBounds({m_x, m_y, m_w, m_h});
@@ -178,6 +184,7 @@ void Label::setViewportWidth(uint16_t width) {
     m_ui.markDirty();
 }
 
+/** @brief Label::setOverflow. */
 void Label::setOverflow(Overflow overflow) {
     if (overflow_ == overflow) return;
     overflow_ = overflow;
@@ -187,6 +194,7 @@ void Label::setOverflow(Overflow overflow) {
     m_ui.markDirty();
 }
 
+/** @brief Label::setTextAlignment. */
 void Label::setTextAlignment(TextAlignX alignment) {
     if (text_alignment_ == alignment) return;
     text_alignment_ = alignment;
@@ -196,6 +204,7 @@ void Label::setTextAlignment(TextAlignX alignment) {
     m_ui.markDirty();
 }
 
+/** @brief Label::setText. */
 void Label::setText(const char* source) {
     src = source;
     if (loaded_) refreshMetrics();
@@ -206,12 +215,14 @@ void Label::setText(const char* source) {
 }
 
 #if PIXELUI_USE_LABEL_SCROLL
+/** @brief Label::stopAutoScroll. */
 void Label::stopAutoScroll() {
     scroll_running_ = false;
     scroll_offset_ = 0;
     scroll_phase_ = ScrollPhase::StartPause;
 }
 
+/** @brief Label::restartAutoScroll. */
 void Label::restartAutoScroll(uint32_t additionalDelayMs) {
     stopAutoScroll();
     if (!loaded_ || overflow_ != Overflow::AutoScroll || m_w <= 0 ||
@@ -224,11 +235,13 @@ void Label::restartAutoScroll(uint32_t additionalDelayMs) {
                             SCROLL_START_PAUSE_MS;
 }
 
+/** @brief Label::nextWakeupMs. */
 uint32_t Label::nextWakeupMs(uint32_t currentTime) const {
     if (!scroll_running_) return PixelUITime::NO_WAKEUP;
     return PixelUITime::untilDeadline(currentTime, next_scroll_deadline_);
 }
 
+/** @brief Label::update. */
 bool Label::update(uint32_t currentTime) {
     if (!scroll_running_ ||
         !PixelUITime::deadlineReached(currentTime, next_scroll_deadline_)) {
@@ -291,6 +304,7 @@ bool Label::update(uint32_t currentTime) {
  */
 Canvas& Label::display() { return m_ui.getCanvas(); }
 
+/** @brief Label::drawSelf. */
 void Label::drawSelf(const WidgetRenderContext& context) {
     if (!src) return;
 

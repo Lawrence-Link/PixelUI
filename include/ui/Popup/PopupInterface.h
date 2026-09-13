@@ -45,13 +45,20 @@ enum class PopupState {
  */
 class IPopup {
 public:
+/** @brief IPopup. */
     IPopup() = default;
+/** @brief ~IPopup. */
     virtual ~IPopup() {}
 
+/** @brief update. */
     virtual bool update(uint32_t currentTime) = 0;
+/** @brief draw. */
     virtual void draw() = 0;
+/** @brief handleInput. */
     virtual bool handleInput(InputEvent event) = 0;
+/** @brief getDuration. */
     virtual uint16_t getDuration() const = 0;
+/** @brief nextWakeupMs. */
     virtual uint32_t nextWakeupMs(
         uint32_t currentTime, uint32_t frameIntervalMs) const {
         (void)currentTime;

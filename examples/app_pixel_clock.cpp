@@ -84,6 +84,7 @@ public:
         resetDigitState(secondOnes);
     }
     
+/** @brief onEnter. */
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
         m_ui.setContinousDraw(true);
@@ -96,6 +97,7 @@ public:
         syncWithSystemTime();
     }
     
+/** @brief resetDigitState. */
     void resetDigitState(DigitState& digit) {
         digit.currentValue = 0;
         digit.offsetY = 0;
@@ -268,6 +270,7 @@ public:
         }
     }
     
+/** @brief draw. */
     void draw() override {
         Canvas& u8g2 = m_ui.getCanvas();
         
@@ -281,6 +284,7 @@ public:
                 lastTickTime = currentTime; // Reset tick timer after sync
             }
             // Tick every second (event-driven)
+/** @brief if. */
             else if (currentTime - lastTickTime >= TICK_INTERVAL) {
                 incrementSecond();
                 lastTickTime = currentTime;
@@ -323,6 +327,7 @@ public:
         drawScrollingDigit(secondX + 10, secondBaseY, secondOnes, false, smallDigitWidth, smallDigitHeight);
     }
     
+/** @brief handleInput. */
     bool handleInput(InputEvent event) override {
         if (event == InputEvent::BACK) {
             requestExit();
@@ -331,6 +336,7 @@ public:
         return false;
     }
     
+/** @brief onExit. */
     void onExit() override {
         m_ui.setContinousDraw(false);
     }

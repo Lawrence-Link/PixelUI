@@ -41,8 +41,13 @@ class IApplication : public IDrawable, public IInputHandler {
 public:
 
     using ExitCallback = etl::inplace_function<void(), CALLBACK_STORAGE_SIZE>; // Exit callback function
+    /**
+     * @brief Creates an application and configures viewport scrolling.
+     * @param useVerticalScroll Whether unhandled vertical input moves the canvas camera.
+     */
     explicit IApplication(bool useVerticalScroll = false)
         : useVerticalScroll(useVerticalScroll) {}
+    /** @brief Destroys the application through its virtual interface. */
     virtual ~IApplication() = default;
 
     // Enable the global canvas camera for this application. Unhandled UP/DOWN
@@ -57,21 +62,28 @@ public:
 
     // Enables the standard horizontal slide applied when onEnter begins.
     // Disabled by default so existing applications keep their current behavior.
+    /** @param enabled Whether entering this application uses the horizontal slide. */
     void setEnterTransitionEnabled(bool enabled) {
         m_enterTransitionEnabled = enabled;
     }
+    /** @return Whether the standard horizontal entry transition is enabled. */
     bool isEnterTransitionEnabled() const { return m_enterTransitionEnabled; }
 
     // Called when the app is pushed to the top of the stack
+    /** @param exitCallback Callback used to request removal of this application. */
     virtual void onEnter(ExitCallback exitCallback) { m_exitCallback = exitCallback; }
     // Called when the app is exited
+    /** @brief Handles application exit; the default implementation does nothing. */
     virtual void onExit() {}; 
     // Called when the app is paused by another app being pushed on top
+    /** @brief Handles pausing; the default implementation does nothing. */
     virtual void onPause() {};   
     // Called when the top app is popped and this app resumes
+    /** @brief Handles resuming; the default implementation does nothing. */
     virtual void onResume() {}; 
 
 protected:
+    /** @brief Invokes the stored callback to request that this application be popped. */
     void requestExit() {
         if (m_exitCallback) {
             m_exitCallback();
@@ -79,6 +91,7 @@ protected:
     }
 
 private:
+    /** @brief Clears the non-owning exit callback before application destruction. */
     void clearExitCallback() { m_exitCallback = nullptr; }
 
     ExitCallback m_exitCallback;

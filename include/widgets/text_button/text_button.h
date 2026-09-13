@@ -42,10 +42,13 @@ private:
     int32_t anim_w = 0, anim_h = 0;           // Animated width/height
     int32_t anim_x = 0, anim_y = 0;           // Animated position
 
+/** @brief drawSelf. */
     void drawSelf(const WidgetRenderContext& context) override;
+/** @brief display. */
     Canvas& display() override;
 
 public:
+/** @brief TextButton. */
     TextButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h, char const* text = "")
         : m_ui(ui), m_x(x), m_y(y), m_w(w), m_h(h), src(text)
     {
@@ -53,25 +56,35 @@ public:
         setFocusInsets({1, 1, 1, 1});
         setWidgetBounds({m_x, m_y, m_w, m_h});
     }
+/** @brief ~TextButton. */
     ~TextButton() override = default;
 
     // IWidget overrides
+/** @brief onLoad. */
     void onLoad() override;
+/** @brief onLoad. */
     void onLoad(LoadTransition transition);
     // Compatibility wrapper for callers that already use the old name.
+/** @brief onLoadNoAnim. */
     void onLoadNoAnim();
+/** @brief onOffload. */
     void onOffload() override;
+/** @brief onSelect. */
     bool onSelect() override;
 
     // Setters
+/** @brief setCallback. */
     void setCallback(VoidCallback cb) { m_callback = cb; }
+/** @brief setPosition. */
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y; 
         setWidgetBounds({m_x, m_y, m_w, m_h});
     }
+/** @brief setSize. */
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h; 
         setWidgetBounds({m_x, m_y, m_w, m_h});
     }
+/** @brief setText. */
     void setText(const char* text) { src = text; }
 };

@@ -69,7 +69,9 @@ class Label;
 class PixelUI
 {
 public:
+/** @brief PixelUI. */
     PixelUI(U8G2& u8g2);
+/** @brief ~PixelUI. */
     ~PixelUI();
 
     /**
@@ -77,14 +79,18 @@ public:
      */
     void begin();
 
+/** @brief addCoroutine. */
     void addCoroutine(Coroutine* coroutine);
+/** @brief removeCoroutine. */
     void removeCoroutine(Coroutine* coroutine);
+/** @brief clearAllCoroutines. */
     void clearAllCoroutines() {
 #if PIXELUI_USE_COROUTINE
         m_coroutineScheduler.clear();
 #endif
     }
     
+/** @brief getActiveCoroutineCount. */
     size_t getActiveCoroutineCount() {
 #if PIXELUI_USE_COROUTINE
         return m_coroutineScheduler.getActiveCount();
@@ -92,6 +98,7 @@ public:
         return 0U;
 #endif
     }
+/** @brief getFocusedWidgetCount. */
     size_t getFocusedWidgetCount() const;
 
     /** @brief Compatibility tick entry; prefer tickFromISR() on embedded hosts. */
@@ -150,6 +157,7 @@ public:
     
     // The callback object is owned by the animation; references captured by it
     // must outlive completion or cancellation.
+/** @brief animateCallback. */
     bool animateCallback(
         int32_t startValue,
         int32_t endValue,
@@ -159,6 +167,7 @@ public:
         PROTECTION protection = PROTECTION::NOT_PROTECTED,
         AnimationHandle* handle = nullptr);
 
+/** @brief cancelAnimation. */
     bool cancelAnimation(AnimationHandle handle) {
 #if PIXELUI_USE_ANIMATION
         return m_animationManager.cancel(handle);
@@ -185,11 +194,13 @@ public:
         m_animationManager.clear();
 #endif
     }
+/** @brief clearAnimationProtection. */
     void clearAnimationProtection() {
 #if PIXELUI_USE_ANIMATION
         m_animationManager.clearAllProtectionMarks();
 #endif
     }
+/** @brief activeAnimationCount. */
     size_t activeAnimationCount() const {
 #if PIXELUI_USE_ANIMATION
         return m_animationManager.activeCount();
@@ -198,11 +209,13 @@ public:
 #endif
     }
 
+/** @brief getCurrentTime. */
     uint32_t getCurrentTime() const {
         return _currentTime + pendingTickMs_.load(etl::memory_order_relaxed);
     }
 
     // setters
+/** @brief setRefreshCallback. */
     void setRefreshCallback(VoidCallback function) { if (function) m_refresh_callback = function; }
     /**
      * @brief Sets a coalesced wake-up notification for clean-to-dirty changes.
@@ -218,36 +231,51 @@ public:
      * while the ISR can run. The function must be an ISR-safe platform API.
      */
     void setTaskNotifyFromISR(IsrTaskNotifyFunction function, void* context = nullptr);
+/** @brief setInputCallback. */
     void setInputCallback(InputCallback callback) { if(callback) inputCallback_ = callback; }
+/** @brief clearInputCallback. */
     void clearInputCallback() { inputCallback_ = nullptr; }
+/** @brief setContinuousDraw. */
     void setContinuousDraw(bool isEnabled) {
         continousMode_ = isEnabled;
         if (isEnabled) markDirty();
     }
     // Backward-compatible spelling retained for existing applications.
+/** @brief setContinousDraw. */
     void setContinousDraw(bool isEnabled) { setContinuousDraw(isEnabled); }
 
     // TBD:
     // void setDebugPrintFunction(void (*func)(const char*)) { if (func) m_func_debug_print = func; }
 
     // getters
+/** @brief getU8G2. */
     U8G2& getU8G2() const { return u8g2_; }
+/** @brief getDisplayWidth. */
     uint16_t getDisplayWidth() const { return displayWidth_; }
+/** @brief getDisplayHeight. */
     uint16_t getDisplayHeight() const { return displayHeight_; }
+/** @brief getDisplayBufferSize. */
     uint16_t getDisplayBufferSize() const { return displayBufferSize_; }
+/** @brief getCanvas. */
     Canvas& getCanvas() { return canvas_; }
     const Canvas& getCanvas() const { return canvas_; }
 
+/** @brief scrollCanvasBy. */
     bool scrollCanvasBy(int32_t deltaY);
+/** @brief scrollCanvasTo. */
     bool scrollCanvasTo(int32_t y);
+/** @brief ensureCanvasVisible. */
     bool ensureCanvasVisible(int32_t top, int32_t bottom);
+/** @brief animateCanvasTo. */
     bool animateCanvasTo(int32_t y, uint32_t duration,
                          EasingType easing = EasingType::EASE_OUT_CUBIC,
                          PROTECTION protection = PROTECTION::NOT_PROTECTED);
+/** @brief getViewManagerPtr. */
     ViewManager* getViewManagerPtr() const {
         return const_cast<ViewManager*>(&m_viewManager);
     }
 
+/** @brief popupCount. */
     size_t popupCount() const {
 #if PIXELUI_USE_POPUP
         return m_popupManager.getPopupCounts();
@@ -255,6 +283,7 @@ public:
         return 0U;
 #endif
     }
+/** @brief clearPopups. */
     void clearPopups() {
 #if PIXELUI_USE_POPUP
         if (m_popupManager.getPopupCounts() != 0U) {
@@ -391,10 +420,13 @@ public:
      */
     void markFading();
 
+/** @brief addWidgetToFocusManager. */
     bool addWidgetToFocusManager(IWidget* w);
 
+/** @brief handleInput. */
     void handleInput(InputEvent event);
 
+/** @brief clearFocusManager. */
     void clearFocusManager();
     /**
      * @brief The main rendering function.
@@ -410,7 +442,9 @@ public:
 #endif
 
 protected:
+/** @brief setDrawable. */
     void setDrawable(IDrawable* drawable) { currentDrawable_ = drawable; }
+/** @brief isFading. */
     bool isFading() const { return isFading_; }
 
 private:
@@ -419,6 +453,7 @@ private:
     friend class Label;
 #endif
 
+/** @brief calculateNextWakeupMs. */
     uint32_t calculateNextWakeupMs(uint32_t frameIntervalMs) const;
 
     U8G2& u8g2_;
@@ -455,6 +490,7 @@ private:
     void* m_taskNotifyContext_ = nullptr;
     InputCallback inputCallback_ = nullptr;
 
+/** @brief isContinousRefreshEnabled. */
     bool isContinousRefreshEnabled() const { return continousMode_; }
     void (*m_func_debug_print)(const char*) = nullptr;
     uint8_t m_fadeStep = 0;

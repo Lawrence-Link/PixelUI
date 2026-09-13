@@ -38,27 +38,39 @@
  */
 class Clock : public IWidget {
 public:
+/** @brief Clock. */
     Clock(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t radius);
+/** @brief ~Clock. */
     ~Clock() = default;
 
+/** @brief onLoad. */
     void onLoad() override;
+/** @brief onLoad. */
     void onLoad(LoadTransition transition);
+/** @brief onOffload. */
     void onOffload() override;
+/** @brief handleEvent. */
     bool handleEvent(InputEvent event) override;
+/** @brief onSelect. */
     bool onSelect() override;
 
+/** @brief setPosition. */
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y;
         setWidgetBounds({m_x - m_radius, m_y - m_radius, 2 * m_radius + 1, 2 * m_radius + 1});
     }
+/** @brief setRadius. */
     void setRadius(uint16_t radius) {
         m_radius = radius;
         setWidgetBounds({m_x - m_radius, m_y - m_radius, 2 * m_radius + 1, 2 * m_radius + 1});
     }
     
     // API functions
+/** @brief setHour. */
     void setHour(uint8_t hour) { m_hour = hour % 12; }
+/** @brief setMinute. */
     void setMinute(uint8_t minute) { m_minute = minute % 60; }
+/** @brief setSecond. */
     void setSecond(uint8_t second) { m_second = second % 60; }
 
 private:
@@ -88,15 +100,21 @@ private:
 
     static constexpr uint32_t ANIM_DURATION = 1000;
     
+/** @brief drawDial. */
     void drawDial();
+/** @brief drawHourMarks. */
     void drawHourMarks();
+/** @brief drawHands. */
     void drawHands();
+/** @brief drawSelf. */
     void drawSelf(const WidgetRenderContext& context) override;
+/** @brief display. */
     Canvas& display() override;
 
     int32_t draw_origin_x_ = 0;
     int32_t draw_origin_y_ = 0;
     
     // Integer-only helper for angle calculations.
+/** @brief getPointOnCircle. */
     void getPointOnCircle(int angle, uint16_t radius, int& x, int& y) const;
 };

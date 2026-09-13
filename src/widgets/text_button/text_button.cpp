@@ -34,6 +34,7 @@ void TextButton::onLoad() {
     onLoad(LoadTransition::Animated);
 }
 
+/** @brief TextButton::onLoad. */
 void TextButton::onLoad(LoadTransition transition) {
     // Calculate the center coordinates
     int32_t center_x = m_x + m_w / 2;
@@ -62,6 +63,7 @@ void TextButton::onLoad(LoadTransition transition) {
     }
 }
 
+/** @brief TextButton::onLoadNoAnim. */
 void TextButton::onLoadNoAnim() {
     onLoad(LoadTransition::Immediate);
 }
@@ -76,6 +78,7 @@ void TextButton::onOffload() { }
  */
 Canvas& TextButton::display() { return m_ui.getCanvas(); }
 
+/** @brief TextButton::drawSelf. */
 void TextButton::drawSelf(const WidgetRenderContext& context) {
     if (!src) return;
 

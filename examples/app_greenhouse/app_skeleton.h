@@ -27,10 +27,29 @@ private:
     enum class ControlState {AUTO, ON};
     ControlState state_pump = ControlState::AUTO, state_lamp = ControlState::AUTO;
 public:
-
+    /**
+     * @brief Creates the greenhouse demonstration and configures its controls.
+     * @param ui UI instance used for drawing, animation, and scheduling.
+     * @param parameter Reserved application parameter; currently ignored.
+     */
     Greenhouse_App(PixelUI& ui, void* parameter);
+
+    /**
+     * @brief Registers controls and starts the staged entrance coroutine.
+     * @param exitCallback Callback used to request removal of the application.
+     */
     void onEnter(ExitCallback exitCallback) override;
+
+    /** @brief Cancels animations owned by the demonstration. */
     void onExit() override;
+
+    /**
+     * @brief Handles application input and requests exit for the back event.
+     * @param event Input event to process.
+     * @return true because this demonstration consumes every input event.
+     */
     bool handleInput(InputEvent event) override;
+
+    /** @brief Draws greenhouse controls, readings, and animated decorations. */
     void draw() override;
 };

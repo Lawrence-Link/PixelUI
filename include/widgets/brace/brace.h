@@ -31,19 +31,28 @@
 class Brace : public IWidget {
 
 public:
+/** @brief Brace. */
     Brace(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint16_t size_h);
+/** @brief ~Brace. */
     ~Brace() = default;
 
+/** @brief onLoad. */
     void onLoad() override;
+/** @brief onLoad. */
     void onLoad(LoadTransition transition);
+/** @brief onOffload. */
     void onOffload() override;
+/** @brief onSelect. */
     bool onSelect() override {
         if (m_callback) m_callback();
         return false;
     }
 
+/** @brief setCallback. */
     void setCallback(VoidCallback cb) { m_callback = cb; }
+/** @brief setSize. */
     void setSize(uint16_t width, uint16_t height);
+/** @brief setPosition. */
     void setPosition(int16_t pos_x, int16_t pos_y);
     
 private:
@@ -55,9 +64,14 @@ private:
     int32_t anim_x = 0;
     int32_t anim_y = 0;
 
+/** @brief updateBounds. */
     void updateBounds(const FocusBox& bounds);
+/** @brief drawSelf. */
     void drawSelf(const WidgetRenderContext& context) override;
+/** @brief drawOverlay. */
     void drawOverlay(const WidgetRenderContext& context) override;
+/** @brief getChildrenClipBounds. */
     FocusBox getChildrenClipBounds() const override;
+/** @brief display. */
     Canvas& display() override;
 };

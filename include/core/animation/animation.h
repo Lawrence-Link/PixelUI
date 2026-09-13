@@ -64,6 +64,7 @@ private:
  */
 class Animation {
 public:
+/** @brief Animation. */
     Animation(uint32_t duration, EasingType easing = EasingType::LINEAR) :
         _progress(0),           
         _isActive(false),       
@@ -73,15 +74,24 @@ public:
         _duration(duration)     
     {}
     
+/** @brief ~Animation. */
     ~Animation() = default;
     
+/** @brief start. */
     void start(uint32_t currentTime);
+/** @brief stop. */
     void stop();
+/** @brief update. */
     bool update(uint32_t currentTime);
+/** @brief isActive. */
     bool isActive() const { return _isActive; }
+/** @brief isProtected. */
     bool isProtected() const { return _isProtected; }
+/** @brief setProtected. */
     void setProtected(bool prot) { _isProtected = prot; }
+/** @brief getProgress. */
     int32_t getProgress() const { return _progress; }
+/** @brief nextWakeupMs. */
     uint32_t nextWakeupMs(uint32_t currentTime, uint32_t frameIntervalMs) const;
 
 protected:
@@ -101,6 +111,7 @@ private:
  */
 class CallbackAnimation : public Animation {
 public:
+/** @brief CallbackAnimation. */
     CallbackAnimation(AnimationHandle handle,
                       int32_t startVal, int32_t endVal, uint32_t duration, EasingType easing,
                       etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE> updateCallback)
@@ -110,6 +121,7 @@ public:
           _endVal(endVal),
           _updateCallback(updateCallback) {}
           
+/** @brief update. */
     bool update(uint32_t currentTime) {
         bool isRunning = Animation::update(currentTime);
         if (_updateCallback) { 
@@ -130,6 +142,7 @@ private:
     etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE> _updateCallback;
 
 public:
+/** @brief handle. */
     AnimationHandle handle() const { return _handle; }
 };
 
@@ -141,7 +154,9 @@ class AnimationManager {
 public:
     using UpdateCallback = etl::inplace_function<void(int32_t), CALLBACK_STORAGE_SIZE>;
 
+/** @brief ~AnimationManager. */
     ~AnimationManager() = default;
+/** @brief emplace. */
     bool emplace(
         int32_t startValue,
         int32_t endValue,
@@ -151,16 +166,25 @@ public:
         PROTECTION protection,
         uint32_t currentTime,
         AnimationHandle* handle = nullptr);
+/** @brief cancel. */
     bool cancel(AnimationHandle handle);
+/** @brief update. */
     void update(uint32_t currentTime);
+/** @brief clear. */
     void clear();
+/** @brief clearUnprotected. */
     void clearUnprotected();
+/** @brief clearAllProtectionMarks. */
     void clearAllProtectionMarks();
+/** @brief activeCount. */
     size_t activeCount() const;
+/** @brief available. */
     size_t available() const { return _animations.available(); }
+/** @brief nextWakeupMs. */
     uint32_t nextWakeupMs(uint32_t currentTime, uint32_t frameIntervalMs) const;
 
 private:
+/** @brief nextHandle. */
     AnimationHandle nextHandle();
 
     etl::vector<CallbackAnimation, MAX_ANIMATION_COUNT> _animations;

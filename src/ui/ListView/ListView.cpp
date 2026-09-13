@@ -46,16 +46,19 @@ ListView::~ListView() {
     cancelAllOwnedAnimations();
 }
 
+/** @brief ListView::cancelLoadAnimations. */
 void ListView::cancelLoadAnimations() {
     for (AnimationHandle handle : loadAnimations_) m_ui.cancelAnimation(handle);
     loadAnimations_.clear();
 }
 
+/** @brief ListView::cancelToggleAnimation. */
 void ListView::cancelToggleAnimation() {
     m_ui.cancelAnimation(switchAnimState_.handle);
     switchAnimState_ = {};
 }
 
+/** @brief ListView::toggleBoxXFor. */
 int32_t ListView::toggleBoxXFor(const ListItem& item) const {
         const bool* toggle = item.accessory.toggleValue();
     if (toggle == nullptr) return 0;
@@ -64,11 +67,13 @@ int32_t ListView::toggleBoxXFor(const ListItem& item) const {
         : (*toggle ? 7 : 0);
 }
 
+/** @brief ListView::clearNonInitialAnimations. */
 void ListView::clearNonInitialAnimations() {
     for (AnimationHandle handle : viewAnimations_) m_ui.cancelAnimation(handle);
     viewAnimations_.clear();
 }
 
+/** @brief ListView::cancelAllOwnedAnimations. */
 void ListView::cancelAllOwnedAnimations() {
     clearNonInitialAnimations();
     cancelLoadAnimations();
@@ -280,6 +285,7 @@ int32_t ListView::calculateTitleRight(
     return etl::max(TITLE_X + 1, right);
 }
 
+/** @brief ListView::updateSelectedItemTitle. */
 int32_t ListView::updateSelectedItemTitle() {
     if (m_itemLength < 0 || currentCursor < 0 ||
         currentCursor > m_itemLength) {

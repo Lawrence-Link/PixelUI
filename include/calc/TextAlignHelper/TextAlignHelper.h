@@ -34,7 +34,15 @@ enum class TextOverflowPlacement {
 
 class TextAlignHelper {
 public:
-
+    /**
+     * @brief Calculates a horizontal offset for text within an area.
+     * @param area_width Width of the available area.
+     * @param text_width Width of the rendered text.
+     * @param align Horizontal alignment to apply.
+     * @param overflow Placement policy when the text is wider than the area.
+     * @return Offset from the area's left edge; it may be negative when
+     *         preserving centered or right alignment for overflowing text.
+     */
     static int32_t calcAlignedOffset(
         int32_t area_width,
         int32_t text_width,
@@ -59,7 +67,14 @@ public:
         }
     }
 
-    // calculate X position for centered text
+    /**
+     * @brief Calculates the left coordinate for horizontally centered text.
+     * @param u8g2 Graphics context used to measure the UTF-8 text.
+     * @param area_x Left coordinate of the available area.
+     * @param area_w Width of the available area.
+     * @param utf8 Null-terminated UTF-8 text to measure.
+     * @return Left coordinate at which the text should be drawn.
+     */
     static int16_t calcCenteredX(
         u8g2_t* u8g2,
         int16_t area_x,
@@ -72,6 +87,15 @@ public:
                 area_w, text_width, TextAlignX::Center));
     }
 
+    /**
+     * @brief Calculates the left coordinate for horizontally aligned text.
+     * @param u8g2 Graphics context used to measure the UTF-8 text.
+     * @param area_x Left coordinate of the available area.
+     * @param area_w Width of the available area.
+     * @param utf8 Null-terminated UTF-8 text to measure.
+     * @param align Horizontal alignment to apply.
+     * @return Left coordinate at which the text should be drawn.
+     */
     static int16_t calcAlignedX(
         u8g2_t* u8g2,
         int16_t area_x,
@@ -85,6 +109,15 @@ public:
             area_x + calcAlignedOffset(area_w, text_width, align));
     }
 
+    /**
+     * @brief Calculates a text baseline for the requested vertical alignment.
+     * @param u8g2 Graphics context that supplies the current font metrics.
+     * @param area_y Top coordinate of the available area, or the baseline when
+     *        @p align is TextAlignY::Baseline.
+     * @param area_h Height of the available area.
+     * @param align Vertical alignment to apply.
+     * @return Baseline coordinate at which the text should be drawn.
+     */
     static int16_t calcAlignedBaselineY(
         u8g2_t* u8g2,
         int16_t area_y,
@@ -113,6 +146,15 @@ public:
         }
     }
 
+    /**
+     * @brief Calculates the draw position for text aligned inside a rectangle.
+     * @param u8g2 Graphics context used for text metrics.
+     * @param area Rectangle in which to align the text.
+     * @param utf8 Null-terminated UTF-8 text to measure.
+     * @param align_x Horizontal alignment to apply.
+     * @param align_y Vertical alignment to apply.
+     * @return Text origin containing the left coordinate and baseline.
+     */
     static TextPos calcTextPos(
         u8g2_t* u8g2,
         const Rect& area,
@@ -139,6 +181,13 @@ public:
         return pos;
     }
 
+    /**
+     * @brief Calculates the draw position for text centered in a rectangle.
+     * @param u8g2 Graphics context used for text metrics.
+     * @param area Rectangle in which to center the text.
+     * @param utf8 Null-terminated UTF-8 text to measure.
+     * @return Text origin containing the left coordinate and baseline.
+     */
     static TextPos calcCenteredText(
         u8g2_t* u8g2,
         const Rect& area,

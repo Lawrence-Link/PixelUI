@@ -46,37 +46,56 @@ public:
         Bare
     };
 
+/** @brief NumScroll. */
     NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+/** @brief NumScroll. */
     NumScroll(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h,
               const NumericRange& range, NumericFormatter formatter);
+/** @brief ~NumScroll. */
     ~NumScroll() override;
 
+/** @brief onLoad. */
     void onLoad() override;
+/** @brief onLoad. */
     void onLoad(LoadTransition transition);
     // Compatibility wrapper for callers that already use the old name.
+/** @brief onLoadNoAnim. */
     void onLoadNoAnim();
+/** @brief onOffload. */
     void onOffload() override;
+/** @brief handleEvent. */
     bool handleEvent(InputEvent event) override;
+/** @brief onSelect. */
     bool onSelect() override;
+/** @brief getTimeout. */
     uint32_t getTimeout() const override { return TIMEOUT_MS; }
 
+/** @brief setPosition. */
     void setPosition(uint16_t x, uint16_t y) {
         m_x = x; m_y = y; 
         updateGeometry();
     }
 
+/** @brief setRange. */
     void setRange(const NumericRange& range);
+/** @brief setRange. */
     bool setRange(int32_t minValue, int32_t maxValue, int32_t step = 1);
     // Any non-null formatter context must outlive this NumScroll.
+/** @brief setFormatter. */
     void setFormatter(NumericFormatter formatter) { formatter_ = formatter; }
+/** @brief setValue. */
     void setValue(int32_t val);
+/** @brief setValueImmediate. */
     void setValueImmediate(int32_t val);
+/** @brief getValue. */
     int32_t getValue() const { return m_current_value; }
 
+/** @brief setPresentation. */
     void setPresentation(Presentation presentation) {
         presentation_ = presentation;
         updateGeometry();
     }
+/** @brief setSize. */
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h; 
         updateGeometry();
@@ -105,14 +124,22 @@ private:
 
     static constexpr uint32_t TIMEOUT_MS = 5000;
 
+/** @brief drawSelf. */
     void drawSelf(const WidgetRenderContext& context) override;
+/** @brief display. */
     Canvas& display() override;
 
+/** @brief incrementValue. */
     void incrementValue();
+/** @brief decrementValue. */
     void decrementValue();
+/** @brief animateToValue. */
     void animateToValue(int32_t new_value);
+/** @brief updateGeometry. */
     void updateGeometry();
+/** @brief cancelOwnAnimations. */
     void cancelOwnAnimations();
 
+/** @brief formatValue. */
     bool formatValue(int32_t value, char* buffer, size_t bufferSize) const;
 };

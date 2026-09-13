@@ -2,6 +2,7 @@
 
 namespace {
 
+/** @brief Calculates 10 raised to a digit count no greater than nine. */
 uint32_t powerOfTen(uint8_t exponent) {
     uint32_t result = 1U;
     while (exponent-- != 0U) result *= 10U;

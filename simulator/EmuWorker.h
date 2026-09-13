@@ -32,13 +32,23 @@
 class EmuWorker : public QObject {
     Q_OBJECT
 public:
+    /**
+     * @brief Creates a simulator worker connected to its background thread.
+     * @param parent Optional QObject parent.
+     */
     explicit EmuWorker(QObject *parent = nullptr);
+
+    /** @brief Stops the background loop before destroying the worker. */
     ~EmuWorker();
-    
+
+    /** @brief Starts the background loop unless it is already running. */
     void start();
+
+    /** @brief Requests the background loop to stop and waits for its thread. */
     void stop();
 
-    virtual void grandLoop() {  // the pseudo main loop
+    /** @brief Runs the simulator loop and requests an update every 50 ms. */
+    virtual void grandLoop() {
         while (running) {
             QThread::msleep(50);
             emit updateRequested();
@@ -46,6 +56,7 @@ public:
     }
 
 signals:
+    /** @brief Signals that the simulator display should be refreshed. */
     void updateRequested();
 
 protected:

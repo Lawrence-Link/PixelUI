@@ -5,5 +5,6 @@
 
 class AppLauncher {
 public:
+/** @brief launch. */
     static ViewManager::LaunchResult launch(PixelUI& ui, ViewManager& viewManager);
 };

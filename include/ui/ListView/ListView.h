@@ -48,6 +48,7 @@ public:
     };
 
     // Accessory targets are non-owning and must outlive the containing ListView.
+/** @brief text. */
     static constexpr ListItemAccessory text(const char* text) {
         ListItemAccessory accessory;
         accessory.kind_ = Kind::Text;
@@ -55,6 +56,7 @@ public:
         return accessory;
     }
 
+/** @brief toggle. */
     static constexpr ListItemAccessory toggle(bool& value) {
         ListItemAccessory accessory;
         accessory.kind_ = Kind::Toggle;
@@ -62,6 +64,7 @@ public:
         return accessory;
     }
 
+/** @brief value. */
     static constexpr ListItemAccessory value(PixelUIValue::Binding binding) {
         ListItemAccessory accessory;
         accessory.kind_ = Kind::Value;
@@ -73,16 +76,19 @@ public:
         return accessory;
     }
 
+/** @brief kind. */
     constexpr Kind kind() const { return kind_; }
 
     constexpr const char* textValue() const {
         return kind_ == Kind::Text ? payload_.text : nullptr;
     }
 
+/** @brief toggleValue. */
     constexpr bool* toggleValue() const {
         return kind_ == Kind::Toggle ? payload_.toggle : nullptr;
     }
 
+/** @brief formatValue. */
     bool formatValue(char* buffer, size_t bufferSize) const {
         if (buffer != nullptr && bufferSize != 0U) buffer[0] = '\0';
         if (kind_ != Kind::Value || payload_.value.formatter == nullptr) {
@@ -107,6 +113,7 @@ private:
     };
 
     union Payload {
+/** @brief Payload. */
         constexpr Payload() : text(nullptr) {}
 
         const char* text;
@@ -136,26 +143,39 @@ public:
     // itemList, every submenu, accessory target, and callback capture are
     // non-owning and must remain valid for this ListView's lifetime.
     // NOTE: length is signed to match internal indices.
+/** @brief ListView. */
     ListView(PixelUI& ui, ListItem *itemList, int length);
+/** @brief ~ListView. */
     ~ListView() override;
 
     // --- Application Lifecycle and Input Handlers ---
+/** @brief draw. */
     void draw() override;
+/** @brief handleInput. */
     bool handleInput(InputEvent event) override;
+/** @brief onEnter. */
     void onEnter(ExitCallback exitCallback) override;
+/** @brief onResume. */
     void onResume() override ;
+/** @brief onPause. */
     void onPause() override;
+/** @brief onExit. */
     void onExit() override;
 
+/** @brief onLoad. */
     virtual void onLoad() = 0;
+/** @brief onSave. */
     virtual void onSave() = 0;
 
     // --- Public Utility Methods ---
+/** @brief resizeLength. */
     void resizeLength(int itemLength) { m_itemLength = itemLength; }
+/** @brief getUI. */
     PixelUI& getUI() { return m_ui; }
     
     PixelUI& m_ui; // Reference to the main UI class.
 protected:
+/** @brief toggleBoxXFor. */
     int32_t toggleBoxXFor(const ListItem& item) const;
 
 private:
@@ -203,31 +223,51 @@ private:
     int32_t progress_bar_bottom = 0;
 
     // --- Navigation and Drawing Methods ---
+/** @brief navigateLeft. */
     void navigateLeft();
+/** @brief navigateRight. */
     void navigateRight();
+/** @brief navigateUp. */
     void navigateUp();
+/** @brief navigateDown. */
     void navigateDown();
 
+/** @brief drawCursor. */
     void drawCursor();
+/** @brief calculateTitleRight. */
     int32_t calculateTitleRight(const ListItem& item, char* valueBuffer,
                                 size_t valueBufferSize) const;
+/** @brief updateSelectedItemTitle. */
     int32_t updateSelectedItemTitle();
+/** @brief scrollToTarget. */
     void scrollToTarget();
+/** @brief updateScrollPosition. */
     void updateScrollPosition();
+/** @brief startLoadAnimation. */
     void startLoadAnimation();
+/** @brief shouldScroll. */
     bool shouldScroll(int newCursor);
+/** @brief calculateItemY. */
     int32_t calculateItemY(int itemIndex);
     
+/** @brief selectCurrent. */
     void selectCurrent();
+/** @brief returnToPreviousContext. */
     void returnToPreviousContext();
 
+/** @brief clearNonInitialAnimations. */
     void clearNonInitialAnimations();
+/** @brief cancelLoadAnimations. */
     void cancelLoadAnimations();
+/** @brief cancelToggleAnimation. */
     void cancelToggleAnimation();
+/** @brief cancelAllOwnedAnimations. */
     void cancelAllOwnedAnimations();
+/** @brief animateOwned. */
     bool animateOwned(int32_t& value, int32_t target, uint32_t duration,
                       EasingType easing,
                       PROTECTION protection = PROTECTION::NOT_PROTECTED);
+/** @brief animateOwnedCallback. */
     bool animateOwnedCallback(int32_t start, int32_t target, uint32_t duration,
                               EasingType easing, ValueCallback callback,
                               PROTECTION protection = PROTECTION::NOT_PROTECTED);

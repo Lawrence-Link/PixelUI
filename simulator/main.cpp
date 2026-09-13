@@ -48,6 +48,7 @@ MainWindow* g_mainWindow = nullptr;
 
 class EmulatorThread : public EmuWorker {
 public:
+/** @brief grandLoop. */
     void grandLoop() override { 
         registerApps();
 
@@ -66,6 +67,7 @@ public:
 };
 
 
+/** @brief main. */
 int main(int argc, char *argv[]) {
     puts("<<<<<< U8G2 Emulator - Qt Windowed Mode >>>>>>");
 

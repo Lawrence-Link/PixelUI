@@ -54,6 +54,7 @@ NumScroll::~NumScroll() {
     cancelOwnAnimations();
 }
 
+/** @brief NumScroll::updateGeometry. */
 void NumScroll::updateGeometry() {
     if (presentation_ == Presentation::Bare) {
         setFocusInsets({2, static_cast<int32_t>(m_h) - 2, 2, 0});
@@ -70,6 +71,7 @@ void NumScroll::onLoad() {
     onLoad(LoadTransition::Animated);
 }
 
+/** @brief NumScroll::onLoad. */
 void NumScroll::onLoad(LoadTransition transition) {
     cancelOwnAnimations();
     m_anim_offset = 0;
@@ -127,6 +129,7 @@ void NumScroll::onOffload() {
     m_is_active = false;
 }
 
+/** @brief NumScroll::cancelOwnAnimations. */
 void NumScroll::cancelOwnAnimations() {
     m_ui.cancelAnimation(valueAnimation_);
     m_ui.cancelAnimation(sizeAnimation_);
@@ -191,6 +194,7 @@ bool NumScroll::handleEvent(InputEvent event) {
  */
 Canvas& NumScroll::display() { return m_ui.getCanvas(); }
 
+/** @brief NumScroll::drawSelf. */
 void NumScroll::drawSelf(const WidgetRenderContext& context) {
     Canvas& u8g2 = m_ui.getCanvas();
     if (anim_w <= 0 || anim_h <= 0) return;
@@ -279,6 +283,7 @@ void NumScroll::setRange(const NumericRange& range) {
     m_ui.markDirty();
 }
 
+/** @brief NumScroll::setRange. */
 bool NumScroll::setRange(int32_t minValue, int32_t maxValue, int32_t step) {
     NumericRange range;
     if (!NumericRange::tryCreate(minValue, maxValue, step, range)) return false;
@@ -298,6 +303,7 @@ void NumScroll::setValue(int32_t val) {
     }
 }
 
+/** @brief NumScroll::setValueImmediate. */
 void NumScroll::setValueImmediate(int32_t val) {
     m_ui.cancelAnimation(valueAnimation_);
     valueAnimation_ = INVALID_ANIMATION_HANDLE;

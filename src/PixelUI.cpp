@@ -101,11 +101,13 @@ void PixelUI::heartbeat(uint32_t ms) {
     pendingTickMs_.fetch_add(ms, etl::memory_order_relaxed);
 }
 
+/** @brief PixelUI::setTaskNotifyFromISR. */
 void PixelUI::setTaskNotifyFromISR(IsrTaskNotifyFunction function, void* context) {
     m_taskNotifyContext_ = context;
     m_taskNotifyFromISR_ = function;
 }
 
+/** @brief PixelUI::tickFromISR. */
 void PixelUI::tickFromISR(uint32_t elapsedMs) {
     if (elapsedMs == 0U) return;
 
@@ -116,6 +118,7 @@ void PixelUI::tickFromISR(uint32_t elapsedMs) {
     }
 }
 
+/** @brief PixelUI::process. */
 bool PixelUI::process() {
     const uint32_t elapsedMs =
         pendingTickMs_.exchange(0U, etl::memory_order_relaxed);
@@ -149,11 +152,13 @@ bool PixelUI::process() {
     return elapsedMs != 0U;
 }
 
+/** @brief PixelUI::handler. */
 uint32_t PixelUI::handler(uint32_t frameIntervalMs) {
     renderer();
     return nextWakeupMs(frameIntervalMs);
 }
 
+/** @brief PixelUI::setRenderRequestCallback. */
 void PixelUI::setRenderRequestCallback(VoidCallback function) {
     m_render_request_callback = etl::move(function);
     if (m_render_request_callback && hasPendingFrame()) {
@@ -161,6 +166,7 @@ void PixelUI::setRenderRequestCallback(VoidCallback function) {
     }
 }
 
+/** @brief PixelUI::markDirty. */
 void PixelUI::markDirty() {
     if (isDirty_) return;
 
@@ -218,18 +224,21 @@ bool PixelUI::animate(int32_t& value, int32_t targetValue, uint32_t duration,
         handle);
 }
 
+/** @brief PixelUI::scrollCanvasBy. */
 bool PixelUI::scrollCanvasBy(int32_t deltaY) {
     if (!canvas_.camera().scrollBy(deltaY)) return false;
     markDirty();
     return true;
 }
 
+/** @brief PixelUI::scrollCanvasTo. */
 bool PixelUI::scrollCanvasTo(int32_t y) {
     if (!canvas_.camera().setY(y)) return false;
     markDirty();
     return true;
 }
 
+/** @brief PixelUI::ensureCanvasVisible. */
 bool PixelUI::ensureCanvasVisible(int32_t top, int32_t bottom) {
     if (!canvas_.camera().ensureVisible(top, bottom)) return false;
     markDirty();
@@ -292,6 +301,7 @@ void PixelUI::clearFocusManager() {
 #endif
 }
 
+/** @brief PixelUI::getFocusedWidgetCount. */
 size_t PixelUI::getFocusedWidgetCount() const {
 #if PIXELUI_USE_FOCUS
     return m_focusManager.widgetCount();
@@ -338,6 +348,7 @@ bool PixelUI::needsHeartbeat() const {
     return false;
 }
 
+/** @brief PixelUI::nextWakeupMs. */
 uint32_t PixelUI::nextWakeupMs(uint32_t periodicTickMs) const {
     periodicTickMs = PixelUITime::normalizeInterval(periodicTickMs);
 #if PIXELUI_ENABLE_TICKLESS
@@ -347,6 +358,7 @@ uint32_t PixelUI::nextWakeupMs(uint32_t periodicTickMs) const {
 #endif
 }
 
+/** @brief PixelUI::calculateNextWakeupMs. */
 uint32_t PixelUI::calculateNextWakeupMs(uint32_t frameIntervalMs) const {
     if (pendingTickMs_.load(etl::memory_order_relaxed) != 0U || isDirty_) {
         return 0U;
@@ -382,10 +394,12 @@ uint32_t PixelUI::calculateNextWakeupMs(uint32_t frameIntervalMs) const {
     return next;
 }
 
+/** @brief PixelUI::hasPendingFrame. */
 bool PixelUI::hasPendingFrame() const {
     return isDirty_ || isFading_ || continousMode_;
 }
 
+/** @brief PixelUI::renderer. */
 bool PixelUI::renderer() {
     if (m_viewManager.isTransitionCommitInProgress()) return false;
 

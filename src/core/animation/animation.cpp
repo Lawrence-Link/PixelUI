@@ -189,6 +189,7 @@ bool AnimationManager::emplace(
     return true;
 }
 
+/** @brief AnimationManager::nextHandle. */
 AnimationHandle AnimationManager::nextHandle() {
     AnimationHandle candidate = nextHandle_++;
     if (nextHandle_ == INVALID_ANIMATION_HANDLE) ++nextHandle_;
@@ -196,6 +197,7 @@ AnimationHandle AnimationManager::nextHandle() {
     return candidate;
 }
 
+/** @brief AnimationManager::cancel. */
 bool AnimationManager::cancel(AnimationHandle handle) {
     if (handle == INVALID_ANIMATION_HANDLE) return false;
     for (auto iterator = _animations.begin(); iterator != _animations.end(); ++iterator) {

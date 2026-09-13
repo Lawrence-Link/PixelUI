@@ -71,10 +71,12 @@ CurveChart::CurveChart(
     anim_y = start_anim_y;
 }
 
+/** @brief CurveChart::onLoad. */
 void CurveChart::onLoad() {
     onLoad(LoadTransition::Animated);
 }
 
+/** @brief CurveChart::onLoad. */
 void CurveChart::onLoad(LoadTransition transition) {
     if (transition == LoadTransition::Immediate) {
         anim_w = size_w_;
@@ -110,10 +112,12 @@ void CurveChart::onLoad(LoadTransition transition) {
     m_ui.markDirty();
 }
 
+/** @brief CurveChart::onOffload. */
 void CurveChart::onOffload() {
 
 }
 
+/** @brief CurveChart::handleEvent. */
 bool CurveChart::handleEvent(InputEvent event) {
     if (event == InputEvent::SELECT) {
         is_expanded = false;
@@ -123,6 +127,7 @@ bool CurveChart::handleEvent(InputEvent event) {
     return false;
 }
 
+/** @brief CurveChart::onSelect. */
 bool CurveChart::onSelect(){
     m_ui.clearUnprotectedAnimations();
     if (!is_expanded) {
@@ -137,6 +142,7 @@ bool CurveChart::onSelect(){
     return true;
 }
 
+/** @brief CurveChart::expandWidget. */
 void CurveChart::expandWidget() {
     int32_t target_x, target_y;
     calculateExpandPosition(target_x, target_y);
@@ -149,6 +155,7 @@ void CurveChart::expandWidget() {
     m_ui.animate(anim_y, target_y, 350, EasingType::EASE_OUT_QUAD);
 }
 
+/** @brief CurveChart::contractWidget. */
 void CurveChart::contractWidget() {
     // Animate back to original size and position
     m_ui.animate(anim_w, size_w_, 350, EasingType::EASE_OUT_QUAD, PROTECTION::PROTECTED);
@@ -195,8 +202,10 @@ void CurveChart::calculateExpandPosition(int32_t& target_x, int32_t& target_y) {
     }
 }
 
+/** @brief CurveChart::display. */
 Canvas& CurveChart::display() { return m_ui.getCanvas(); }
 
+/** @brief CurveChart::drawSelf. */
 void CurveChart::drawSelf(const WidgetRenderContext& context) {
     Canvas& u8g2 = m_ui.getCanvas();
     // tl_x and tl_y are the animated top-left corner coordinates

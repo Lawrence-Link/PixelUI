@@ -47,15 +47,18 @@ Brace::Brace(PixelUI& ui, uint16_t pos_x, uint16_t pos_y, uint16_t size_w, uint1
     anim_y = start_anim_y;
 }
 
+/** @brief Brace::updateBounds. */
 void Brace::updateBounds(const FocusBox& bounds) {
     setWidgetBounds(bounds);
 }
 
+/** @brief Brace::setSize. */
 void Brace::setSize(uint16_t width, uint16_t height) {
     const FocusBox bounds = getLocalBounds();
     updateBounds({bounds.x, bounds.y, width, height});
 }
 
+/** @brief Brace::setPosition. */
 void Brace::setPosition(int16_t pos_x, int16_t pos_y) {
     const FocusBox bounds = getLocalBounds();
     updateBounds({pos_x, pos_y, bounds.w, bounds.h});
@@ -68,6 +71,7 @@ void Brace::onLoad() {
     onLoad(LoadTransition::Animated);
 }
 
+/** @brief Brace::onLoad. */
 void Brace::onLoad(LoadTransition transition) {
     const FocusBox bounds = getLocalBounds();
     if (transition == LoadTransition::Immediate) {
@@ -116,13 +120,16 @@ void Brace::onOffload() {
  */
 Canvas& Brace::display() { return m_ui.getCanvas(); }
 
+/** @brief Brace::drawSelf. */
 void Brace::drawSelf(const WidgetRenderContext&) {}
 
+/** @brief Brace::getChildrenClipBounds. */
 FocusBox Brace::getChildrenClipBounds() const {
     const FocusBox bounds = getLocalBounds();
     return {bounds.x + anim_x, bounds.y + anim_y, anim_w, anim_h};
 }
 
+/** @brief Brace::drawOverlay. */
 void Brace::drawOverlay(const WidgetRenderContext& context) {
     Canvas& u8g2 = m_ui.getCanvas();
     const FocusBox bounds = getLocalBounds();

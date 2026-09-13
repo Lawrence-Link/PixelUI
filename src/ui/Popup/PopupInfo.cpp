@@ -60,16 +60,6 @@ PopupInfo::PopupInfo(PixelUI& ui, uint16_t width, uint16_t height,
     }
 }
 
-/**
- * @brief Split a text string into lines for popup rendering
- * @param text Input text
- * @param maxWidth Maximum width in pixels
- * @return Number of lines generated
- *
- * Uses a fixed font width (6px for 5x7) to determine line breaks.
- * Supports word wrapping at spaces and newlines.
- * Stores line start pointer and length in _textLines array.
- */
 uint16_t PopupInfo::splitTextIntoLines(const char* text, uint16_t maxWidth) {
     if (!text) return 0;
 

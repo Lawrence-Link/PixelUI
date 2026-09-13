@@ -33,6 +33,7 @@
 class Histogram : public IWidget {
 public:
     template <size_t N, uint16_t ExpandedWidth, uint16_t ExpandedHeight>
+/** @brief Histogram. */
     Histogram(
         PixelUI& ui,
         uint16_t pos_x,
@@ -60,23 +61,32 @@ public:
                       "Histogram buffer capacity exceeds supported index range");
     }
 
+/** @brief ~Histogram. */
     ~Histogram() = default;
 
+/** @brief onLoad. */
     void onLoad() override;
+/** @brief onLoad. */
     void onLoad(LoadTransition transition);
+/** @brief onOffload. */
     void onOffload() override;
+/** @brief onSelect. */
     bool onSelect() override;
+/** @brief handleEvent. */
     bool handleEvent(InputEvent event) override;
 
+/** @brief setSize. */
     void setSize(uint16_t mar_w, uint16_t mar_h) { 
         size_w_ = mar_w; size_h_ = mar_h; 
         setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
     }
+/** @brief setPosition. */
     void setPosition(uint16_t pos_x, uint16_t pos_y) { 
         pos_x_ = pos_x; pos_y_ = pos_y;
         setWidgetBounds({pos_x_, pos_y_, size_w_, size_h_});
     }
 
+/** @brief isExpanded. */
     bool isExpanded() const { return is_expanded; }
 
 private:
@@ -102,6 +112,7 @@ private:
     
     const char* m_label = nullptr;
 
+/** @brief Histogram. */
     Histogram(
         PixelUI& ui,
         uint16_t pos_x,
@@ -114,10 +125,16 @@ private:
         EXPAND_BASE base,
         const char* label);
 
+/** @brief expandWidget. */
     void expandWidget();
+/** @brief contractWidget. */
     void contractWidget();
+/** @brief calculateExpandPosition. */
     void calculateExpandPosition(int32_t& target_x, int32_t& target_y);
+/** @brief drawHistogramData. */
     void drawHistogramData(int tl_x, int tl_y, int width, int height, Canvas& u8g2);
+/** @brief drawSelf. */
     void drawSelf(const WidgetRenderContext& context) override;
+/** @brief display. */
     Canvas& display() override;
 };

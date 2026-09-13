@@ -28,10 +28,6 @@
 #include "etl/vector.h"
 #include <string.h>
 
-/*
-* @brief Retrieves the vector of registered applications.
-* @return A constant reference to the vector of AppItem structures.
-*/
 const etl::vector<AppItem, MAX_APP_NUM>& AppManager::getAppVector() const {
     return appItems_;
 }

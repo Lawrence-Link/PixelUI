@@ -71,6 +71,7 @@ public:
     label_demo(ui, 10, 53, "Hello 世界!", POS::TOP)
     {}
 
+/** @brief draw. */
     void draw() override {
         Canvas& u8g2 = m_ui.getCanvas();
 
@@ -106,6 +107,7 @@ public:
         label_demo.draw();
     }
 
+/** @brief handleInput. */
     bool handleInput(InputEvent event) override {
         // No widget has taken over input, execute the original focus management logic
         if (event == InputEvent::BACK) {
@@ -114,6 +116,7 @@ public:
         return true;
     }
     
+/** @brief onEnter. */
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
 
@@ -157,9 +160,11 @@ public:
         m_ui.addWidgetToFocusManager(&button_right);
     }
 
+/** @brief onResume. */
     void onResume() override {
     }
 
+/** @brief onExit. */
     void onExit() override {
     }
 };

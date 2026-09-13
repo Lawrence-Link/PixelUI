@@ -16,11 +16,30 @@ class PixelUI;
 
 class APP_COUNTER : public IApplication {
 public:
+    /**
+     * @brief Creates the counter demonstration application and its widgets.
+     * @param ui UI instance used for rendering, animation, and focus handling.
+     * @param parameter Reserved application parameter; currently ignored.
+     */
     explicit APP_COUNTER(PixelUI& ui, void* parameter = nullptr);
 
+    /**
+     * @brief Initializes widget resources, focus registration, and load state.
+     * @param cb Callback used to request removal of the application.
+     */
     void onEnter(ExitCallback cb) override;
+
+    /** @brief Advances the staged entrance sequence and draws the application. */
     void draw() override;
+
+    /**
+     * @brief Handles application input and requests exit for the back event.
+     * @param event Input event to process.
+     * @return true because this demonstration consumes every input event.
+     */
     bool handleInput(InputEvent event) override;
+
+    /** @brief Cancels animations owned by the demonstration. */
     void onExit() override;
 
 private:

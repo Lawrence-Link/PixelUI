@@ -67,6 +67,7 @@ void IconButton::onOffload() {
  */
 Canvas& IconButton::display() { return m_ui.getCanvas(); }
 
+/** @brief IconButton::drawSelf. */
 void IconButton::drawSelf(const WidgetRenderContext& context) {
     if (!src) {
         return; // No image source, nothing to draw

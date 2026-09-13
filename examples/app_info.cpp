@@ -92,6 +92,7 @@ public:
     }
     ~AboutApp() = default;
 
+/** @brief draw. */
     void draw() override {
         Canvas& display = m_ui.getCanvas();
         display.setFontDirection(0);

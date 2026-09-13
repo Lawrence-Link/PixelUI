@@ -30,7 +30,9 @@
 
 class IDrawable {
 public:
+    /** @brief Draws the current visual state onto the active UI canvas. */
     virtual void draw() = 0;
+    /** @brief Destroys the drawable through its polymorphic interface. */
     virtual ~IDrawable() = default; 
     // virtual void update(uint32_t currentTime) {}
 };

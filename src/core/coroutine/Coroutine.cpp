@@ -47,7 +47,7 @@ void Coroutine::start() {
 }
 
 /**
- * @brief Rusume a coroutine
+ * @brief Resumes a coroutine
  * @param currentTime uint32_t, current timestamp of the system
  */
 void Coroutine::resume(uint32_t currentTime, bool animationActive) {

@@ -42,6 +42,7 @@ int32_t my_value_4_digits = 0;
 static int32_t displayProgress = 0;
 static AnimationHandle displayProgressAnimation = INVALID_ANIMATION_HANDLE;
 
+/** @brief showReadOnlyProgress. */
 static void showReadOnlyProgress() {
     constexpr int32_t peakProgress = 100;
     constexpr uint32_t roundTripDurationMs = 4000;
@@ -91,7 +92,9 @@ class ListViewDemo : public ListView {
 public:
     ListViewDemo(PixelUI& ui, ListItem *itemList, size_t length) : ListView(ui, itemList, length) {}
 
+/** @brief onLoad. */
     void onLoad() override {  } // will be called when loading ListViewDemo
+/** @brief onSave. */
     void onSave() override {  } // will be called when requesting exit
 };
 

@@ -39,13 +39,23 @@ public:
         TransitionInProgress,
     };
 
+    /** @brief Creates a view manager bound to the supplied UI instance. */
     explicit ViewManager(PixelUI& ui);
+    /** @brief Detaches the current view and destroys all stacked applications. */
     ~ViewManager();
 
+    /** @brief Copy construction is disabled because the manager owns stack state. */
     ViewManager(const ViewManager&) = delete;
+    /** @brief Copy assignment is disabled because the manager owns application state. */
     ViewManager& operator=(const ViewManager&) = delete;
 
     template <typename T, typename... Args>
+    /**
+     * @brief Constructs and pushes an application into the fixed application stack.
+     * @tparam T Application type to construct.
+     * @param args Constructor arguments forwarded to T.
+     * @return Launch status, including stack, arena, and transition failures.
+     */
     LaunchResult push(Args&&... args) {
         TransitionGuard transition(*this);
         if (!transition.acquired()) {
@@ -63,15 +73,27 @@ public:
         return LaunchResult::Ok;
     }
 
+    /**
+     * @brief Constructs and pushes the application described by an AppItem.
+     * @param item Factory and metadata for the application.
+     * @param parameters Optional caller parameter passed to the factory.
+     * @return Launch status.
+     */
     LaunchResult launch(const AppItem& item, void* parameters = nullptr);
+    /** @brief Exits and removes the current application, if one is active. */
     bool pop();
+    /** @return Whether an application transition is currently pending or active. */
     bool isTransitioning() const noexcept {
         return m_pendingEnter != nullptr || m_isTransitioning;
     }
 
+    /** @return The application at the top of the stack, or nullptr when empty. */
     IApplication* getCurrentApp() const;
+    /** @return Number of applications currently in the stack. */
     size_t getViewDepth() const noexcept { return m_applicationStack.depth(); }
+    /** @return Bytes currently used by the application arena. */
     size_t getArenaUsed() const noexcept { return m_applicationStack.used(); }
+    /** @return Total bytes available in the application arena. */
     static constexpr size_t getArenaCapacity() noexcept { return ApplicationStack::capacity(); }
 
 private:
@@ -79,6 +101,7 @@ private:
 
     class TransitionGuard {
     public:
+        /** @brief Acquires exclusive ownership of an in-progress transition. */
         explicit TransitionGuard(ViewManager& manager) : manager_(manager) {
             if (manager_.m_pendingEnter != nullptr) {
                 return;
@@ -90,12 +113,14 @@ private:
             acquired_ = true;
         }
 
+        /** @brief Releases the transition marker when this guard acquired it. */
         ~TransitionGuard() {
             if (acquired_) {
                 manager_.m_isTransitioning = false;
             }
         }
 
+        /** @return Whether this guard acquired the transition slot. */
         bool acquired() const noexcept { return acquired_; }
 
     private:
@@ -103,13 +128,21 @@ private:
         bool acquired_ = false;
     };
 
+    /** @brief Converts an application-stack result to a view launch result. */
     static LaunchResult toLaunchResult(ApplicationStackResult result);
+    /** @brief Routes input to popups, the current application, or its camera. */
     void attachInputRouter();
+    /** @brief Pauses the previous application and prepares the pushed application. */
     void activatePushedApplication(IApplication* application);
+    /** @brief Completes an application entry deferred until fading finishes. */
     void completePendingEnter();
+    /** @brief Enters an application and optionally starts its horizontal transition. */
     void enterApplication(IApplication* application);
+    /** @brief Clears UI references owned by the outgoing application. */
     void clearNonOwningReferences();
+    /** @brief Restores the saved camera state for the current application. */
     void restoreCurrentCameraState();
+    /** @return Whether a transition commit is currently in progress. */
     bool isTransitionCommitInProgress() const noexcept {
         return m_isTransitioning;
     }

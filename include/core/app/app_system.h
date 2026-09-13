@@ -43,11 +43,22 @@ struct AppItem {
     ApplicationFactory factory;
 
     template <typename T>
+    /**
+     * @brief Creates an application item using T's default factory.
+     * @param title Non-owning application title.
+     * @param bitmap Non-owning application icon bitmap.
+     */
     static constexpr AppItem make(const char* title, const uint8_t* bitmap) {
         return AppItem{title, bitmap, ApplicationFactory::make<T>()};
     }
 
     template <typename T>
+    /**
+     * @brief Creates an application item using a custom construction callback.
+     * @param title Non-owning application title.
+     * @param bitmap Non-owning application icon bitmap.
+     * @param customConstruct Callback that constructs T in supplied storage.
+     */
     static constexpr AppItem make(
         const char* title,
         const uint8_t* bitmap,
@@ -58,16 +69,25 @@ struct AppItem {
 
 class AppManager {
 public:
+    /** @return The process-wide application registry. */
     static AppManager& getInstance() {
         static AppManager instance;
         return instance;
     }
+    /** @brief Adds an application unless the fixed registry is full. */
     void registerApp(const AppItem& item);
+
+    /** @return Read-only access to the registered application items. */
     const etl::vector<AppItem, MAX_APP_NUM>& getAppVector() const;
+
+    /** @return Number of application items currently registered. */
     size_t getRegisteredCount() const { return appItems_.size(); }
+    /** @brief Copy construction is disabled for the process-wide registry. */
     AppManager(const AppManager&) = delete;
+    /** @brief Copy assignment is disabled for the process-wide registry. */
     AppManager& operator=(const AppManager&) = delete;
 private:
+    /** @brief Creates an empty application registry. */
     AppManager() = default;
     etl::vector<AppItem, MAX_APP_NUM> appItems_;
 };

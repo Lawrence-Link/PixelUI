@@ -85,6 +85,7 @@ void Histogram::onLoad() {
     onLoad(LoadTransition::Animated);
 }
 
+/** @brief Histogram::onLoad. */
 void Histogram::onLoad(LoadTransition transition) {
     if (transition == LoadTransition::Immediate) {
         anim_w = size_w_;
@@ -221,6 +222,7 @@ void Histogram::calculateExpandPosition(int32_t& target_x, int32_t& target_y) {
  */
 Canvas& Histogram::display() { return m_ui.getCanvas(); }
 
+/** @brief Histogram::drawSelf. */
 void Histogram::drawSelf(const WidgetRenderContext& context) {
     Canvas& u8g2 = m_ui.getCanvas();
     

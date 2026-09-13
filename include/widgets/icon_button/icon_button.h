@@ -38,23 +38,34 @@ private:
     const unsigned char* src;
 
     int32_t anim_x = 0, anim_y = 0;
+/** @brief drawSelf. */
     void drawSelf(const WidgetRenderContext& context) override;
+/** @brief display. */
     Canvas& display() override;
 public:
+/** @brief IconButton. */
     IconButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h, const unsigned char* source = NULL);
+/** @brief ~IconButton. */
     ~IconButton() = default;
+/** @brief onLoad. */
     void onLoad() override;
+/** @brief onOffload. */
     void onOffload() override;
+/** @brief onSelect. */
     bool onSelect() override ;
 
+/** @brief setCallback. */
     void setCallback(VoidCallback cb) {m_callback = cb;}
+/** @brief setPosition. */
     void setPosition(uint16_t x, uint16_t y) {
         pos_x = x; pos_y = y;
         setWidgetBounds({pos_x, pos_y, m_w, m_h});
     };
+/** @brief setSize. */
     void setSize(uint16_t w, uint16_t h) {
         m_w = w; m_h = h;
         setWidgetBounds({pos_x, pos_y, m_w, m_h});
     }
+/** @brief setSource. */
     void setSource(const unsigned char* source) {src = source;};
 };

@@ -78,6 +78,7 @@ public:
         CORO_END(ctx);
     }) {};
 
+/** @brief draw. */
     void draw() override {
         Canvas& u8g2 = m_ui.getCanvas();
 
@@ -97,6 +98,7 @@ public:
         title.draw();
     }
 
+/** @brief handleInput. */
     bool handleInput(InputEvent event) override {
         if (event == InputEvent::BACK) {
             requestExit();
@@ -104,6 +106,7 @@ public:
         return true;
     }
     
+/** @brief onEnter. */
     void onEnter(ExitCallback cb) override {
         IApplication::onEnter(cb);
         m_ui.markDirty(); 
@@ -136,9 +139,11 @@ public:
         m_ui.addWidgetToFocusManager(&button_sync);
     }
 
+/** @brief onResume. */
     void onResume() override {
     }
 
+/** @brief onExit. */
     void onExit() override {
 
         // cleanup the coroutine

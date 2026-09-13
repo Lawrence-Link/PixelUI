@@ -35,29 +35,45 @@ private:
     ValueEditorBinding sourceBinding_{};
     PopupProgressMode mode_ = PopupProgressMode::ReadOnly;
 
+    /** @brief Updates the active editing session and refreshes the display value. */
     bool updateDraft(int32_t value);
+    /** @brief Commits the active editing session. */
     bool commitEditing();
+    /** @brief Cancels the active editing session and restores its original value. */
     bool cancelEditing();
 
 public:
+    /**
+     * @brief Creates a progress popup using an externally owned edit session.
+     * @param session Non-owning session that must outlive this popup.
+     */
     PopupProgress(PixelUI& ui, uint16_t width, uint16_t height,
                   const NumericRange& range, NumericFormatter formatter,
                   ValueEditSession& session, const char* title = "",
                   uint16_t duration = 3000,
                   PopupProgressMode mode = PopupProgressMode::ReadOnly);
+    /**
+     * @brief Creates a progress popup using an external value binding.
+     * @param binding Non-owning value binding.
+     * @param callback Optional callback invoked after value changes.
+     */
     PopupProgress(PixelUI& ui, uint16_t width, uint16_t height,
                   const NumericRange& range, NumericFormatter formatter,
                   ValueEditorBinding binding, const char* title,
                   uint16_t duration, ValueCallback callback = nullptr,
                   ValueEditPolicy policy = ValueEditPolicy::CommitOnConfirm,
                   PopupProgressMode mode = PopupProgressMode::ReadOnly);
+    /** @brief Creates a progress popup with an internal value-only session. */
     PopupProgress(PixelUI& ui, uint16_t width, uint16_t height,
                   const NumericRange& range, NumericFormatter formatter,
                   int32_t initialValue, const char* title = "",
                   uint16_t duration = 3000,
                   PopupProgressMode mode = PopupProgressMode::ReadOnly);
+    /** @brief Destroys the progress popup and releases no external values. */
     ~PopupProgress() = default;
 
+    /** @brief Draws the formatted value and progress indicator. */
     void drawContent(const PopupContentBounds& bounds) override;
+    /** @return Whether the event changed, committed, or cancelled editing. */
     bool handleContentInput(InputEvent event) override;
 };

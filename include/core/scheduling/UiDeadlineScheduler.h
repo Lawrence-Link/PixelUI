@@ -32,20 +32,28 @@ class UiDeadlineScheduler;
 
 class UiDeadlineSource {
 public:
+    /** @brief Detaches this source from its scheduler, if attached. */
     virtual ~UiDeadlineSource();
 
+    /** @brief Copy construction is disabled because the scheduler owns the linkage. */
     UiDeadlineSource(const UiDeadlineSource&) = delete;
+    /** @brief Copy assignment is disabled because the scheduler owns the linkage. */
     UiDeadlineSource& operator=(const UiDeadlineSource&) = delete;
+    /** @brief Move construction is disabled because the scheduler owns the linkage. */
     UiDeadlineSource(UiDeadlineSource&&) = delete;
+    /** @brief Move assignment is disabled because the scheduler owns the linkage. */
     UiDeadlineSource& operator=(UiDeadlineSource&&) = delete;
 
 protected:
+    /** @brief Attaches this source to a scheduler's deadline list. */
     explicit UiDeadlineSource(UiDeadlineScheduler& scheduler);
 
 private:
     friend class UiDeadlineScheduler;
 
+    /** @return Delay until this source needs an update, or NO_WAKEUP. */
     virtual uint32_t nextWakeupMs(uint32_t currentTime) const = 0;
+    /** @return Whether updating this source changed the drawable state. */
     virtual bool update(uint32_t currentTime) = 0;
 
     UiDeadlineScheduler* scheduler_ = nullptr;
@@ -54,19 +62,30 @@ private:
 
 class UiDeadlineScheduler {
 public:
+    /** @brief Creates an empty deadline source list. */
     UiDeadlineScheduler() = default;
+    /** @brief Detaches all remaining sources without destroying them. */
     ~UiDeadlineScheduler();
 
+    /** @brief Copy construction is disabled because the scheduler owns source linkage. */
     UiDeadlineScheduler(const UiDeadlineScheduler&) = delete;
+    /** @brief Copy assignment is disabled because the scheduler owns source linkage. */
     UiDeadlineScheduler& operator=(const UiDeadlineScheduler&) = delete;
 
+    /**
+     * @brief Updates every source whose deadline has arrived.
+     * @return Whether any source requested a redraw.
+     */
     bool update(uint32_t currentTime);
+    /** @return Earliest wakeup delay among all attached sources. */
     uint32_t nextWakeupMs(uint32_t currentTime) const;
 
 private:
     friend class UiDeadlineSource;
 
+    /** @brief Adds a source to the scheduler's non-owning linked list. */
     void attach(UiDeadlineSource& source);
+    /** @brief Removes a source from the scheduler's non-owning linked list. */
     void detach(UiDeadlineSource& source);
 
     UiDeadlineSource* first_ = nullptr;

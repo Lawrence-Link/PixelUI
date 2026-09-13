@@ -19,6 +19,7 @@ Canvas& PopupValueDigits::ControlGroup::display() {
     return ui_.getCanvas();
 }
 
+/** @brief PopupValueDigits::maximumValue. */
 int32_t PopupValueDigits::maximumValue(uint8_t digitCount) {
     int32_t maximum = 0;
     for (uint8_t i = 0; i < digitCount; ++i) maximum = maximum * 10 + 9;
@@ -81,6 +82,7 @@ PopupValueDigits::PopupValueDigits(PixelUI& ui, uint16_t width, uint16_t height,
     initializeControls();
 }
 
+/** @brief PopupValueDigits::initializeControls. */
 void PopupValueDigits::initializeControls() {
     const bool rangeCreated = NumericRange::tryCreate(0, 9, 1, digitRange_);
     assert(rangeCreated);
@@ -162,6 +164,7 @@ PopupValueDigits::~PopupValueDigits() {
     ui().markDirty();
 }
 
+/** @brief PopupValueDigits::destroyControls. */
 void PopupValueDigits::destroyControls() {
     focusManager_.clear();
     controls_.removeAllChildren();
@@ -173,6 +176,7 @@ void PopupValueDigits::destroyControls() {
     }
 }
 
+/** @brief PopupValueDigits::collectValue. */
 int32_t PopupValueDigits::collectValue() const {
     int32_t result = 0;
     for (uint8_t i = 0; i < digitCount_; ++i) {
@@ -181,6 +185,7 @@ int32_t PopupValueDigits::collectValue() const {
     return result;
 }
 
+/** @brief PopupValueDigits::synchronizeValue. */
 bool PopupValueDigits::synchronizeValue() {
     if (session_ == nullptr || !session_->valid()) return false;
     const int32_t newValue = collectValue();
@@ -196,6 +201,7 @@ bool PopupValueDigits::synchronizeValue() {
     return true;
 }
 
+/** @brief PopupValueDigits::restoreDigitsFromDraft. */
 void PopupValueDigits::restoreDigitsFromDraft() {
     if (session_ == nullptr || !session_->valid()) return;
     const int32_t maximum = maximumValue(digitCount_);
@@ -214,6 +220,7 @@ void PopupValueDigits::restoreDigitsFromDraft() {
     ui().markDirty();
 }
 
+/** @brief PopupValueDigits::commitEditing. */
 bool PopupValueDigits::commitEditing() {
     if (finalizationState_ != FinalizationState::Editing) return true;
     if (!synchronizeValue()) return false;
@@ -228,6 +235,7 @@ bool PopupValueDigits::commitEditing() {
     return true;
 }
 
+/** @brief PopupValueDigits::cancelEditing. */
 bool PopupValueDigits::cancelEditing(bool closePopup) {
     if (finalizationState_ != FinalizationState::Editing) return true;
     if (session_ == nullptr) return false;
@@ -244,11 +252,13 @@ bool PopupValueDigits::cancelEditing(bool closePopup) {
     return true;
 }
 
+/** @brief PopupValueDigits::onClosing. */
 bool PopupValueDigits::onClosing() {
     return finalizationState_ != FinalizationState::Editing ||
            cancelEditing(false);
 }
 
+/** @brief PopupValueDigits::drawContent. */
 void PopupValueDigits::drawContent(const PopupContentBounds& bounds) {
     U8G2& u8g2 = ui().getU8G2();
     if (title_ && title_[0] != '\0') {
@@ -273,6 +283,7 @@ void PopupValueDigits::drawContent(const PopupContentBounds& bounds) {
     focusManager_.draw();
 }
 
+/** @brief PopupValueDigits::handleContentInput. */
 bool PopupValueDigits::handleContentInput(InputEvent event) {
     IWidget* activeWidget = focusManager_.getActiveWidget();
     if (activeWidget) {

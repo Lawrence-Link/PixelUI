@@ -35,6 +35,7 @@ public:
     AppLauncherView(PixelUI& ui, ViewManager& viewManager)
         : IconView<MAX_APP_NUM>(ui), viewManager_(viewManager) {}
 
+/** @brief onEnter. */
     void onEnter(ExitCallback exitCallback) override {
         setTitle("< Apps >");
         enableProgressBar(true);
@@ -65,6 +66,7 @@ private:
 
 } // namespace
 
+/** @brief AppLauncher::launch. */
 ViewManager::LaunchResult AppLauncher::launch(PixelUI& ui, ViewManager& viewManager) {
     return viewManager.push<AppLauncherView>(ui, viewManager);
 }
