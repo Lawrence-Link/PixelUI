@@ -244,7 +244,7 @@ int32_t ListView::calculateTitleRight(
     const ListItem& item, char* valueBuffer, size_t valueBufferSize) const {
     Canvas& canvas = m_ui.getCanvas();
     const int32_t displayWidth = m_ui.getDisplayWidth();
-    int32_t right = displayWidth - 4;
+    int32_t right = displayWidth - 15;
 
     if (valueBuffer != nullptr && valueBufferSize != 0U) {
         valueBuffer[0] = '\0';
@@ -325,7 +325,7 @@ void ListView::scrollToTarget(){
     animateOwned(CursorWidth,
                  etl::min(
                      canvas.getUTF8Width(m_itemList[currentCursor].title) + 6,
-                     titleRight - CURSOR_X),
+                     titleRight + 2 - CURSOR_X),
                  500, EasingType::EASE_OUT_CUBIC);
     animateOwned(progress_bar_top,
                  static_cast<int32_t>(

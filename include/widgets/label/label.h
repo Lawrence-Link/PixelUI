@@ -50,7 +50,7 @@ public:
 
 private:
     PixelUI& m_ui;
-    int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
+int32_t m_x = 0, m_y = 0, m_w = 0, m_h = 0;
     const char* src = nullptr;
     int32_t anim_x = 0, anim_y = 0;
     int32_t text_width_ = 0;
