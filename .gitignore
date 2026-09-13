@@ -59,3 +59,4 @@ third_party/u8g2/build/
 .cache/
 
 AGENTS.md
+/tests/
