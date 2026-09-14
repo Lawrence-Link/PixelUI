@@ -85,7 +85,7 @@ ListItem ItemList[10] = {
     ListItem{.title ="- Progress", .pFunc = &showReadOnlyProgress, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(displayProgress))},
     ListItem{.title ="- The author of this lib!"},
     ListItem{.title ="- actually deserves a hug:>"},
-    ListItem{.title ="- Tomato"}
+    ListItem{.title ="- 中文テスト"}
 };
 
 class ListViewDemo : public ListView {

@@ -230,7 +230,7 @@ void ListView::updateScrollPosition() {
     const int32_t targetY = topVisibleIndex_ * rowHeight;
     const int32_t startY = m_ui.getCanvas().camera().storedY();
     animateOwnedCallback(
-        startY, targetY, 350, EasingType::EASE_OUT_CUBIC,
+        startY, targetY, 150, EasingType::EASE_OUT_CUBIC,
         [this](int32_t value) { m_ui.getCanvas().camera().setY(value); },
         PROTECTION::PROTECTED);
 }
