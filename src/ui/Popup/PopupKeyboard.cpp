@@ -10,12 +10,12 @@
 namespace {
 
 constexpr const char* KEY_LABELS[] = {
-    "1,@.", "2!ABC", "3@DEF", "4#GHI", "5$JKL", "6%MNO",
+    "01,@.", "2!ABC", "3@DEF", "4#GHI", "5$JKL", "6%MNO",
     "7^PQRS", "8&TUV", "9*WXYZ"
 };
 
 constexpr const char* KEY_CHARS[] = {
-    "1,@.", "2!ABCabc", "3@DEFdef", "4#GHIghi", "5$JKLjkl", "6%MNOmno",
+    "01,@.", "2!ABCabc", "3@DEFdef", "4#GHIghi", "5$JKLjkl", "6%MNOmno",
     "7^PQRSpqrs", "8&TUVtuv", "9*WXYZwxyz"
 };
 
