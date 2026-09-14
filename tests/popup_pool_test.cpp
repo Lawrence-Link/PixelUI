@@ -22,6 +22,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
+    ui.begin();
     PopupManager manager(ui);
     int32_t firstValue = 10;
     int32_t secondValue = 20;
@@ -107,6 +108,7 @@ int main() {
     u8g2_Setup_ssd1306_96x40_f(
         compactDisplay.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI compactUi(compactDisplay);
+    compactUi.begin();
     int32_t compactValue = 0;
     if (compactUi.showPopupValueDigits(compactValue, 4)) return 26;
 

@@ -51,6 +51,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
+    ui.begin();
     bool cameraTitleToggle = false;
     ListItem items[6] = {
         {"Back"}, {"One"}, {"Two"}, {"ABCDEFGHIJKLMNOPQRSTUVWXYZ12"},
@@ -100,6 +101,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         fullDisplay.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI fullUi(fullDisplay);
+    fullUi.begin();
     bool toggled = false;
     ListItem fullItems[2] = {{"Back"}, {"Toggle"}};
     fullItems[1].accessory = ListItemAccessory::toggle(toggled);
@@ -122,6 +124,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         referenceDisplay.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI referenceUi(referenceDisplay);
+    referenceUi.begin();
     bool referenceToggle = true;
     ListItem referenceItems[2] = {{"Back"}, {"Toggle"}};
     referenceItems[1].accessory = ListItemAccessory::toggle(referenceToggle);
@@ -139,6 +142,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         nestedDisplay.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI nestedUi(nestedDisplay);
+    nestedUi.begin();
     bool parentToggle = false;
     bool childToggle = false;
     ListItem children[2] = {{"Back"}, {"Child toggle"}};
@@ -169,6 +173,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         titleDisplay.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI titleUi(titleDisplay);
+    titleUi.begin();
     bool titleToggle = false;
     ListItem titleItems[3] = {
         {"Back"}, {"ABCDEFGHIJKLMNOPQRSTUVWXYZ12"}, {"Short"}
@@ -205,6 +210,7 @@ int main() {
         clippedReferenceDisplay.getU8g2(), U8G2_R0,
         u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI clippedReferenceUi(clippedReferenceDisplay);
+    clippedReferenceUi.begin();
     bool clippedReferenceToggle = false;
     ListItem clippedReferenceItems[3] = {
         {"Back"}, {""}, {"Short"}

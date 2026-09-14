@@ -82,6 +82,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
+    ui.begin();
     static_assert(sizeof(IconView<1>) < sizeof(IconView<3>));
     IconView<3> view(ui);
     IconItemList<3> items;
@@ -121,6 +122,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         titleDisplay.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI titleUi(titleDisplay);
+    titleUi.begin();
     IconView<2> titleView(titleUi, u8g2_font_4x6_tr);
     IconItemList<2> titleItems;
     titleItems.push_back({"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", nullptr});

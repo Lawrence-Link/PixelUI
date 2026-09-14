@@ -29,6 +29,7 @@
 void registerApps() {
     auto& app_man = AppManager::getInstance();
 
+    app_man.registerApp(boot_app);
     app_man.registerApp(counter_app);
     app_man.registerApp(cube_demo_app);
     app_man.registerApp(about_app);

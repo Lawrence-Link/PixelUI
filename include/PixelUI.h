@@ -457,9 +457,9 @@ private:
     uint32_t calculateNextWakeupMs(uint32_t frameIntervalMs) const;
 
     U8G2& u8g2_;
-    const uint16_t displayWidth_;
-    const uint16_t displayHeight_;
-    const uint16_t displayBufferSize_;
+    uint16_t displayWidth_;
+    uint16_t displayHeight_;
+    uint16_t displayBufferSize_;
     Canvas canvas_;
     UiDeadlineScheduler m_deadlineScheduler;
 

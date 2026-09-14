@@ -31,6 +31,7 @@ int verifyClippingAndAutomaticScroll() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
+    ui.begin();
     Label label(ui, 4, 12, 8, "ABCDE", POS::BOTTOM, u8g2_font_4x6_tr);
     label.setOverflow(Label::Overflow::AutoScroll);
     label.onLoad();
@@ -85,6 +86,7 @@ int verifyShortTextRemainsIdle() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
+    ui.begin();
     Label label(ui, 4, 12, 30, "A", POS::BOTTOM, u8g2_font_4x6_tr);
     label.setOverflow(Label::Overflow::AutoScroll);
     label.onLoad();
@@ -107,6 +109,7 @@ int verifyDisabledFallback() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
+    ui.begin();
     Label label(ui, 4, 12, 8, "ABCDE", POS::BOTTOM, u8g2_font_4x6_tr);
     label.setOverflow(Label::Overflow::AutoScroll);
     label.onLoad();

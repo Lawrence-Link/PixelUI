@@ -88,6 +88,7 @@ int main() {
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
     PixelUI ui(display);
+    ui.begin();
 
     ProbeWidget root(ui, 10, 8, 30, 20);
     ProbeWidget first(ui, 3, 4, 12, 10);

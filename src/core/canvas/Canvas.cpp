@@ -13,6 +13,13 @@ void CanvasCamera::setEnabled(bool enabled) {
     y_ = clampY(y_);
 }
 
+/** @brief CanvasCamera::setViewportSize. */
+void CanvasCamera::setViewportSize(int32_t width, int32_t height) {
+    viewportWidth_ = width;
+    viewportHeight_ = height;
+    y_ = clampY(y_);
+}
+
 /** @brief CanvasCamera::maxY. */
 int32_t CanvasCamera::maxY() const {
     return maximum(0, contentHeight_ - viewportHeight());
@@ -84,6 +91,13 @@ bool Canvas::endFrame() {
 /** @brief Canvas::setContentHeight. */
 void Canvas::setContentHeight(int32_t height) {
     declaredHeight_ = maximum(declaredHeight_, height);
+}
+
+/** @brief Canvas::setDisplaySize. */
+void Canvas::setDisplaySize(int32_t width, int32_t height) {
+    displayWidth_ = width;
+    displayHeight_ = height;
+    camera_.setViewportSize(width, height);
 }
 
 /** @brief Canvas::screenX. */

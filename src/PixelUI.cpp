@@ -41,12 +41,10 @@
  */
 PixelUI::PixelUI(U8G2& u8g2)
     : u8g2_(u8g2)
-      , displayWidth_(u8g2.getDisplayWidth())
-      , displayHeight_(u8g2.getDisplayHeight())
-      , displayBufferSize_((displayWidth_ != 0U && displayHeight_ != 0U)
-            ? u8g2_GetBufferSize(u8g2.getU8g2())
-            : 0U)
-      , canvas_(u8g2, displayWidth_, displayHeight_)
+      , displayWidth_(0U)
+      , displayHeight_(0U)
+      , displayBufferSize_(0U)
+      , canvas_(u8g2, 0, 0)
 #if PIXELUI_USE_POPUP
       , m_popupManager(*this)
 #endif
@@ -88,11 +86,16 @@ void PixelUI::removeCoroutine(Coroutine* coroutine) {
 }
 
 /**
- * @brief Placeholder initialization function
- *
- * Currently empty; kept for API consistency and future expansion.
+ * @brief Initializes display-dependent PixelUI state after U8G2 setup
  */
-void PixelUI::begin() { }
+void PixelUI::begin() {
+    displayWidth_ = u8g2_.getDisplayWidth();
+    displayHeight_ = u8g2_.getDisplayHeight();
+    displayBufferSize_ = (displayWidth_ != 0U && displayHeight_ != 0U)
+            ? u8g2_GetBufferSize(u8g2_.getU8g2())
+            : 0U;
+    canvas_.setDisplaySize(displayWidth_, displayHeight_);
+}
 
 /**
  * @brief Compatibility wrapper for hosts that inject ticks outside an ISR.

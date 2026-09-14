@@ -59,6 +59,10 @@ public:
     int32_t viewportHeight() const { return viewportHeight_; }
 
 private:
+    friend class Canvas;
+
+    /** @brief Updates the physical viewport after display initialization. */
+    void setViewportSize(int32_t width, int32_t height);
     /** @return Vertical offset clamped to the valid content extent. */
     int32_t clampY(int32_t y) const;
 
@@ -110,6 +114,7 @@ public:
     uint8_t getDrawColor() { return display_.getDrawColor(); }
     /** @param transparent U8G2 bitmap transparency mode. */
     void setBitmapMode(uint8_t transparent) { display_.setBitmapMode(transparent); }
+
     /** @param font U8G2 font data. */
     void setFont(const uint8_t* font) { display_.setFont(font); }
     /** @param transparent U8G2 font transparency mode. */
@@ -211,6 +216,10 @@ public:
 #endif
 
 private:
+    friend class PixelUI;
+
+    /** @brief Updates display-dependent dimensions after U8G2 initialization. */
+    void setDisplaySize(int32_t width, int32_t height);
     /** @return Screen X coordinate after camera translation. */
     u8g2_uint_t screenX(int32_t x) const;
     /** @return Screen Y coordinate after camera translation. */

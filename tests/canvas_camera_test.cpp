@@ -70,11 +70,19 @@ bool pixelIsSet(U8G2& display, int32_t x, int32_t y) {
 
 int main() {
     U8G2 display;
+    PixelUI ui(display);
+    if (ui.getDisplayWidth() != 0U || ui.getDisplayHeight() != 0U ||
+        ui.getDisplayBufferSize() != 0U) return 14;
+
     u8g2_Setup_ssd1306_128x64_noname_f(
         display.getU8g2(), U8G2_R0, u8x8_byte_empty, u8x8_dummy_cb);
-    PixelUI ui(display);
+    ui.begin();
     if (ui.getDisplayWidth() != 128U || ui.getDisplayHeight() != 64U ||
-        ui.getDisplayBufferSize() != 1024U) return 14;
+        ui.getDisplayBufferSize() != 1024U ||
+        ui.getCanvas().getDisplayWidth() != 128 ||
+        ui.getCanvas().getDisplayHeight() != 64 ||
+        ui.getCanvas().camera().viewportWidth() != 128 ||
+        ui.getCanvas().camera().viewportHeight() != 64) return 20;
     ViewManager& manager = *ui.getViewManagerPtr();
     AppOptions options;
     const AppItem scrollable =
