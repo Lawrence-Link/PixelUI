@@ -41,6 +41,7 @@ int32_t my_value_4_digits = 0;
 
 static int32_t displayProgress = 0;
 static AnimationHandle displayProgressAnimation = INVALID_ANIMATION_HANDLE;
+static char keyboardText[MAX_TEXT_LENGTH + 1] = "";
 
 /** @brief showReadOnlyProgress. */
 static void showReadOnlyProgress() {
@@ -75,17 +76,23 @@ ListItem sub_CathyFlower[3] = {
     ListItem("- 进度")
 };
 
-ListItem ItemList[10] = {
+namespace {
+    bool bs_cn_state = false;
+}
+
+constexpr size_t ITEM_COUNT = 11U;
+ListItem ItemList[ITEM_COUNT] = {
     ListItem(">>> ListDemo <<<"),
     ListItem{.title ="- Show pop", .pFunc = [](){ ui.showPopupInfo("Hello from PixelUI!", "Info", 80, 30, 2000); }},
     ListItem{.title ="- Sub Menu", .nextList = sub_CathyFlower, .nextListLength = 3},
-    ListItem{.title ="- Bool State", .accessory = ListItemAccessory::toggle(bool_state)},
+    ListItem{.title ="- Toggle", .accessory = ListItemAccessory::toggle(bool_state)},
     ListItem{.title ="- Bool Value", .pFunc = [](){ ui.showPopupProgress(my_value, 0, 100, "Value", 100, 40, 5000, nullptr, PopupProgressMode::Editable); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value))},
     ListItem{.title ="- Show Digits", .pFunc = [](){ ui.showPopupValueDigits(my_value_4_digits, 4, "Value", 100, 56, 5000); }, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(my_value_4_digits))},
     ListItem{.title ="- Progress", .pFunc = &showReadOnlyProgress, .accessory = ListItemAccessory::value(PixelUIValue::Binding::integer(displayProgress))},
+    ListItem{.title ="- Keyboard", .pFunc = [](){ ui.showPopupKeyboard(keyboardText, sizeof(keyboardText)); }, .accessory = ListItemAccessory::text(keyboardText)},
     ListItem{.title ="- The author of this lib!"},
     ListItem{.title ="- actually deserves a hug:>"},
-    ListItem{.title ="- 中文テスト"}
+    ListItem{.title ="- 中文テスト", .accessory = ListItemAccessory::check(bs_cn_state)},
 };
 
 class ListViewDemo : public ListView {
@@ -102,5 +109,5 @@ AppItem ListViewDemo_app = AppItem::make<ListViewDemo>(
     "ListView Test",
     image_LISTVIEW_bits,
     [](void* storage, PixelUI& ui, void*) -> IApplication* {
-        return ::new (storage) ListViewDemo(ui, ItemList, 10);
+        return ::new (storage) ListViewDemo(ui, ItemList, ITEM_COUNT);
     });

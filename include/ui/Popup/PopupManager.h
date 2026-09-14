@@ -26,6 +26,10 @@
 #include "PopupValueDigits.h"
 #endif
 
+#if PIXELUI_USE_POPUP_KEYBOARD
+#include "PopupKeyboard.h"
+#endif
+
 class PixelUI;
 
 #if PIXELUI_USE_POPUP
@@ -74,21 +78,37 @@ struct ValueDigitsRequest {
 };
 #endif
 
+#if PIXELUI_USE_POPUP_KEYBOARD
+struct KeyboardRequest {
+    RequestEnvelope envelope{};
+    // output is non-owning and must survive pending plus active use.
+    char* output = nullptr;
+    size_t outputCapacity = 0U;
+    VoidCallback commitCallback{};
+};
+#endif
+
 using PopupRequest = etl::variant<
 #if PIXELUI_USE_POPUP_INFO
     InfoRequest
-    #if PIXELUI_USE_POPUP_PROGRESS || PIXELUI_USE_POPUP_VALUE_DIGITS
+    #if PIXELUI_USE_POPUP_PROGRESS || PIXELUI_USE_POPUP_VALUE_DIGITS || PIXELUI_USE_POPUP_KEYBOARD
     ,
     #endif
 #endif
 #if PIXELUI_USE_POPUP_PROGRESS
     ProgressRequest
-    #if PIXELUI_USE_POPUP_VALUE_DIGITS
+    #if PIXELUI_USE_POPUP_VALUE_DIGITS || PIXELUI_USE_POPUP_KEYBOARD
     ,
     #endif
 #endif
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
     ValueDigitsRequest
+    #if PIXELUI_USE_POPUP_KEYBOARD
+    ,
+    #endif
+#endif
+#if PIXELUI_USE_POPUP_KEYBOARD
+    KeyboardRequest
 #endif
 >;
 
@@ -113,6 +133,9 @@ private:
 #endif
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
         , PopupValueDigits
+#endif
+#if PIXELUI_USE_POPUP_KEYBOARD
+        , PopupKeyboard
 #endif
     >;
 
@@ -141,6 +164,10 @@ private:
 #if PIXELUI_USE_POPUP_VALUE_DIGITS
     /** @brief Constructs an active digit-edit popup from a pending request. */
     void activate(ValueDigitsRequest& request);
+#endif
+#if PIXELUI_USE_POPUP_KEYBOARD
+    /** @brief Constructs an active compact keyboard from a pending request. */
+    void activate(KeyboardRequest& request);
 #endif
 
 public:
@@ -189,6 +216,13 @@ public:
                             int32_t& value, uint8_t digitCount,
                             const char* title, uint16_t duration,
                             ValueCallback callback = nullptr);
+#endif
+#if PIXELUI_USE_POPUP_KEYBOARD
+    /** @brief Queues a fixed-capacity multi-tap keyboard. */
+    bool enqueueKeyboard(uint16_t width, uint16_t height,
+                         char* output, size_t outputCapacity,
+                         uint16_t duration = 0U,
+                         VoidCallback commitCallback = nullptr);
 #endif
 
     /** @brief Removes pending requests and destroys the active popup. */

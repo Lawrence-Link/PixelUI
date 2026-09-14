@@ -309,6 +309,25 @@ public:
                        uint16_t height = 30, uint16_t duration = 3000);
 
     /**
+     * @brief Shows a compact multi-tap text keyboard.
+     * @param output Null-terminated destination and initial text.
+     * @param outputCapacity Total destination capacity including the terminator.
+     * @param width Popup width.
+     * @param height Popup height.
+     * @param duration Auto-cancel delay, or zero to disable auto-close.
+     * @param commitCallback Invoked after OK copies the draft to output.
+     * @return true if the buffer, layout, and queue accept the request.
+     * @note output must outlive pending and active use.
+     */
+    bool showPopupKeyboard(
+        char* output,
+        size_t outputCapacity,
+        uint16_t width = 120U,
+        uint16_t height = 60U,
+        uint16_t duration = 0U,
+        VoidCallback commitCallback = nullptr);
+
+    /**
      * @brief Shows a fixed-width integer editor.
      * @param binding Non-owning read/write/notification boundary.
      * @param digitCount Number of editable digits (1..MAX_INT_FIXED_WIDTH).

@@ -44,6 +44,7 @@ public:
         None,
         Text,
         Toggle,
+        Check,
         Value,
     };
 
@@ -60,6 +61,14 @@ public:
     static constexpr ListItemAccessory toggle(bool& value) {
         ListItemAccessory accessory;
         accessory.kind_ = Kind::Toggle;
+        accessory.payload_.toggle = &value;
+        return accessory;
+    }
+
+    /** @brief Displays a read-only check state; the item callback owns changes. */
+    static constexpr ListItemAccessory check(bool& value) {
+        ListItemAccessory accessory;
+        accessory.kind_ = Kind::Check;
         accessory.payload_.toggle = &value;
         return accessory;
     }
@@ -86,6 +95,11 @@ public:
 /** @brief toggleValue. */
     constexpr bool* toggleValue() const {
         return kind_ == Kind::Toggle ? payload_.toggle : nullptr;
+    }
+
+    /** @brief Returns the non-owning check-state binding. */
+    constexpr bool* checkValue() const {
+        return kind_ == Kind::Check ? payload_.toggle : nullptr;
     }
 
 /** @brief formatValue. */

@@ -45,10 +45,11 @@
 #define PIXELUI_ENABLE_TICKLESS          0
 #endif
 
-/* Popup types. PopupValueDigits also requires Focus. */
+/* Popup types. PopupValueDigits and PopupKeyboard also require Focus. */
 #define PIXELUI_USE_POPUP_INFO          1
 #define PIXELUI_USE_POPUP_PROGRESS      1
 #define PIXELUI_USE_POPUP_VALUE_DIGITS  1
+#define PIXELUI_USE_POPUP_KEYBOARD      1
 
 /* Font roles. Replace the WQY fonts when full Chinese coverage is unnecessary. */
 #define PIXELUI_FONT_TEXT       u8g2_font_wqy12_t_gb2312

@@ -38,6 +38,7 @@ private:
     int32_t m_w = 0, m_h = 0;                  // Size of the button                       // Reference to the UI manager
 
     const char* src = nullptr;                 // Button text
+    const uint8_t* m_font = PIXELUI_FONT_TEXT;
     // Animation values
     int32_t anim_w = 0, anim_h = 0;           // Animated width/height
     int32_t anim_x = 0, anim_y = 0;           // Animated position
@@ -50,7 +51,13 @@ private:
 public:
 /** @brief TextButton. */
     TextButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h, char const* text = "")
-        : m_ui(ui), m_x(x), m_y(y), m_w(w), m_h(h), src(text)
+        : TextButton(ui, x, y, w, h, text, PIXELUI_FONT_TEXT)
+    {
+    }
+/** @brief TextButton. */
+    TextButton(PixelUI& ui, uint16_t x, uint16_t y, uint16_t w, uint16_t h,
+               char const* text, const uint8_t* font)
+        : m_ui(ui), m_x(x), m_y(y), m_w(w), m_h(h), src(text), m_font(font)
     {
         setFocusable(true);
         setFocusInsets({1, 1, 1, 1});

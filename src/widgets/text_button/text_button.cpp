@@ -94,7 +94,7 @@ void TextButton::drawSelf(const WidgetRenderContext& context) {
     // Draw rounded frame with radius 2
     u8g2.drawRFrame(draw_x, draw_y, anim_w, anim_h, 2);
 
-    u8g2.setFont(PIXELUI_FONT_TEXT);
+    u8g2.setFont(m_font);
 
     // Get font metrics
     int8_t font_ascent = u8g2.getAscent();   // Height above baseline
