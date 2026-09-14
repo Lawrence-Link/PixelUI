@@ -39,7 +39,6 @@ extern AppItem anim_demo_app;
 extern AppItem greenhouse_app;
 extern AppItem pixel_clock_app;
 extern AppItem parent_child_demo_app;
-extern AppItem boot_app;
 
 /** @brief Registers every example application with the global AppManager. */
 void registerApps();
