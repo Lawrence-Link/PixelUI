@@ -59,6 +59,7 @@ set(SIM_SOURCES
     ../examples/app_widgets_demo/app_demo_textbutton_label.cpp
     ../examples/app_widgets_demo/app_demo_animation.cpp
     ../examples/app_widgets_demo/app_demo_parent_child.cpp
+    ../examples/app_widgets_demo/app_demo_progress_bar.cpp
     ../examples/app_greenhouse/app_main.cpp
 )
 
